@@ -1,0 +1,3670 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Helion — Regelenergiemarkt Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       HELION BRAND TOKENS
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --helion-blau:      #00BEF5;
+      --midnight-blau:    #003250;
+      --black:            #000000;
+      --white:            #FFFFFF;
+      --blau-2:           #4CD2F6;
+      --blau-3:           #82DCF5;
+      --blau-4:           #B0E6F4;
+      --blau-5:           #DCF4F8;
+      --night-2:          #104864;
+      --night-3:          #367088;
+      --night-4:          #689CAA;
+      --night-5:          #74A4BE;
+      --scarlet:          #FC3200;
+      --flush-orange:     #FE7500;
+      --amber:            #FFA500;
+
+      --bg:               #000F1E;
+      --bg-card:          #003250;
+      --bg-elevated:      #104864;
+      --bg-header:        rgba(0,15,30,0.92);
+
+      --accent:           var(--helion-blau);
+      --accent-dim:       rgba(0,190,245,0.12);
+      --accent-glow:      rgba(0,190,245,0.25);
+      --accent-border:    rgba(0,190,245,0.18);
+
+      --down-color:       var(--flush-orange);
+      --down-dim:         rgba(254,117,0,0.12);
+      --down-border:      rgba(254,117,0,0.22);
+
+      --text:             rgba(255,255,255,0.88);
+      --text-strong:      #FFFFFF;
+      --text-muted:       var(--night-5);
+      --text-subtle:      var(--night-4);
+
+      --border:           rgba(0,190,245,0.10);
+      --border-mid:       rgba(0,190,245,0.20);
+
+      --font: 'Proxima Nova', 'ProximaNova', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Atmospheric ── */
+    .atmo {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .atmo::before {
+      content: ''; position: absolute;
+      width: 900px; height: 900px;
+      top: -300px; left: -200px;
+      background: radial-gradient(circle, rgba(0,190,245,0.07) 0%, transparent 65%);
+    }
+    .atmo::after {
+      content: ''; position: absolute;
+      width: 700px; height: 700px;
+      bottom: -200px; right: -150px;
+      background: radial-gradient(circle, rgba(0,50,80,0.5) 0%, transparent 70%);
+    }
+    .atmo-grid {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle, rgba(0,190,245,0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* ── Layout ── */
+    .root {
+      position: relative; z-index: 1;
+      max-width: 1440px; margin: 0 auto; padding: 0 40px;
+    }
+    @media (max-width: 768px) { .root { padding: 0 20px; } }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg-header);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-inner {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      height: 64px; gap: 24px;
+    }
+    .brand {
+      display: flex; align-items: center;
+      gap: 12px; text-decoration: none;
+    }
+    .brand-icon { flex-shrink: 0; width: 32px; height: 32px; }
+    .brand-wordmark { display: flex; flex-direction: column; gap: 1px; }
+    .brand-name {
+      font-weight: 800; font-size: 20px;
+      letter-spacing: -0.02em; color: var(--text-strong); line-height: 1;
+    }
+    .brand-tagline {
+      font-weight: 400; font-size: 9.5px;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-muted); line-height: 1;
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .hbadge {
+      background: var(--accent-dim); border: 1px solid var(--accent-border);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--helion-blau);
+    }
+    .hstatus {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .pulse {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--helion-blau);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.75); }
+    }
+
+    /* ── Period Bar ── */
+    .period-bar {
+      position: sticky; top: 64px; z-index: 99;
+      background: rgba(0,10,20,0.96);
+      backdrop-filter: blur(20px) saturate(1.3);
+      -webkit-backdrop-filter: blur(20px) saturate(1.3);
+      border-bottom: 1px solid var(--border);
+    }
+    .period-bar-inner {
+      display: flex; align-items: center;
+      gap: 8px; padding: 10px 0; flex-wrap: wrap;
+    }
+    .period-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--text-muted); margin-right: 4px;
+      white-space: nowrap;
+    }
+    .preset-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 14px;
+      font-family: var(--font); font-size: 12px; font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .preset-btn:hover {
+      background: var(--accent-dim);
+      border-color: var(--accent-border);
+      color: var(--helion-blau);
+      transform: translateY(-1px);
+    }
+    .preset-btn:active { transform: translateY(0); }
+    .preset-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--helion-blau);
+      color: var(--helion-blau);
+    }
+    /* In-card toggle buttons — same look as preset-btn but not wired to the date-range listener */
+    .mini-toggle-btn {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 3px 10px; font-size: 10px;
+      font-family: var(--font); font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.15s;
+    }
+    .mini-toggle-btn:hover { background: var(--accent-dim); border-color: var(--accent-border); color: var(--helion-blau); transform: translateY(-1px); }
+    .mini-toggle-btn:active { transform: translateY(0); }
+    .mini-toggle-btn.active { background: var(--accent-dim); border-color: var(--helion-blau); color: var(--helion-blau); }
+    .period-sep {
+      width: 1px; height: 20px;
+      background: var(--border);
+      margin: 0 4px; flex-shrink: 0;
+    }
+    .date-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 5px 10px;
+      font-family: var(--font); font-size: 12px; font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.2s;
+      color-scheme: dark;
+    }
+    .date-input:hover, .date-input:focus {
+      border-color: var(--accent-border);
+      outline: none;
+    }
+    .period-to {
+      font-size: 11px; color: var(--text-subtle);
+      white-space: nowrap;
+    }
+
+    /* ── Hero ── */
+    .hero { padding: 64px 0 48px; }
+    .hero-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-dim); border: 1px solid var(--accent-border);
+      border-radius: 100px; padding: 5px 14px 5px 10px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--helion-blau); margin-bottom: 24px;
+    }
+    .hero-label-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--helion-blau); }
+    .hero h1 {
+      font-weight: 800; font-size: clamp(40px, 5vw, 68px);
+      letter-spacing: -0.035em; line-height: 1.05;
+      color: var(--text-strong); margin-bottom: 18px;
+    }
+    .hero h1 .blue { color: var(--helion-blau); }
+    .hero-desc {
+      font-size: 15px; font-weight: 300;
+      color: var(--text-muted); max-width: 520px; line-height: 1.8;
+    }
+    .hero-desc strong { color: var(--text); font-weight: 500; }
+
+    /* ── KPI Strip ── */
+    .kpi-strip {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 16px; margin-bottom: 64px;
+    }
+    @media (max-width: 1100px) { .kpi-strip { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px)  { .kpi-strip { grid-template-columns: 1fr; } }
+
+    .kpi {
+      position: relative; background: var(--bg-card);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 24px 22px 20px; overflow: hidden;
+      cursor: default;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .kpi:hover { border-color: var(--border-mid); transform: translateY(-2px); }
+    .kpi::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .kpi.k-up::before   { background: linear-gradient(90deg, var(--helion-blau), transparent 70%); }
+    .kpi.k-down::before { background: linear-gradient(90deg, var(--flush-orange), transparent 70%); }
+    .kpi.k-vol::before  { background: linear-gradient(90deg, var(--night-5), transparent 70%); }
+    .kpi.k-rate::before { background: linear-gradient(90deg, var(--blau-3), transparent 70%); }
+    .kpi::after {
+      content: ''; position: absolute;
+      top: -60px; right: -60px; width: 160px; height: 160px;
+      border-radius: 50%; background: var(--kpi-glow, transparent);
+      opacity: 0.07; transition: opacity 0.3s;
+    }
+    .kpi:hover::after { opacity: 0.12; }
+    .kpi.k-up   { --kpi-glow: var(--helion-blau); }
+    .kpi.k-down { --kpi-glow: var(--flush-orange); }
+    .kpi-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px;
+    }
+    .kpi-value-row { display: flex; align-items: baseline; gap: 7px; }
+    .kpi-value {
+      font-size: 34px; font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.0; color: var(--text-strong);
+    }
+    .kpi.k-up   .kpi-value { color: var(--helion-blau); }
+    .kpi.k-down .kpi-value { color: var(--flush-orange); }
+    .kpi-unit {
+      font-size: 11px; font-weight: 500;
+      color: var(--text-strong); opacity: 0.75; letter-spacing: 0.04em;
+    }
+    .kpi.k-up   .kpi-unit { color: var(--helion-blau); }
+    .kpi.k-down .kpi-unit { color: var(--flush-orange); }
+    .kpi-meta {
+      margin-top: 14px; padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      font-size: 10px; color: var(--text-subtle);
+    }
+
+    /* ── Home / Overview Page ── */
+    .home-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 40px;
+    }
+    @media (max-width: 900px) { .home-grid { grid-template-columns: 1fr; } }
+
+    .home-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px 28px 24px;
+      display: flex; flex-direction: column;
+      transition: border-color 0.25s, transform 0.2s, box-shadow 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .home-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--hc-accent, var(--helion-blau)); border-radius: 3px 0 0 3px;
+    }
+    .home-card:hover {
+      border-color: var(--hc-hover-border, rgba(0,190,245,0.3));
+      transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+    .home-card.card-srl { --hc-accent: var(--blau-3); --hc-hover-border: rgba(130,220,245,0.35); }
+    .home-card.card-sre { --hc-accent: var(--blau-4); --hc-hover-border: rgba(176,230,244,0.35); }
+    .home-card.card-trl { --hc-accent: var(--helion-blau); --hc-hover-border: rgba(0,190,245,0.35); }
+    .home-card.card-tre { --hc-accent: #74c8e0; --hc-hover-border: rgba(116,200,224,0.35); }
+    .home-card.card-spot { --hc-accent: var(--flush-orange); --hc-hover-border: rgba(254,117,0,0.3); }
+    .home-card.card-pv   { --hc-accent: #f0c040; --hc-hover-border: rgba(240,192,64,0.3); }
+    .home-card.card-pv::before { background: #f0c040; }
+    .home-pv-note { font-size: 10px; color: var(--text-subtle); margin-top: 12px; line-height: 1.5; }
+
+    .home-card.card-bess { --hc-accent: #52D9C2; --hc-hover-border: rgba(82,217,194,0.35); }
+    .home-card.card-bess::before { background: #52D9C2; }
+    .bess-params {
+      display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 20px;
+      margin-bottom: 20px; padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      align-items: end;
+    }
+    @media (max-width: 900px) { .bess-params { grid-template-columns: 1fr 1fr; } }
+    .bess-param { display: flex; flex-direction: column; gap: 8px; }
+    .bess-param-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-subtle); }
+    .bess-param-val { font-size: 12px; font-weight: 700; color: #52D9C2; min-width: 38px; text-align: right; }
+    .bess-slider-row { display: flex; align-items: center; gap: 10px; }
+    .bess-number {
+      -webkit-appearance: none; background: rgba(82,217,194,0.07);
+      border: 1px solid rgba(82,217,194,0.25); border-radius: 6px;
+      color: var(--text-strong); font-family: var(--font); font-size: 15px; font-weight: 700;
+      padding: 6px 10px; width: 72px; outline: none; text-align: center;
+    }
+    .bess-number:focus { border-color: #52D9C2; box-shadow: 0 0 0 2px rgba(82,217,194,0.15); }
+    .bess-number-unit { font-size: 11px; color: var(--text-muted); }
+    input[type=range].bess-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 3px; background: rgba(255,255,255,0.1);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type=range].bess-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 14px; height: 14px; border-radius: 50%; background: #52D9C2;
+      cursor: pointer; box-shadow: 0 0 6px rgba(82,217,194,0.5);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    input[type=range].bess-slider::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 12px rgba(82,217,194,0.8); transform: scale(1.2);
+    }
+    .bess-note { font-size: 10px; color: var(--text-subtle); margin-top: 12px; line-height: 1.5; }
+
+    .home-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .home-card-name { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); }
+    .home-card-week { font-size: 10px; color: var(--text-subtle); margin-bottom: 18px; letter-spacing: 0.05em; }
+
+    .home-metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+    .home-metric-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-subtle); margin-bottom: 4px; }
+    .home-metric-row   { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+    .home-metric-value { font-size: 28px; font-weight: 800; color: var(--text-strong); line-height: 1.1; }
+    .home-metric-unit  { font-size: 11px; font-weight: 500; color: var(--text-strong); white-space: nowrap; opacity: 0.75; }
+
+    .home-trends { display: flex; flex-direction: column; gap: 4px; }
+    .home-trend-row { display: flex; align-items: center; gap: 6px; }
+    .home-trend-val { font-size: 12px; font-weight: 700; min-width: 60px; display: inline-block; }
+    .home-trend-val.positive { color: #34d399; }
+    .home-trend-val.negative { color: var(--flush-orange); }
+    .home-trend-val.neutral  { color: var(--text-subtle); }
+    .home-trend-label { font-size: 10px; color: var(--text-subtle); }
+    #homePvTotalWow .home-trend-val { font-size: 22px; font-weight: 700; min-width: unset; white-space: nowrap; }
+    #homePvTotalWow .home-trend-val.negative { color: #ef4444; }
+
+    .home-card-btn {
+      background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      padding: 8px 18px; font-family: var(--font); font-size: 12px; font-weight: 600;
+      color: var(--helion-blau); cursor: pointer; align-self: flex-start; margin-top: auto;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .home-card-btn:hover { background: var(--accent-dim); border-color: var(--helion-blau); transform: translateY(-1px); }
+    .home-card-btn:active { transform: translateY(0); }
+
+    .period-bar.bar-hidden { display: none; }
+
+    /* ── Market Sections ── */
+    .market-section { margin-bottom: 72px; }
+    .section-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; }
+    .section-tag {
+      flex-shrink: 0; margin-top: 4px;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.22em;
+      text-transform: uppercase; padding: 5px 12px;
+      border-radius: var(--radius-sm);
+    }
+    .section-tag.trl { background: var(--accent-dim); border: 1px solid var(--accent-border); color: var(--helion-blau); }
+    .section-tag.tre { background: var(--down-dim); border: 1px solid var(--down-border); color: var(--flush-orange); }
+    .section-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-strong); line-height: 1.2; }
+    .section-desc { font-size: 13px; font-weight: 400; color: var(--text-muted); margin-top: 3px; }
+
+    /* ── Chart Grids ── */
+    .charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 960px) { .charts-grid-2 { grid-template-columns: 1fr; } }
+
+    .charts-grid-full { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 20px; }
+    .charts-grid-slot { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 960px) { .charts-grid-slot { grid-template-columns: 1fr; } }
+
+    /* ── Chart Card ── */
+    .chart-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 28px 28px 20px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .chart-card:hover { border-color: var(--border-mid); }
+    .chart-card::after {
+      content: ''; position: absolute; top: 0; right: 0;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle at top right, var(--card-glow, rgba(0,190,245,0.04)) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .chart-card.down::after { --card-glow: rgba(254,117,0,0.05); }
+    .chart-head { margin-bottom: 18px; }
+    .chart-title { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); margin-bottom: 4px; }
+    .chart-meta { font-size: 11px; color: var(--text-muted); letter-spacing: 0.02em; }
+    .chart-legend { display: flex; gap: 18px; margin-top: 10px; flex-wrap: wrap; }
+    .leg { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-muted); }
+    .leg-pip { width: 20px; height: 2px; border-radius: 2px; }
+    .leg-pip.up   { background: var(--helion-blau); }
+    .leg-pip.down { background: var(--flush-orange); }
+    .leg-pip.ant  { background: var(--blau-3); border-top: 2px dashed var(--blau-3); height: 0; }
+    .leg-sq { width: 9px; height: 9px; border-radius: 2px; }
+    .leg-sq.up-solid  { background: rgba(0,190,245,0.7); }
+    .leg-sq.up-dim    { background: rgba(0,190,245,0.2); border: 1px solid rgba(0,190,245,0.4); }
+    .leg-sq.down-solid { background: rgba(254,117,0,0.7); }
+    .leg-sq.down-dim   { background: rgba(254,117,0,0.2); border: 1px solid rgba(254,117,0,0.4); }
+    .chart-body { position: relative; height: 260px; }
+    .chart-body.tall { height: 300px; }
+
+    /* ── Sub-section heading ── */
+    .subsection-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin: 40px 0 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .subsection-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Raw / Rolling toggle ── */
+    .chart-toggle {
+      display: inline-flex;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+      margin-top: 8px;
+    }
+    .ct-btn {
+      font-family: var(--font);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border: none; background: transparent;
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .ct-btn.active {
+      background: var(--accent-dim);
+      color: var(--helion-blau);
+    }
+    .ct-btn:not(.active):hover { background: rgba(255,255,255,0.06); }
+
+    /* ── Loading Screen ── */
+    .loading {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+      transition: opacity 0.7s ease, visibility 0.7s ease;
+    }
+    .loading.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loading-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .loading-name { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-strong); }
+    .loading-ring {
+      width: 36px; height: 36px;
+      border: 2.5px solid rgba(0,190,245,0.15);
+      border-top-color: var(--helion-blau);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 12px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.08em; }
+    .loading-sub  { font-size: 11px; color: var(--night-3); }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid var(--border); padding: 28px 0 36px; margin-top: 8px; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-text { font-size: 11px; color: var(--night-3); }
+
+    /* ── Page Layout (sidebar + content) ── */
+    :root {
+      --header-h: 64px;
+      --pbar-h:   45px;
+      --sticky-top: calc(var(--header-h) + var(--pbar-h));
+    }
+    .page-layout {
+      display: flex;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 210px;
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--sticky-top);
+      height: calc(100vh - var(--sticky-top));
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 28px 0 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .sidebar-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.20em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+      padding: 0 20px;
+      margin-bottom: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+      text-decoration: none;
+    }
+    .nav-item:hover {
+      background: rgba(0,190,245,0.06);
+    }
+    .nav-item.active {
+      background: var(--accent-dim);
+      border-left-color: var(--helion-blau);
+    }
+    .nav-badge {
+      flex-shrink: 0;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.10em;
+      padding: 3px 7px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+    .nav-badge.trl  { background: var(--accent-dim); border-color: var(--accent-border); color: var(--helion-blau); }
+    .nav-badge.tre  { background: rgba(0,190,245,0.08); border-color: rgba(0,190,245,0.2); color: #74c8e0; }
+    .nav-badge.srl  { background: rgba(130,220,245,0.10); border-color: rgba(130,220,245,0.25); color: var(--blau-3); }
+    .nav-badge.spot { background: rgba(254,117,0,0.12); border-color: rgba(254,117,0,0.28); color: var(--flush-orange); }
+    .nav-badge.home { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: var(--text-muted); }
+    .nav-item.active .nav-badge.home { background: rgba(255,255,255,0.1); }
+    .nav-item.active .nav-badge.trl  { background: rgba(0,190,245,0.2); }
+    .nav-item.active .nav-badge.tre  { background: rgba(0,190,245,0.2); }
+    .nav-item.active .nav-badge.srl  { background: rgba(130,220,245,0.2); }
+    .nav-item.active .nav-badge.spot { background: rgba(254,117,0,0.22); }
+    .nav-text { display: flex; flex-direction: column; gap: 1px; }
+    .nav-name { font-size: 13px; font-weight: 700; color: var(--text-strong); line-height: 1; }
+    .nav-sub  { font-size: 10px; color: var(--text-muted); line-height: 1.3; }
+    .nav-item:not(.active) .nav-name { color: var(--text-muted); }
+
+    /* ── Page Main ── */
+    .page-main {
+      flex: 1;
+      min-width: 0;
+      padding: 0 40px;
+    }
+    @media (max-width: 768px) { .page-main { padding: 0 20px; } }
+    @media (max-width: 768px) { .sidebar { display: none; } }
+
+    /* Market pages — show/hide */
+    .market-page { display: none; }
+    .market-page.active { display: block; }
+
+    /* ── Animations ── */
+    .reveal {
+      opacity: 0; transform: translateY(18px);
+      animation: rev 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    @keyframes rev { to { opacity: 1; transform: translateY(0); } }
+    .d1 { animation-delay: 0.05s; } .d2 { animation-delay: 0.12s; }
+    .d3 { animation-delay: 0.20s; } .d4 { animation-delay: 0.28s; }
+    .d5 { animation-delay: 0.36s; } .d6 { animation-delay: 0.44s; }
+    .d7 { animation-delay: 0.52s; } .d8 { animation-delay: 0.60s; }
+  </style>
+</head>
+<body>
+
+<div class="atmo" aria-hidden="true"></div>
+<div class="atmo-grid" aria-hidden="true"></div>
+
+<!-- Loading Screen -->
+<div class="loading" id="loading">
+  <div class="loading-logo">
+    <svg class="brand-icon" viewBox="0 0 100 100" fill="none">
+      <path d="M10,0 H60 V43 Q60,47 64,47 H100 V90 Q100,100 90,100 H10 Q0,100 0,90 V10 Q0,0 10,0 Z" fill="#00BEF5"/>
+    </svg>
+    <span class="loading-name">Helion</span>
+  </div>
+  <div class="loading-ring"></div>
+  <p class="loading-text">Marktdaten werden geladen …</p>
+  <p class="loading-sub">Erstverarbeitung kann 1–2 Minuten dauern</p>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="root">
+    <div class="header-inner">
+      <a class="brand" href="#">
+        <svg class="brand-icon" viewBox="0 0 100 100" fill="none">
+          <path d="M10,0 H60 V43 Q60,47 64,47 H100 V90 Q100,100 90,100 H10 Q0,100 0,90 V10 Q0,0 10,0 Z" fill="#00BEF5"/>
+        </svg>
+        <div class="brand-wordmark">
+          <span class="brand-name">Helion</span>
+          <span class="brand-tagline">Marktdaten Dashboard</span>
+        </div>
+      </a>
+      <div class="header-right">
+        <span class="hbadge">mFRR / Spot</span>
+        <div class="hstatus">
+          <div class="pulse"></div>
+          <span id="hStatusText">Laden …</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Period Bar -->
+<div class="period-bar">
+  <div class="root">
+    <div class="period-bar-inner">
+      <span class="period-label">Zeitraum</span>
+      <button class="preset-btn" data-start="2022-01-01" data-end="2022-12-31">2022</button>
+      <button class="preset-btn" data-start="2023-01-01" data-end="2023-12-31">2023</button>
+      <button class="preset-btn" data-start="2024-01-01" data-end="2024-12-31">2024</button>
+      <button class="preset-btn" data-start="2025-01-01" data-end="2025-12-31">2025</button>
+      <button class="preset-btn active" data-start="2026-01-01" data-end="2026-04-30">2026</button>
+      <div class="period-sep"></div>
+      <input type="date" class="date-input" id="dateFrom" value="2026-01-01" min="2022-01-01" max="2026-12-31">
+      <span class="period-to">bis</span>
+      <input type="date" class="date-input" id="dateTo" value="2026-04-30" min="2022-01-01" max="2026-12-31">
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="page-layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <div class="sidebar-label">Märkte</div>
+
+    <div class="nav-item active" data-market="home">
+      <span class="nav-badge home">CH</span>
+      <div class="nav-text">
+        <span class="nav-name">Übersicht</span>
+        <span class="nav-sub">Marktüberblick</span>
+      </div>
+    </div>
+
+    <div class="nav-item" data-market="trl">
+      <span class="nav-badge trl">mFRR</span>
+      <div class="nav-text">
+        <span class="nav-name">TRL</span>
+        <span class="nav-sub">Tertiärregelleistung</span>
+      </div>
+    </div>
+
+    <div class="nav-item" data-market="tre">
+      <span class="nav-badge tre">mFRR</span>
+      <div class="nav-text">
+        <span class="nav-name">TRE</span>
+        <span class="nav-sub">Tertiärregelenergie</span>
+      </div>
+    </div>
+
+    <div class="nav-item" data-market="srl">
+      <span class="nav-badge srl">aFRR</span>
+      <div class="nav-text">
+        <span class="nav-name">SRL</span>
+        <span class="nav-sub">Sekundärregelleistung</span>
+      </div>
+    </div>
+
+    <div class="nav-item" data-market="spot">
+      <span class="nav-badge spot">Spot</span>
+      <div class="nav-text">
+        <span class="nav-name">Spot</span>
+        <span class="nav-sub">EPEX Spotmarkt CH</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ── -->
+  <main class="page-main">
+
+    <!-- ════ HOME / OVERVIEW PAGE ════ -->
+    <div class="market-page active" id="page-home">
+
+      <section class="hero reveal d1">
+        <h1>Markt<br><span class="blue">Übersicht</span></h1>
+        <p class="hero-desc">
+          Schweizer Regelenergie- und Spotmarkt · <span id="homeLastUpdate">—</span>
+        </p>
+      </section>
+
+      <div class="home-grid reveal d2">
+
+        <!-- SRL -->
+        <div class="home-card card-srl">
+          <div class="home-card-header">
+            <span class="nav-badge srl">aFRR</span>
+            <span class="home-card-name">Sekundärregelleistung (SRL)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="home-card-week" id="homeSrlWeek" style="margin:0;">—</div>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <button class="mini-toggle-btn active" id="srlBtnDown" onclick="setSrlBlockDir('down')">DOWN</button>
+              <button class="mini-toggle-btn"        id="srlBtnUp"   onclick="setSrlBlockDir('up')">UP</button>
+              <div style="width:1px; height:14px; background:var(--border); margin:0 2px;"></div>
+              <button class="mini-toggle-btn active" id="srlBlockBtn7"  onclick="setSrlBlockWindow(7)">7 Tage</button>
+              <button class="mini-toggle-btn"        id="srlBlockBtn28" onclick="setSrlBlockWindow(28)">4 Wochen</button>
+            </div>
+          </div>
+          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
+            <canvas id="cSrlBlock"></canvas>
+          </div>
+          <button class="home-card-btn" onclick="switchMarket('srl')">SRL Details →</button>
+        </div>
+
+        <!-- SRE -->
+        <div class="home-card card-sre">
+          <div class="home-card-header">
+            <span class="nav-badge srl">aFRR</span>
+            <span class="home-card-name">Sekundärregelenergie (SRE)</span>
+          </div>
+          <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+            <span style="font-size:12px; color:var(--text-subtle); font-style:italic;">Daten noch nicht verfügbar</span>
+          </div>
+        </div>
+
+        <!-- TRL -->
+        <div class="home-card card-trl">
+          <div class="home-card-header">
+            <span class="nav-badge trl">mFRR</span>
+            <span class="home-card-name">Tertiärregelleistung (TRL)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="home-card-week" id="homeTrlWeek" style="margin:0;">—</div>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <button class="mini-toggle-btn active" id="trlBtnDown" onclick="setTrlBlockDir('down')">DOWN</button>
+              <button class="mini-toggle-btn"        id="trlBtnUp"   onclick="setTrlBlockDir('up')">UP</button>
+              <div style="width:1px; height:14px; background:var(--border); margin:0 2px;"></div>
+              <button class="mini-toggle-btn active" id="trlBlockBtn7"  onclick="setTrlBlockWindow(7)">7 Tage</button>
+              <button class="mini-toggle-btn"        id="trlBlockBtn28" onclick="setTrlBlockWindow(28)">4 Wochen</button>
+            </div>
+          </div>
+          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
+            <canvas id="cTrlBlock"></canvas>
+          </div>
+          <button class="home-card-btn" onclick="switchMarket('trl')">TRL Details →</button>
+        </div>
+
+        <!-- TRE -->
+        <div class="home-card card-tre">
+          <div class="home-card-header">
+            <span class="nav-badge tre">mFRR</span>
+            <span class="home-card-name">Tertiärregelenergie (TRE)</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div class="home-card-week" id="homeTreWeek" style="margin:0;">—</div>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <button class="mini-toggle-btn active" id="treBtnDown" onclick="setTreBlockDir('down')">DOWN</button>
+              <button class="mini-toggle-btn"        id="treBtnUp"   onclick="setTreBlockDir('up')">UP</button>
+              <div style="width:1px; height:14px; background:var(--border); margin:0 2px;"></div>
+              <button class="mini-toggle-btn active" id="treBlockBtn7"  onclick="setTreBlockWindow(7)">7 Tage</button>
+              <button class="mini-toggle-btn"        id="treBlockBtn28" onclick="setTreBlockWindow(28)">4 Wochen</button>
+            </div>
+          </div>
+          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
+            <canvas id="cTreBlock"></canvas>
+          </div>
+          <button class="home-card-btn" onclick="switchMarket('tre')">TRE Details →</button>
+        </div>
+
+        <!-- Spot -->
+        <div class="home-card card-spot" style="grid-column: 1 / -1;">
+          <div class="home-card-header">
+            <span class="nav-badge spot">Spot</span>
+            <span class="home-card-name">EPEX Spotmarkt Schweiz</span>
+          </div>
+          <div class="home-card-week" id="homeSpotWeek">—</div>
+          <div style="display:flex; gap:40px; align-items:flex-start; flex:1;">
+            <div style="flex-shrink:0;">
+              <div class="home-metrics-row">
+                <div>
+                  <div class="home-metric-label">Ø Baseload</div>
+                  <div class="home-metric-row"><div class="home-metric-value" id="homeSpotAvg">—</div><span class="home-metric-unit">EUR/MWh</span></div>
+                  <div class="home-trends">
+                    <div class="home-trend-row"><span id="homeSpotAvgWow"></span><span class="home-trend-label">vs. Vorwoche</span></div>
+                    <div class="home-trend-row"><span id="homeSpotAvgYoy"></span><span class="home-trend-label">vs. Vorjahr</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="home-metric-label">Ø TB1 Spread</div>
+                  <div class="home-metric-row"><div class="home-metric-value" id="homeSpotTb1">—</div><span class="home-metric-unit">EUR/MWh</span></div>
+                  <div class="home-trends">
+                    <div class="home-trend-row"><span id="homeSpotTb1Wow"></span><span class="home-trend-label">vs. Vorwoche</span></div>
+                    <div class="home-trend-row"><span id="homeSpotTb1Yoy"></span><span class="home-trend-label">vs. Vorjahr</span></div>
+                  </div>
+                </div>
+              </div>
+              <button class="home-card-btn" onclick="switchMarket('spot')">Spot Details →</button>
+            </div>
+            <div style="flex:1; height:180px; position:relative; min-width:0;">
+              <canvas id="cSpotHomeTrend"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- PV Revenue -->
+        <div class="home-card card-pv" style="grid-column: 1 / -1;">
+          <div class="home-card-header">
+            <span class="nav-badge" style="background:rgba(240,192,64,0.12);border-color:rgba(240,192,64,0.3);color:#f0c040;">PV</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f0c040" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.85;">
+              <!-- sun rays -->
+              <circle cx="12" cy="8" r="2.2"/>
+              <line x1="12" y1="2" x2="12" y2="4.2"/>
+              <line x1="12" y1="11.8" x2="12" y2="13.2"/>
+              <line x1="6.1" y1="3.9" x2="7.6" y2="5.4"/>
+              <line x1="16.4" y1="10.6" x2="17.9" y2="12.1"/>
+              <line x1="4" y1="8" x2="6.2" y2="8"/>
+              <line x1="17.8" y1="8" x2="20" y2="8"/>
+              <line x1="6.1" y1="12.1" x2="7.6" y2="10.6"/>
+              <line x1="16.4" y1="5.4" x2="17.9" y2="3.9"/>
+              <!-- solar panel -->
+              <rect x="2" y="14" width="20" height="7" rx="1.2"/>
+              <line x1="2" y1="17.5" x2="22" y2="17.5"/>
+              <line x1="8.7" y1="14" x2="8.7" y2="21"/>
+              <line x1="15.3" y1="14" x2="15.3" y2="21"/>
+            </svg>
+            <span class="home-card-name">Ertragspotenzial PV-Anlage — letzte 7 Tage</span>
+          </div>
+          <div class="home-card-week" id="homePvWeek">—</div>
+          <div style="display:flex; gap:24px; align-items:center; margin-bottom:16px;">
+            <div style="width:260px; height:260px; flex-shrink:0;"><canvas id="cPvPie"></canvas></div>
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; width:100px; flex-shrink:0; gap:6px;">
+              <div style="font-size:10px; color:rgba(116,164,190,0.6); text-align:center; line-height:1.4;">Total<br>vs. Vorwoche</div>
+              <span id="homePvTotalWow"></span>
+            </div>
+            <div style="flex:1; height:260px; min-width:0; position:relative;">
+              <canvas id="cPvProduction"></canvas>
+            </div>
+          </div><!-- end flex wrapper -->
+          <div class="home-pv-note">
+            TRE DOWN: Gebot ≤ −200 EUR/MWh · Ertrag = PV-MW × |Preis| × 0,25h ·
+            TRL DOWN: Blocks 08–12 &amp; 12–16 · Ertrag = min PV-MW im Block × Marginalpreis ·
+            Einspeisevergütung: 12 Rp./kWh für nicht-aktivierte Slots (08–16 Uhr) ·
+            PV-Daten: Solar Manager API · 531 kWp · Live (letzte 45 Tage, 15-Min-Auflösung)
+          </div>
+        </div>
+
+        <!-- BESS Revenue Proxy -->
+        <div class="home-card card-bess" style="grid-column: 1 / -1;">
+          <div class="home-card-header">
+            <span class="nav-badge" style="background:rgba(82,217,194,0.1);border-color:rgba(82,217,194,0.3);color:#52D9C2;">BESS</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#52D9C2" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.85;">
+              <rect x="2" y="7" width="18" height="11" rx="1.5"/>
+              <path d="M20 11h2v4h-2"/>
+              <line x1="7" y1="11" x2="10" y2="7"/><line x1="10" y1="7" x2="10" y2="12"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="14" y1="12" x2="14" y2="18"/><line x1="14" y1="18" x2="17" y2="14"/>
+            </svg>
+            <span class="home-card-name">BESS Ertragspotenzial — letzte 7 Tage</span>
+          </div>
+          <div class="home-card-week" id="homeBessWeek">—</div>
+
+          <!-- Parameters -->
+          <div class="bess-params">
+            <div class="bess-param">
+              <div class="bess-param-label">Gesamtleistung P</div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="number" class="bess-number" id="bessP" value="1" min="0.1" max="500" step="0.1" oninput="onBessInput()">
+                <span class="bess-number-unit">MW</span>
+              </div>
+            </div>
+            <div class="bess-param">
+              <div class="bess-param-label">γ — Arbitrage-Anteil</div>
+              <div class="bess-slider-row">
+                <input type="range" class="bess-slider" id="bessGamma" min="0" max="100" value="50" oninput="onBessInput()">
+                <span class="bess-param-val" id="bessGammaVal">50%</span>
+              </div>
+            </div>
+            <div class="bess-param">
+              <div class="bess-param-label">α — Aktivierungswahrscheinlichkeit</div>
+              <div class="bess-slider-row">
+                <input type="range" class="bess-slider" id="bessAlpha" min="0" max="100" value="30" oninput="onBessInput()">
+                <span class="bess-param-val" id="bessAlphaVal">30%</span>
+              </div>
+            </div>
+            <div class="bess-param">
+              <div class="bess-param-label">β — SRE/SRL-Preisfaktor</div>
+              <div class="bess-slider-row">
+                <input type="range" class="bess-slider" id="bessBeta" min="0" max="1000" value="100" oninput="onBessInput()">
+                <span class="bess-param-val" id="bessBetaVal">1.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results + Pie -->
+          <div style="display:flex; gap:32px; align-items:center; margin-bottom:16px;">
+            <div style="width:180px; height:180px; flex-shrink:0;"><canvas id="cBessPie"></canvas></div>
+            <div class="home-metrics-row" style="grid-template-columns: 1fr 1fr 1fr 1fr; flex:1;">
+              <div>
+                <div class="home-metric-label">Arbitrage</div>
+                <div class="home-metric-row"><div class="home-metric-value" id="homeBessArb">—</div><span class="home-metric-unit">EUR</span></div>
+                <div class="home-trends">
+                  <div class="home-trend-row"><span id="homeBessArbWow"></span><span class="home-trend-label">vs. Vorwoche</span></div>
+                  <div class="home-trend-row"><span id="homeBessArbWom"></span><span class="home-trend-label">vs. Vormonat</span></div>
+                </div>
+              </div>
+              <div>
+                <div class="home-metric-label">SRL Ertrag</div>
+                <div class="home-metric-row"><div class="home-metric-value" id="homeBessAfrCap">—</div><span class="home-metric-unit">CHF</span></div>
+                <div class="home-trends">
+                  <div class="home-trend-row"><span id="homeBessAfrCapWow"></span><span class="home-trend-label">vs. Vorwoche</span></div>
+                  <div class="home-trend-row"><span id="homeBessAfrCapWom"></span><span class="home-trend-label">vs. Vormonat</span></div>
+                </div>
+              </div>
+              <div>
+                <div class="home-metric-label">SRE Ertrag</div>
+                <div class="home-metric-row"><div class="home-metric-value" id="homeBessAfrEng">—</div><span class="home-metric-unit">CHF</span></div>
+                <div class="home-trends">
+                  <div class="home-trend-row"><span id="homeBessAfrEngWow"></span><span class="home-trend-label">vs. Vorwoche</span></div>
+                  <div class="home-trend-row"><span id="homeBessAfrEngWom"></span><span class="home-trend-label">vs. Vormonat</span></div>
+                </div>
+              </div>
+              <div>
+                <div class="home-metric-label">Total Ertrag</div>
+                <div class="home-metric-row"><div class="home-metric-value" id="homeBessTot">—</div><span class="home-metric-unit">EUR</span></div>
+                <div class="home-trends">
+                  <div class="home-trend-row"><span id="homeBessTotWow"></span><span class="home-trend-label">vs. Vorwoche</span></div>
+                  <div class="home-trend-row"><span id="homeBessTotWom"></span><span class="home-trend-label">vs. Vormonat</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bess-note">
+            Arbitrage: 0,6 × P<sub>spot</sub> × Σ(TB1+TB2) pro Tag (1 h Entladung je Spreizung, EUR) ·
+            aFRR Kapazität: 0,5 × P<sub>aFRR</sub> × (SRL⁺+SRL⁻) wöchentlich (Ø letzte 4 Wochenauktionen, CHF) · SOC 50% ·
+            aFRR Energie: 0,5 × α × P<sub>aFRR</sub> × β×(SRL⁺_tägl.+SRL⁻_tägl.) · β skaliert tägliche SRL-Tagesauktionspreise auf SRE-Preis-Proxy ·
+            EUR ≈ CHF für Gesamtvergleich
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════ TRL / mFRR PAGE ════ -->
+    <div class="market-page" id="page-trl">
+
+      <section class="hero reveal d1">
+        <h1>Tertiär<br><span class="blue">Regelleistung</span></h1>
+        <p class="hero-desc">
+          Ergebnisse der <strong>mFRR-Kapazitätsauktionen</strong> (TRL)
+          für die Schweiz. Wöchentliche und tägliche Ausschreibungen. Datenquelle: Swissgrid.
+        </p>
+      </section>
+
+      <div class="kpi-strip reveal d2">
+        <div class="kpi k-up">
+          <div class="kpi-label">TRL UP — Ø Marginalpreis</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlUpPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
+          <div class="kpi-meta" id="kpiTrlUpMeta">Wochenauktion · mFRR Kapazität</div>
+        </div>
+        <div class="kpi k-down">
+          <div class="kpi-label">TRL DOWN — Ø Marginalpreis</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlDownPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
+          <div class="kpi-meta" id="kpiTrlDownMeta">Wochenauktion · mFRR Kapazität</div>
+        </div>
+        <div class="kpi k-vol">
+          <div class="kpi-label">TRL UP — Ø Zuschlag</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlUpVol">—</div><span class="kpi-unit">MW</span></div>
+          <div class="kpi-meta" id="kpiTrlUpVolMeta">Ø zugeschlagenes Volumen</div>
+        </div>
+        <div class="kpi k-vol">
+          <div class="kpi-label">TRL DOWN — Ø Zuschlag</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlDownVol">—</div><span class="kpi-unit">MW</span></div>
+          <div class="kpi-meta" id="kpiTrlDownVolMeta">Ø zugeschlagenes Volumen</div>
+        </div>
+      </div>
+
+      <!-- TRL Wochenauktion -->
+      <section class="market-section reveal d3">
+        <div class="section-head">
+          <span class="section-tag trl">TRL</span>
+          <div>
+            <div class="section-title">Tertiärregelleistung — Wochenauktion</div>
+            <div class="section-desc">mFRR Kapazitätsmarkt · wöchentliche Ausschreibung · Leistungspreise in CHF/MW/Woche</div>
+          </div>
+        </div>
+        <div class="charts-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Marginale Leistungspreise</div>
+              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je Woche</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #82DCF5;vertical-align:middle"></span>&nbsp;Anticipiert DOWN</div>
+              </div>
+            </div>
+            <div class="chart-body"><canvas id="cTrlWeeklyPrice"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Angebots- und Zuschlagsvolumen</div>
+              <div class="chart-meta">UP über / DOWN unter der Achse · MW · inkl. Anticipierter Auktion</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-sq up-solid"></div>UP Zuschlag</div>
+                <div class="leg"><div class="leg-sq up-dim"></div>UP Angebot (n.z.)</div>
+                <div class="leg"><div class="leg-sq down-solid"></div>DOWN Zuschlag</div>
+                <div class="leg"><div class="leg-sq down-dim"></div>DOWN Angebot (n.z.)</div>
+                <div class="leg"><div class="leg-sq" style="background:rgba(255,165,0,0.65)"></div>Ant. DOWN Zuschlag</div>
+              </div>
+            </div>
+            <div class="chart-body"><canvas id="cTrlWeeklyVol"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRL Tagesauktion -->
+      <section class="market-section reveal d4">
+        <div class="section-head">
+          <span class="section-tag trl">TRL</span>
+          <div>
+            <div class="section-title">Tertiärregelleistung — Tagesauktion</div>
+            <div class="section-desc">mFRR Kapazitätsmarkt · tägliche Ausschreibung · 4-Stunden-Blöcke · Leistungspreise in CHF/MW</div>
+          </div>
+        </div>
+        <div class="charts-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Marginale Leistungspreise</div>
+              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je 4h-Block</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTrlDailyPrice"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Angebots- und Zuschlagsvolumen</div>
+              <div class="chart-meta">UP über / DOWN unter der Achse · MW je 4h-Block</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-sq up-solid"></div>UP Zuschlag</div>
+                <div class="leg"><div class="leg-sq up-dim"></div>UP Angebot (n.z.)</div>
+                <div class="leg"><div class="leg-sq down-solid"></div>DOWN Zuschlag</div>
+                <div class="leg"><div class="leg-sq down-dim"></div>DOWN Angebot (n.z.)</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTrlDailyVol"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end #page-trl -->
+
+    <!-- ════ TRE / mFRR Energie PAGE ════ -->
+    <div class="market-page" id="page-tre">
+
+      <section class="hero reveal d1">
+        <h1>Tertiär<br><span class="blue">Regelenergie</span></h1>
+        <p class="hero-desc">
+          Ergebnisse der <strong>mFRR-Energieauktionen</strong> (TRE) für die Schweiz.
+          15-Minuten-Granularität · Preise in EUR/MWh. Datenquelle: Swissgrid.
+        </p>
+      </section>
+
+      <div class="kpi-strip reveal d2" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="kpi k-up">
+          <div class="kpi-label">TRE — Aktivierte Energie UP</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrePosActivated">—</div><span class="kpi-unit">MWh/Tag</span></div>
+          <div class="kpi-meta" id="kpiTrePosActivatedMeta">Positive Regelenergie · mFRR</div>
+        </div>
+        <div class="kpi k-down">
+          <div class="kpi-label">TRE — Aktivierte Energie DOWN</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTreNegActivated">—</div><span class="kpi-unit">MWh/Tag</span></div>
+          <div class="kpi-meta" id="kpiTreNegActivatedMeta">Negative Regelenergie · mFRR</div>
+        </div>
+        <div class="kpi k-rate">
+          <div class="kpi-label">TRE — Ø Aktivierungsrate</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiTreRate">—</div><span class="kpi-unit">%</span></div>
+          <div class="kpi-meta" id="kpiTreRateMeta">Verhältnis Abruf / Angebot</div>
+        </div>
+      </div>
+
+      <section class="market-section reveal d3">
+        <div class="section-head">
+          <span class="section-tag tre">TRE</span>
+          <div>
+            <div class="section-title">Tertiärregelenergie</div>
+            <div class="section-desc">mFRR Energiemarkt · 15-Minuten-Granularität · Preise in EUR/MWh</div>
+          </div>
+        </div>
+        <div class="charts-grid-full">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Marginalpreise (15-Min-Auflösung)</div>
+              <div class="chart-meta">UP: höchster aktivierter Angebotspreis · DOWN: niedrigster aktivierter Angebotspreis</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP — höchster aktivierter Preis</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN — niedrigster aktivierter Preis</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTreDailyPrice"></canvas></div>
+          </div>
+        </div>
+        <div class="subsection-label">Tagesgang (15-Minuten-Zeitblöcke, Ø über Periode)</div>
+        <div class="charts-grid-slot">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Aktivierungsrate nach Zeitblock</div>
+              <div class="chart-meta">Anteil abgerufener Menge an angebotener Menge</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTreSlotRate"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Ø Marginalpreis nach Zeitblock</div>
+              <div class="chart-meta">Durchschnitt der täglichen Marginalpreise je Zeitblock</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTreSlotPrice"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end #page-tre -->
+
+    <!-- ════ SRL / aFRR PAGE ════ -->
+    <div class="market-page" id="page-srl">
+
+      <section class="hero reveal d1">
+        <h1>Sekundär<br><span class="blue">Regelleistung</span></h1>
+        <p class="hero-desc">
+          Ergebnisse der <strong>aFRR-Kapazitätsauktionen</strong> (SRL)
+          für die Schweiz. Wöchentliche und tägliche Ausschreibungen. Datenquelle: Swissgrid.
+        </p>
+      </section>
+
+      <div class="kpi-strip reveal d2">
+        <div class="kpi k-up">
+          <div class="kpi-label">SRL UP — Ø Marginalpreis</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlUpPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
+          <div class="kpi-meta" id="kpiSrlUpMeta">Wochenauktion · aFRR Kapazität</div>
+        </div>
+        <div class="kpi k-down">
+          <div class="kpi-label">SRL DOWN — Ø Marginalpreis</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlDownPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
+          <div class="kpi-meta" id="kpiSrlDownMeta">Wochenauktion · aFRR Kapazität</div>
+        </div>
+        <div class="kpi k-vol">
+          <div class="kpi-label">SRL UP — Ø Zuschlag</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlUpVol">—</div><span class="kpi-unit">MW</span></div>
+          <div class="kpi-meta" id="kpiSrlUpVolMeta">Ø zugeschlagenes Volumen</div>
+        </div>
+        <div class="kpi k-vol">
+          <div class="kpi-label">SRL DOWN — Ø Zuschlag</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlDownVol">—</div><span class="kpi-unit">MW</span></div>
+          <div class="kpi-meta" id="kpiSrlDownVolMeta">Ø zugeschlagenes Volumen</div>
+        </div>
+      </div>
+
+      <!-- SRL Wochenauktion -->
+      <section class="market-section reveal d3">
+        <div class="section-head">
+          <span class="section-tag trl">SRL</span>
+          <div>
+            <div class="section-title">Sekundärregelleistung — Wochenauktion</div>
+            <div class="section-desc">aFRR Kapazitätsmarkt · wöchentliche Ausschreibung · Leistungspreise in CHF/MW/Woche</div>
+          </div>
+        </div>
+        <div class="charts-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Marginale Leistungspreise</div>
+              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je Woche</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #82DCF5;vertical-align:middle"></span>&nbsp;Anticipiert UP</div>
+                <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #FFA500;vertical-align:middle"></span>&nbsp;Anticipiert DOWN</div>
+              </div>
+            </div>
+            <div class="chart-body"><canvas id="cSrlWeeklyPrice"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Angebots- und Zuschlagsvolumen</div>
+              <div class="chart-meta">UP über / DOWN unter der Achse · MW · inkl. Anticipierter Auktion</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-sq up-solid"></div>UP Zuschlag</div>
+                <div class="leg"><div class="leg-sq up-dim"></div>UP Angebot (n.z.)</div>
+                <div class="leg"><div class="leg-sq" style="background:rgba(76,210,246,0.65)"></div>Ant. UP Zuschlag</div>
+                <div class="leg"><div class="leg-sq down-solid"></div>DOWN Zuschlag</div>
+                <div class="leg"><div class="leg-sq down-dim"></div>DOWN Angebot (n.z.)</div>
+                <div class="leg"><div class="leg-sq" style="background:rgba(255,165,0,0.65)"></div>Ant. DOWN Zuschlag</div>
+              </div>
+            </div>
+            <div class="chart-body"><canvas id="cSrlWeeklyVol"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SRL Tagesauktion -->
+      <section class="market-section reveal d4">
+        <div class="section-head">
+          <span class="section-tag trl">SRL</span>
+          <div>
+            <div class="section-title">Sekundärregelleistung — Tagesauktion</div>
+            <div class="section-desc">aFRR Kapazitätsmarkt · tägliche Ausschreibung · 4-Stunden-Blöcke · Leistungspreise in CHF/MW</div>
+          </div>
+        </div>
+        <div class="charts-grid-2">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Marginale Leistungspreise</div>
+              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je 4h-Block</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>UP</div>
+                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cSrlDailyPrice"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Angebots- und Zuschlagsvolumen</div>
+              <div class="chart-meta">UP über / DOWN unter der Achse · MW je 4h-Block</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-sq up-solid"></div>UP Zuschlag</div>
+                <div class="leg"><div class="leg-sq up-dim"></div>UP Angebot (n.z.)</div>
+                <div class="leg"><div class="leg-sq down-solid"></div>DOWN Zuschlag</div>
+                <div class="leg"><div class="leg-sq down-dim"></div>DOWN Angebot (n.z.)</div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cSrlDailyVol"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end #page-srl -->
+
+    <!-- ════ SPOT PAGE ════ -->
+    <div class="market-page" id="page-spot">
+
+      <section class="hero reveal d1">
+        <h1>Spotmarkt<br><span class="blue">Preisanalyse</span></h1>
+        <p class="hero-desc">
+          Stündliche <strong>EPEX Day-Ahead-Auktionspreise</strong> für die Schweiz.
+          Spotpreise und Top-Bottom-Spreads (TB1–TB4). Quelle: EPEX Spot.
+        </p>
+      </section>
+
+      <div class="kpi-strip reveal d2">
+        <div class="kpi k-up">
+          <div class="kpi-label">Ø Stundenmittel</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSpotBase">—</div><span class="kpi-unit">EUR/MWh</span></div>
+          <div class="kpi-meta" id="kpiSpotBaseMeta">Ø über Periode</div>
+        </div>
+        <div class="kpi k-down">
+          <div class="kpi-label">Ø Tageshöchstpreis</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSpotPeak">—</div><span class="kpi-unit">EUR/MWh</span></div>
+          <div class="kpi-meta" id="kpiSpotPeakMeta">Ø über Periode</div>
+        </div>
+        <div class="kpi k-vol">
+          <div class="kpi-label">Ø TB1 Spread</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSpotTb1">—</div><span class="kpi-unit">EUR/MWh</span></div>
+          <div class="kpi-meta" id="kpiSpotTb1Meta">Höchste – tiefste Stunde</div>
+        </div>
+        <div class="kpi k-rate">
+          <div class="kpi-label">Ø TB2 Spread</div>
+          <div class="kpi-value-row"><div class="kpi-value" id="kpiSpotTb2">—</div><span class="kpi-unit">EUR/MWh</span></div>
+          <div class="kpi-meta" id="kpiSpotTb2Meta">2. höchste – 2. tiefste Stunde</div>
+        </div>
+      </div>
+
+      <!-- Spot Trend -->
+      <section class="market-section reveal d3">
+        <div class="section-head">
+          <span class="section-tag tre">Spot</span>
+          <div>
+            <div class="section-title">Spotmarkt — Preistrend</div>
+            <div class="section-desc">EPEX Day-Ahead · Tagesauktion · EUR/MWh</div>
+          </div>
+        </div>
+        <div class="charts-grid-full">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">Tägliche Spotpreise</div>
+              <div class="chart-meta">Stündliche EPEX Day-Ahead-Auktionspreise</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>Spotpreis (stündlich)</div>
+              </div>
+              <div class="chart-toggle" id="toggleSpotTrend">
+                <button class="ct-btn active" data-mode="raw">Rohdaten</button>
+                <button class="ct-btn" data-mode="rolling">30-Tage Ø</button>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cSpotTrend"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TB Spreads -->
+      <section class="market-section reveal d4">
+        <div class="section-head">
+          <span class="section-tag tre">Spot</span>
+          <div>
+            <div class="section-title">Top-Bottom Spreads</div>
+            <div class="section-desc">Tägliche Preisunterschiede zwischen Zeitblöcken · EUR/MWh</div>
+          </div>
+        </div>
+        <div class="charts-grid-full">
+          <div class="chart-card">
+            <div class="chart-head">
+              <div class="chart-title">TB1 – TB4 Spreads</div>
+              <div class="chart-meta">Tägliche Spread zwischen n-höchster und n-tiefster Stunde</div>
+              <div class="chart-legend">
+                <div class="leg"><div class="leg-pip up"></div>TB1 (höchste – tiefste Stunde)</div>
+                <div class="leg"><div class="leg-pip" style="background:#82DCF5"></div>TB2 (2. höchste – 2. tiefste Stunde)</div>
+                <div class="leg"><div class="leg-pip down"></div>TB3 (3. höchste – 3. tiefste Stunde)</div>
+                <div class="leg"><div class="leg-pip" style="background:#FFA500"></div>TB4 (4. höchste – 4. tiefste Stunde)</div>
+              </div>
+              <div class="chart-toggle" id="toggleSpotSpread">
+                <button class="ct-btn active" data-mode="raw">Rohdaten</button>
+                <button class="ct-btn" data-mode="rolling">30-Tage Ø</button>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cSpotSpread"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end #page-spot -->
+
+  </main>
+</div><!-- end .page-layout -->
+
+<!-- Footer -->
+<footer>
+  <div class="root">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+          <path d="M10,0 H60 V43 Q60,47 64,47 H100 V90 Q100,100 90,100 H10 Q0,100 0,90 V10 Q0,0 10,0 Z" fill="#367088"/>
+        </svg>
+        <span class="footer-text">Helion Energy AG</span>
+      </div>
+      <span class="footer-text" id="footerProcessed">Daten: Swissgrid · Q1 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   CHART.JS GLOBAL DEFAULTS
+═══════════════════════════════════════════════════════════ */
+Chart.defaults.color = 'rgba(116,164,190,0.75)';
+Chart.defaults.borderColor = 'rgba(0,190,245,0.08)';
+Chart.defaults.font.family = "'Proxima Nova','ProximaNova','Nunito',sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.decimation = { enabled: false };
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════ */
+const C_UP       = '#00BEF5';
+const C_UP_DIM   = 'rgba(0,190,245,0.22)';
+const C_UP_FILL  = 'rgba(0,190,245,0.08)';
+const C_DOWN     = '#FE7500';
+const C_DOWN_DIM = 'rgba(254,117,0,0.22)';
+const C_ANT      = '#82DCF5';  // anticipated
+const GRID       = 'rgba(0,190,245,0.07)';
+
+const PRESETS = [
+  { label: 'Jan 2026', start: '2026-01-01', end: '2026-01-31' },
+  { label: 'Feb 2026', start: '2026-02-01', end: '2026-02-28' },
+  { label: 'Mär 2026', start: '2026-03-01', end: '2026-03-31' },
+  { label: 'Q1 2026',  start: '2026-01-01', end: '2026-03-31' },
+];
+
+/* ═══════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════ */
+let allData = null;
+let currentStart = '2026-01-01';
+let currentEnd   = '2026-04-30';
+
+// BESS parameters (reactive via sliders)
+let bessParams = { P: 1.0, gamma: 0.5, alpha: 0.30, beta: 0.50 };
+
+function onBessInput() {
+  bessParams.P     = parseFloat(document.getElementById('bessP').value) || 1;
+  bessParams.gamma = parseInt(document.getElementById('bessGamma').value) / 100;
+  bessParams.alpha = parseInt(document.getElementById('bessAlpha').value) / 100;
+  bessParams.beta  = parseInt(document.getElementById('bessBeta').value)  / 100;  // 0–1000 → 0.00–10.00
+  document.getElementById('bessGammaVal').textContent = Math.round(bessParams.gamma * 100) + '%';
+  document.getElementById('bessAlphaVal').textContent = Math.round(bessParams.alpha * 100) + '%';
+  document.getElementById('bessBetaVal').textContent  = bessParams.beta.toFixed(2);
+  updateBessCard();
+}
+
+// Returns the ISO Monday date string for any given date string
+function getMondayOf(dateStr) {
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, mo - 1, d);
+  const offset = dt.getDay() === 0 ? -6 : 1 - dt.getDay(); // 0=Sun needs -6
+  dt.setDate(dt.getDate() + offset);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function calcBessRevenue(dateFrom, dateTo) {
+  if (!allData) return null;
+  const { P, gamma, alpha, beta } = bessParams;
+  const P_spot = gamma * P;
+  const P_afrr = (1 - gamma) * P;
+
+  // ── Arbitrage ──────────────────────────────────────────────────────────────
+  const spotDays = (allData.spotDaily || []).filter(d => d.date >= dateFrom && d.date <= dateTo);
+  let arbRev = 0;
+  for (const d of spotDays) {
+    arbRev += 0.6 * P_spot * ((d.tb1 ?? 0) + (d.tb2 ?? 0));
+  }
+
+  // ── aFRR Capacity revenue ──────────────────────────────────────────────────
+  // SRL weekly auctions run Mon–Sun. Our 7-day window may straddle two weeks,
+  // so we weight each week's price by the number of days it contributes.
+  // Each day contributes (weekly_price / 7) to the revenue.
+  const srlWeeklyByMonday = {};
+  for (const w of (allData.srlWeekly || [])) {
+    srlWeeklyByMonday[w.date] = w; // w.date is already the Monday of the week
+  }
+  let capUpSum = 0, capDownSum = 0;
+  {
+    const [y0, m0, d0] = dateFrom.split('-').map(Number);
+    const [y1, m1, d1] = dateTo.split('-').map(Number);
+    const end = new Date(y1, m1 - 1, d1);
+    for (const dt = new Date(y0, m0 - 1, d0); dt <= end; dt.setDate(dt.getDate() + 1)) {
+      const iso = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      const week = srlWeeklyByMonday[getMondayOf(iso)];
+      if (week) {
+        capUpSum   += (week.up?.marginal   ?? 0) / 7;
+        capDownSum += (week.down?.marginal ?? 0) / 7;
+      }
+    }
+  }
+  // capUpSum / capDownSum now hold the day-weighted weekly price contribution
+  // 0.5 factor: SOC at 50% → effective bid per direction = 0.5 × P_afrr
+  const afrCapRev = 0.5 * P_afrr * (capUpSum + capDownSum);
+
+  // ── aFRR Energy revenue ────────────────────────────────────────────────────
+  // SRE price proxy = beta × avg daily SRL block marginal price over the window
+  const srlDays   = (allData.srlDaily || []).filter(d => d.date >= dateFrom && d.date <= dateTo);
+  const srlBlocks = srlDays.flatMap(d => d.blocks);
+  const dailyUpPrices   = srlBlocks.map(b => b.up?.marginal).filter(v => v != null);
+  const dailyDownPrices = srlBlocks.map(b => b.down?.marginal).filter(v => v != null);
+  const avgDailyUp   = dailyUpPrices.length   ? dailyUpPrices.reduce((a, b) => a + b, 0)   / dailyUpPrices.length   : 0;
+  const avgDailyDown = dailyDownPrices.length ? dailyDownPrices.reduce((a, b) => a + b, 0) / dailyDownPrices.length : 0;
+  const afrEngRev = 0.5 * alpha * P_afrr * beta * (avgDailyUp + avgDailyDown);
+
+  return { arbRev, afrCapRev, afrEngRev, total: arbRev + afrCapRev + afrEngRev };
+}
+
+function updateBessCard() {
+  if (!allData) return;
+  const allSpot = allData.spotDaily || [];
+  const spotDays = allSpot.slice(-7);
+  if (!spotDays.length) return;
+
+  const curEnd   = spotDays.at(-1).date;
+  const curStart = spotDays[0].date;
+
+  // Previous 7 days (week-over-week)
+  const prevEndDt   = new Date(curStart); prevEndDt.setDate(prevEndDt.getDate() - 1);
+  const prevStartDt = new Date(prevEndDt); prevStartDt.setDate(prevStartDt.getDate() - 6);
+  const prevStart   = prevStartDt.toISOString().slice(0, 10);
+  const prevEnd     = prevEndDt.toISOString().slice(0, 10);
+
+  // Same 7-day window shifted back 30 days (month-over-month)
+  const momEndDt   = new Date(curEnd);   momEndDt.setDate(momEndDt.getDate() - 30);
+  const momStartDt = new Date(curStart); momStartDt.setDate(momStartDt.getDate() - 30);
+  const momStart   = momStartDt.toISOString().slice(0, 10);
+  const momEnd     = momEndDt.toISOString().slice(0, 10);
+
+  const cur  = calcBessRevenue(curStart,  curEnd);
+  const prev = calcBessRevenue(prevStart, prevEnd);
+  const mom  = calcBessRevenue(momStart,  momEnd);
+  if (!cur) return;
+
+  document.getElementById('homeBessArb').textContent    = fmt(cur.arbRev,    0);
+  document.getElementById('homeBessAfrCap').textContent = fmt(cur.afrCapRev, 0);
+  document.getElementById('homeBessAfrEng').textContent = fmt(cur.afrEngRev, 0);
+  document.getElementById('homeBessTot').textContent    = fmt(cur.total,     0);
+
+  trendEl('homeBessArbWow',    cur.arbRev,    prev.arbRev    > 0 ? prev.arbRev    : null);
+  trendEl('homeBessArbWom',    cur.arbRev,    mom.arbRev     > 0 ? mom.arbRev     : null);
+  trendEl('homeBessAfrCapWow', cur.afrCapRev, prev.afrCapRev > 0 ? prev.afrCapRev : null);
+  trendEl('homeBessAfrCapWom', cur.afrCapRev, mom.afrCapRev  > 0 ? mom.afrCapRev  : null);
+  trendEl('homeBessAfrEngWow', cur.afrEngRev, prev.afrEngRev > 0 ? prev.afrEngRev : null);
+  trendEl('homeBessAfrEngWom', cur.afrEngRev, mom.afrEngRev  > 0 ? mom.afrEngRev  : null);
+  trendEl('homeBessTotWow',    cur.total,     prev.total     > 0 ? prev.total     : null);
+  trendEl('homeBessTotWom',    cur.total,     mom.total      > 0 ? mom.total      : null);
+
+  document.getElementById('homeBessWeek').textContent = `7 Tage bis ${fmtDate(curEnd)}`;
+
+  // Donut chart — treat EUR ≈ CHF for proportional illustration
+  createChart('cBessPie', {
+    type: 'doughnut',
+    data: {
+      labels: ['Arbitrage', 'SRL Ertrag', 'SRE Ertrag'],
+      datasets: [{
+        data: [cur.arbRev, cur.afrCapRev, cur.afrEngRev],
+        backgroundColor: ['rgba(82,217,194,0.85)', 'rgba(0,190,245,0.85)', 'rgba(130,220,245,0.65)'],
+        borderColor:     ['rgba(82,217,194,0.3)',  'rgba(0,190,245,0.3)',  'rgba(130,220,245,0.3)'],
+        borderWidth: 1, hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '55%',
+      plugins: {
+        legend: {
+          display: true, position: 'bottom',
+          labels: { color: 'rgba(116,164,190,0.85)', font: { size: 10 }, boxWidth: 10, padding: 8 }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: {
+            label: ctx => {
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const pct   = total > 0 ? (ctx.parsed / total * 100).toFixed(1) : '0';
+              return ` ${ctx.label}: ${fmt(ctx.parsed, 0)} (${pct}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+const charts = {};
+
+/* ═══════════════════════════════════════════════════════════
+   CHART FACTORY HELPERS
+═══════════════════════════════════════════════════════════ */
+function axisStyle(extra) {
+  return {
+    grid: { color: GRID, drawBorder: false },
+    ticks: { color: 'rgba(116,164,190,0.7)', ...extra },
+    border: { display: false },
+  };
+}
+function lineDataset(label, data, color, opts = {}) {
+  return {
+    label, data,
+    borderColor: color,
+    backgroundColor: opts.fill ? color.replace(/[\d.]+\)$/, '0.08)') : 'transparent',
+    borderWidth: opts.thin ? 1.5 : 2,
+    pointRadius: 0,
+    pointHoverRadius: 4,
+    tension: 0.3,
+    fill: opts.fill || false,
+    borderDash: opts.dashed ? [5, 3] : [],
+    ...opts.extra,
+  };
+}
+function baseLineOpts(xTitle, yTitle, yUnit) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(0,15,30,0.92)',
+        borderColor: 'rgba(0,190,245,0.2)',
+        borderWidth: 1,
+        titleColor: '#fff',
+        bodyColor: 'rgba(116,164,190,0.9)',
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toLocaleString('de-CH', {maximumFractionDigits: 2}) : '—'} ${yUnit}`,
+        }
+      }
+    },
+    scales: {
+      x: {
+        ...axisStyle({ maxRotation: 45, autoSkip: true, maxTicksLimit: 18 }),
+        title: { display: false },
+      },
+      y: {
+        ...axisStyle({}),
+        title: { display: yTitle !== '', text: yTitle, color: 'rgba(116,164,190,0.5)', font: { size: 10 } },
+      }
+    }
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DATE HELPERS
+═══════════════════════════════════════════════════════════ */
+function fmtDate(d) {
+  // '2026-01-05' -> '05.01.'
+  const [, m, day] = d.split('-');
+  return `${day}.${m}.`;
+}
+function fmtDateFull(d) {
+  // '2026-01-05' -> '05.01.2026'
+  const [yyyy, m, day] = d.split('-');
+  return `${day}.${m}.${yyyy}`;
+}
+function fmtWeek(kw, date) {
+  return kw;  // e.g. 'KW01'
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILTER HELPERS
+═══════════════════════════════════════════════════════════ */
+function inRange(date) {
+  return date >= currentStart && date <= currentEnd;
+}
+function avg(arr) {
+  const valid = arr.filter(v => v !== null && v !== undefined);
+  return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : null;
+}
+function fmt(val, dec = 0) {
+  if (val === null || val === undefined) return '—';
+  return val.toLocaleString('de-CH', { maximumFractionDigits: dec, minimumFractionDigits: dec });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHART CREATION
+═══════════════════════════════════════════════════════════ */
+function createChart(id, config) {
+  if (charts[id]) { charts[id].destroy(); }
+  charts[id] = new Chart(document.getElementById(id), config);
+  return charts[id];
+}
+
+function updateChart(id, labels, datasets) {
+  const c = charts[id];
+  if (!c) return;
+  c.data.labels = labels;
+  c.data.datasets.forEach((ds, i) => {
+    if (datasets[i]) ds.data = datasets[i];
+  });
+  c.update('none');
+}
+
+/* ── TRL Weekly Charts ── */
+function buildTrlWeeklyCharts() {
+  const weeks = allData.trlWeekly.filter(w => inRange(w.date));
+  const labels = weeks.map(w => w.id);
+
+  // Chart 1: Marginal prices
+  createChart('cTrlWeeklyPrice', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        lineDataset('Aufreglung UP', weeks.map(w => w.up?.marginal ?? null), C_UP),
+        lineDataset('Abreglung DOWN', weeks.map(w => w.down?.marginal ?? null), C_DOWN),
+        lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.marginal ?? null), C_ANT, { dashed: true, thin: true }),
+      ]
+    },
+    options: baseLineOpts('', 'CHF/MW', 'CHF/MW'),
+  });
+
+  // Chart 2: Volumes (mirrored bars) — regular + anticipated stacked together
+  // TRL anticipated is DOWN only (w.anticipated = {offered, awarded, ...})
+  createChart('cTrlWeeklyVol', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'UP Zuschlag',              data: weeks.map(w =>  (w.up?.awarded ?? 0)),                                              backgroundColor: 'rgba(0,190,245,0.75)', stack: 'vol' },
+        { label: 'UP Angebot (n.z.)',        data: weeks.map(w =>  Math.max(0,(w.up?.offered??0)-(w.up?.awarded??0))),               backgroundColor: 'rgba(0,190,245,0.18)', stack: 'vol' },
+        { label: 'DOWN Zuschlag',            data: weeks.map(w => -(w.down?.awarded ?? 0)),                                          backgroundColor: 'rgba(254,117,0,0.75)', stack: 'vol' },
+        { label: 'Ant. DOWN Zuschlag',       data: weeks.map(w => -(w.anticipated?.awarded ?? 0)),                                   backgroundColor: 'rgba(255,165,0,0.65)', stack: 'vol' },
+        { label: 'DOWN Angebot (n.z.)',      data: weeks.map(w => -Math.max(0,(w.down?.offered??0)-(w.down?.awarded??0))),           backgroundColor: 'rgba(254,117,0,0.18)', stack: 'vol' },
+        { label: 'Ant. DOWN Angebot (n.z.)', data: weeks.map(w => -Math.max(0,(w.anticipated?.offered??0)-(w.anticipated?.awarded??0))), backgroundColor: 'rgba(255,165,0,0.18)', stack: 'vol' },
+      ]
+    },
+    options: {
+      ...baseLineOpts('', 'MW', 'MW'),
+      scales: {
+        x: { ...axisStyle({ maxRotation: 0 }), stacked: true },
+        y: { ...axisStyle({}), stacked: true,
+             title: { display: false },
+             ticks: { color: 'rgba(116,164,190,0.7)',
+               callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW`
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ── TRL Daily Charts ── */
+function buildTrlDailyCharts() {
+  const days = allData.trlDaily.filter(d => inRange(d.date));
+
+  const nDays = days.length;
+  const dateStep = niceDayStep(nDays);
+  const volLabels = [];
+  const upPriceScatter = [], downPriceScatter = [];
+  const upAwd = [], upNotAwd = [];
+  const downAwd = [], downNotAwd = [];
+  const dayStarts = {};
+  let prevDate = '';
+  let dayCount = 0;
+  let idx = 0;
+
+  for (const day of days) {
+    for (const blk of day.blocks) {
+      const isFirst = day.date !== prevDate;
+      if (isFirst) {
+        dayCount++;
+        if ((dayCount - 1) % dateStep === 0) dayStarts[idx] = fmtDate(day.date);
+      }
+      volLabels.push(isFirst && (dayCount - 1) % dateStep === 0 ? fmtDate(day.date) : '');
+      prevDate = day.date;
+
+      if (blk.up?.marginal   != null) upPriceScatter.push({ x: idx, y: blk.up.marginal });
+      if (blk.down?.marginal != null) downPriceScatter.push({ x: idx, y: blk.down.marginal });
+      upAwd.push(blk.up?.awarded ?? 0);
+      upNotAwd.push(Math.max(0, (blk.up?.offered ?? 0) - (blk.up?.awarded ?? 0)));
+      downAwd.push(-(blk.down?.awarded ?? 0));
+      downNotAwd.push(-Math.max(0, (blk.down?.offered ?? 0) - (blk.down?.awarded ?? 0)));
+      idx++;
+    }
+  }
+
+  const totalBlocks = idx;
+  const blocksPerDay = totalBlocks / Math.max(nDays, 1);
+  const scatterTickStep = Math.round(dateStep * blocksPerDay);
+
+  const xScatterOpts = {
+    type: 'linear', min: 0, max: totalBlocks - 1,
+    ...axisStyle({ maxRotation: 90 }),
+    ticks: {
+      color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false,
+      stepSize: scatterTickStep,
+      callback: v => {
+        const near = Object.keys(dayStarts).map(Number).find(k => Math.abs(k - v) < scatterTickStep / 2);
+        return near != null ? dayStarts[near] : null;
+      },
+      font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 },
+    }
+  };
+
+  const xVolOpts = {
+    ...axisStyle({ maxRotation: 90, autoSkip: false, font: { size: 9 } }),
+    ticks: {
+      color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false,
+      callback: (v, i) => volLabels[i] || null,
+      font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 },
+    }
+  };
+
+  createChart('cTrlDailyPrice', {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'Aufreglung UP',   data: upPriceScatter,   backgroundColor: `rgba(0,190,245,0.6)`,   pointRadius: 3, pointHoverRadius: 5 },
+        { label: 'Abreglung DOWN',  data: downPriceScatter, backgroundColor: `rgba(254,117,0,0.6)`,   pointRadius: 3, pointHoverRadius: 5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: true },
+      plugins: {
+        legend: { display: true, labels: { color: 'rgba(116,164,190,0.85)', font: { size: 11 }, boxWidth: 12 } },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: {
+            title: ctx => {
+              const xi = Math.round(ctx[0].parsed.x);
+              const near = Object.keys(dayStarts).map(Number).sort((a,b)=>a-b).reverse().find(k => k <= xi);
+              return near != null ? dayStarts[near] : '';
+            },
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW`
+          }
+        }
+      },
+      scales: {
+        x: xScatterOpts,
+        y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) + ' CHF/MW' } }
+      }
+    }
+  });
+
+  createChart('cTrlDailyVol', {
+    type: 'bar',
+    data: {
+      labels: volLabels,
+      datasets: [
+        { label: 'UP Zuschlag',         data: upAwd,      backgroundColor: 'rgba(0,190,245,0.75)', stack: 'vol' },
+        { label: 'UP Angebot (n.z.)',   data: upNotAwd,   backgroundColor: 'rgba(0,190,245,0.18)', stack: 'vol' },
+        { label: 'DOWN Zuschlag',       data: downAwd,    backgroundColor: 'rgba(254,117,0,0.75)', stack: 'vol' },
+        { label: 'DOWN Angebot (n.z.)', data: downNotAwd, backgroundColor: 'rgba(254,117,0,0.18)', stack: 'vol' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW` }
+        }
+      },
+      scales: {
+        x: { ...xVolOpts, stacked: true },
+        y: { ...axisStyle({}), stacked: true,
+             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+      }
+    }
+  });
+}
+
+/* ── TRE Daily Chart (15-min resolution, scatter) ── */
+function buildTreDailyChart() {
+  const slots = allData.treSlots.filter(s => inRange(s.d));
+
+  // Build a numeric x-axis index → label map for date ticks
+  const dayStarts = {};   // index → date label (only at first slot of day)
+  let prevDate = '';
+  const upData = [], downData = [];
+
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i];
+    if (s.d !== prevDate) { dayStarts[i] = fmtDate(s.d); prevDate = s.d; }
+    if (s.pm !== null) upData.push({ x: i, y: s.pm });
+    if (s.nm !== null) downData.push({ x: i, y: s.nm });
+  }
+
+  const totalSlots = slots.length;
+  const nTreDays = Object.keys(dayStarts).length;
+  // Aim for ≤25 date labels regardless of period length
+  const treDayStep = Math.max(1, Math.ceil(nTreDays / 25));
+  const treTickStep = treDayStep * 96;
+
+  createChart('cTreDailyPrice', {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'UP — höchster aktivierter Preis',
+          data: upData,
+          backgroundColor: 'rgba(0,190,245,0.55)',
+          pointRadius: 2,
+          pointHoverRadius: 5,
+        },
+        {
+          label: 'DOWN — niedrigster aktivierter Preis',
+          data: downData,
+          backgroundColor: 'rgba(254,117,0,0.55)',
+          pointRadius: 2,
+          pointHoverRadius: 5,
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        decimation: { enabled: false },
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: {
+            title: (items) => {
+              const idx = items[0]?.raw?.x;
+              const s = slots[idx];
+              return s ? `${s.d} ${s.s}` : '';
+            },
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} EUR/MWh`,
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0, max: totalSlots - 1,
+          ...axisStyle({}),
+          ticks: {
+            color: 'rgba(116,164,190,0.7)',
+            maxRotation: 45,
+            autoSkip: false,
+            stepSize: treTickStep,
+            callback: (val) => {
+              // snap to nearest day-start entry for robustness
+              const rounded = Math.round(val / 96) * 96;
+              return dayStarts[rounded] ?? '';
+            },
+            font: { family: 'ProximaNova, Nunito, sans-serif', size: 11 },
+          }
+        },
+        y: {
+          ...axisStyle({}),
+          title: { display: false },
+          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' }
+        }
+      }
+    }
+  });
+}
+
+/* ── TRE Slot Charts ── */
+function buildTreSlotCharts() {
+  // Filter slots by date range
+  const filtered = allData.treSlots.filter(s => inRange(s.d));
+
+  // Aggregate by slot time
+  const slotMap = {};
+  for (const s of filtered) {
+    if (!slotMap[s.s]) {
+      slotMap[s.s] = { po: 0, pa: 0, pmSum: 0, pmCnt: 0, no: 0, na: 0, nmSum: 0, nmCnt: 0 };
+    }
+    const m = slotMap[s.s];
+    m.po += s.po; m.pa += s.pa;
+    if (s.pm !== null) { m.pmSum += s.pm; m.pmCnt++; }
+    m.no += s.no; m.na += s.na;
+    if (s.nm !== null) { m.nmSum += s.nm; m.nmCnt++; }
+  }
+
+  // Build 96-slot ordered labels
+  const slotTimes = [];
+  for (let h = 0; h < 24; h++) {
+    for (let min = 0; min < 60; min += 15) {
+      slotTimes.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
+    }
+  }
+
+  const upRate = [], downRate = [], upAvgPrice = [], downAvgPrice = [];
+  for (const t of slotTimes) {
+    const m = slotMap[t];
+    if (!m) {
+      upRate.push(null); downRate.push(null);
+      upAvgPrice.push(null); downAvgPrice.push(null);
+    } else {
+      upRate.push(m.po > 0 ? Math.round(m.pa / m.po * 1000) / 10 : 0);
+      downRate.push(m.no > 0 ? Math.round(m.na / m.no * 1000) / 10 : 0);
+      upAvgPrice.push(m.pmCnt > 0 ? Math.round(m.pmSum / m.pmCnt * 100) / 100 : null);
+      downAvgPrice.push(m.nmCnt > 0 ? Math.round(m.nmSum / m.nmCnt * 100) / 100 : null);
+    }
+  }
+
+  // Show only hourly tick labels on x-axis
+  const hourlyLabels = slotTimes.map((t, i) => i % 4 === 0 ? t : '');
+
+  const slotXOpts = {
+    ...axisStyle({ maxRotation: 0, autoSkip: false }),
+    ticks: {
+      color: 'rgba(116,164,190,0.7)',
+      callback: (val, idx) => idx % 16 === 0 ? slotTimes[idx] : null,
+      maxRotation: 0,
+    }
+  };
+
+  createChart('cTreSlotRate', {
+    type: 'line',
+    data: {
+      labels: slotTimes,
+      datasets: [
+        lineDataset('UP-Aktivierungsrate', upRate, C_UP, { thin: true }),
+        lineDataset('DOWN-Aktivierungsrate', downRate, C_DOWN, { thin: true }),
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 1) : '—'} %` }
+        }
+      },
+      scales: {
+        x: slotXOpts,
+        y: {
+          ...axisStyle({}),
+          title: { display: false },
+          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' %' }
+        }
+      }
+    }
+  });
+
+  createChart('cTreSlotPrice', {
+    type: 'line',
+    data: {
+      labels: slotTimes,
+      datasets: [
+        lineDataset('UP Ø Marginalpreis', upAvgPrice, C_UP, { thin: true }),
+        lineDataset('DOWN Ø Marginalpreis', downAvgPrice, C_DOWN, { thin: true }),
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 2) : '—'} EUR/MWh` }
+        }
+      },
+      scales: {
+        x: slotXOpts,
+        y: { ...axisStyle({}), title: { display: false },
+             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } }
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   KPI UPDATER
+═══════════════════════════════════════════════════════════ */
+function updateKpis() {
+  const weeks = allData.trlWeekly.filter(w => inRange(w.date));
+  const treD   = allData.treDaily.filter(d => inRange(d.date));
+
+  // TRL marginal prices + average MW available at any hour
+  // = avg weekly awarded + avg daily block awarded (each block = 4h of flat capacity)
+  const upMarginals   = weeks.map(w => w.up?.marginal).filter(Boolean);
+  const downMarginals = weeks.map(w => w.down?.marginal).filter(Boolean);
+  const avgWeeklyUp   = weeks.length ? avg(weeks.map(w => w.up?.awarded   ?? 0)) : 0;
+  const avgWeeklyDown = weeks.length ? avg(weeks.map(w => (w.down?.awarded ?? 0) + (w.anticipated?.awarded ?? 0))) : 0;
+  const trlDays = allData.trlDaily.filter(d => inRange(d.date));
+  const trlBlocks = trlDays.flatMap(d => d.blocks);
+  const avgDailyBlockUp   = trlBlocks.length ? avg(trlBlocks.map(b => b.up?.awarded   ?? 0)) : 0;
+  const avgDailyBlockDown = trlBlocks.length ? avg(trlBlocks.map(b => b.down?.awarded ?? 0)) : 0;
+  document.getElementById('kpiTrlUpPrice').textContent    = upMarginals.length   ? fmt(avg(upMarginals), 0)   : '—';
+  document.getElementById('kpiTrlDownPrice').textContent  = downMarginals.length ? fmt(avg(downMarginals), 0) : '—';
+  document.getElementById('kpiTrlUpVol').textContent      = weeks.length ? fmt(avgWeeklyUp   + avgDailyBlockUp,   0) : '—';
+  document.getElementById('kpiTrlDownVol').textContent    = weeks.length ? fmt(avgWeeklyDown + avgDailyBlockDown, 0) : '—';
+  document.getElementById('kpiTrlUpMeta').textContent     = `${weeks.length} Wochen · mFRR Kapazität`;
+  document.getElementById('kpiTrlDownMeta').textContent   = `${weeks.length} Wochen · mFRR Kapazität`;
+  document.getElementById('kpiTrlUpVolMeta').textContent  = `Ø verfügbare MW · Wochen- + Tagesauktion`;
+  document.getElementById('kpiTrlDownVolMeta').textContent = `Ø verfügbare MW · Wochen- + Tagesauktion`;
+
+  // TRE activated MWh split by direction, daily average over selected period
+  let totalPosActivated = 0, totalNegActivated = 0, totalOffered = 0;
+  for (const d of treD) {
+    totalPosActivated += (d.pos?.activated ?? 0);
+    totalNegActivated += (d.neg?.activated ?? 0);
+    totalOffered      += (d.pos?.offered ?? 0) + (d.neg?.offered ?? 0);
+  }
+  const nDays = treD.length || 1;
+  const avgPosDay = (totalPosActivated * 0.25) / nDays;
+  const avgNegDay = (totalNegActivated * 0.25) / nDays;
+  const rate = totalOffered > 0 ? (totalPosActivated + totalNegActivated) / totalOffered * 100 : 0;
+
+  document.getElementById('kpiTrePosActivated').textContent    = treD.length ? fmt(avgPosDay, 1) : '—';
+  document.getElementById('kpiTrePosActivatedMeta').textContent = `Ø über ${treD.length} Tage`;
+  document.getElementById('kpiTreNegActivated').textContent    = treD.length ? fmt(avgNegDay, 1) : '—';
+  document.getElementById('kpiTreNegActivatedMeta').textContent = `Ø über ${treD.length} Tage`;
+  document.getElementById('kpiTreRate').textContent          = fmt(rate, 1);
+  document.getElementById('kpiTreRateMeta').textContent      = `Ø über ${treD.length} Tage`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SRL CHARTS
+═══════════════════════════════════════════════════════════ */
+const C_ANT_DOWN = '#FFA500';  // amber — anticipated DOWN for SRL
+
+function buildSrlWeeklyCharts() {
+  const weeks = (allData.srlWeekly || []).filter(w => inRange(w.date));
+  const labels = weeks.map(w => w.id);
+
+  // Chart 1: Marginal prices — 4 curves (regular UP/DOWN + anticipated UP/DOWN)
+  createChart('cSrlWeeklyPrice', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        lineDataset('UP', weeks.map(w => w.up?.marginal ?? null), C_UP),
+        lineDataset('DOWN', weeks.map(w => w.down?.marginal ?? null), C_DOWN),
+        lineDataset('Anticipiert UP', weeks.map(w => w.anticipated?.up?.marginal ?? null), C_ANT, { dashed: true, thin: true }),
+        lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.down?.marginal ?? null), C_ANT_DOWN, { dashed: true, thin: true }),
+      ]
+    },
+    options: baseLineOpts('', 'CHF/MW', 'CHF/MW'),
+  });
+
+  // Chart 2: Volumes (mirrored bars) — regular + anticipated stacked together
+  // SRL anticipated has both UP and DOWN (w.anticipated = {up:{...}, down:{...}})
+  createChart('cSrlWeeklyVol', {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'UP Zuschlag',              data: weeks.map(w =>  (w.up?.awarded ?? 0)),                                                   backgroundColor: 'rgba(0,190,245,0.75)', stack: 'vol' },
+        { label: 'UP Angebot (n.z.)',        data: weeks.map(w =>  Math.max(0,(w.up?.offered??0)-(w.up?.awarded??0))),                      backgroundColor: 'rgba(0,190,245,0.18)', stack: 'vol' },
+        { label: 'Ant. UP Zuschlag',         data: weeks.map(w =>  (w.anticipated?.up?.awarded ?? 0)),                                      backgroundColor: 'rgba(76,210,246,0.65)', stack: 'vol' },
+        { label: 'Ant. UP Angebot (n.z.)',   data: weeks.map(w =>  Math.max(0,(w.anticipated?.up?.offered??0)-(w.anticipated?.up?.awarded??0))),  backgroundColor: 'rgba(76,210,246,0.18)', stack: 'vol' },
+        { label: 'DOWN Zuschlag',            data: weeks.map(w => -(w.down?.awarded ?? 0)),                                                 backgroundColor: 'rgba(254,117,0,0.75)',  stack: 'vol' },
+        { label: 'DOWN Angebot (n.z.)',      data: weeks.map(w => -Math.max(0,(w.down?.offered??0)-(w.down?.awarded??0))),                  backgroundColor: 'rgba(254,117,0,0.18)',  stack: 'vol' },
+        { label: 'Ant. DOWN Zuschlag',       data: weeks.map(w => -(w.anticipated?.down?.awarded ?? 0)),                                    backgroundColor: 'rgba(255,165,0,0.65)',  stack: 'vol' },
+        { label: 'Ant. DOWN Angebot (n.z.)', data: weeks.map(w => -Math.max(0,(w.anticipated?.down?.offered??0)-(w.anticipated?.down?.awarded??0))), backgroundColor: 'rgba(255,165,0,0.18)', stack: 'vol' },
+      ]
+    },
+    options: {
+      ...baseLineOpts('', 'MW', 'MW'),
+      scales: {
+        x: { ...axisStyle({ maxRotation: 0 }), stacked: true },
+        y: { ...axisStyle({}), stacked: true,
+             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW` }
+        }
+      }
+    }
+  });
+}
+
+function buildSrlDailyCharts() {
+  const days = (allData.srlDaily || []).filter(d => inRange(d.date));
+
+  const nDays = days.length;
+  const dateStep = niceDayStep(nDays);
+  const volLabels = [];
+  const upPriceScatter = [], downPriceScatter = [];
+  const upAwd = [], upNotAwd = [], downAwd = [], downNotAwd = [];
+  const dayStarts = {};
+  let prevDate = '';
+  let dayCount = 0;
+  let idx = 0;
+
+  for (const day of days) {
+    for (const blk of day.blocks) {
+      const isFirst = day.date !== prevDate;
+      if (isFirst) {
+        dayCount++;
+        if ((dayCount - 1) % dateStep === 0) dayStarts[idx] = fmtDate(day.date);
+      }
+      volLabels.push(isFirst && (dayCount - 1) % dateStep === 0 ? fmtDate(day.date) : '');
+      prevDate = day.date;
+
+      if (blk.up?.marginal   != null) upPriceScatter.push({ x: idx, y: blk.up.marginal });
+      if (blk.down?.marginal != null) downPriceScatter.push({ x: idx, y: blk.down.marginal });
+      upAwd.push(blk.up?.awarded ?? 0);
+      upNotAwd.push(Math.max(0,(blk.up?.offered??0)-(blk.up?.awarded??0)));
+      downAwd.push(-(blk.down?.awarded ?? 0));
+      downNotAwd.push(-Math.max(0,(blk.down?.offered??0)-(blk.down?.awarded??0)));
+      idx++;
+    }
+  }
+
+  const totalBlocks = idx;
+  const blocksPerDay = totalBlocks / Math.max(nDays, 1);
+  const scatterTickStep = Math.round(dateStep * blocksPerDay);
+
+  const xScatterOpts = {
+    type: 'linear', min: 0, max: totalBlocks - 1,
+    ...axisStyle({ maxRotation: 90 }),
+    ticks: {
+      color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false,
+      stepSize: scatterTickStep,
+      callback: v => {
+        const near = Object.keys(dayStarts).map(Number).sort((a,b)=>a-b).reverse().find(k => k <= v && v - k < scatterTickStep / 2);
+        return near != null ? dayStarts[near] : null;
+      },
+      font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 },
+    }
+  };
+
+  const xVolOpts = {
+    ...axisStyle({ maxRotation: 90, autoSkip: false, font: { size: 9 } }),
+    ticks: {
+      color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false,
+      callback: (v, i) => volLabels[i] || null,
+      font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 },
+    }
+  };
+
+  createChart('cSrlDailyPrice', {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'UP',   data: upPriceScatter,   backgroundColor: 'rgba(0,190,245,0.6)',  pointRadius: 3, pointHoverRadius: 5 },
+        { label: 'DOWN', data: downPriceScatter, backgroundColor: 'rgba(254,117,0,0.6)', pointRadius: 3, pointHoverRadius: 5 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: true },
+      plugins: {
+        legend: { display: true, labels: { color: 'rgba(116,164,190,0.85)', font: { size: 11 }, boxWidth: 12 } },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: {
+            title: ctx => {
+              const xi = Math.round(ctx[0].parsed.x);
+              const near = Object.keys(dayStarts).map(Number).sort((a,b)=>a-b).reverse().find(k => k <= xi);
+              return near != null ? dayStarts[near] : '';
+            },
+            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW`
+          }
+        }
+      },
+      scales: {
+        x: xScatterOpts,
+        y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) + ' CHF/MW' } }
+      }
+    }
+  });
+
+  createChart('cSrlDailyVol', {
+    type: 'bar',
+    data: {
+      labels: volLabels,
+      datasets: [
+        { label: 'UP Zuschlag',         data: upAwd,      backgroundColor: 'rgba(0,190,245,0.75)', stack: 'vol' },
+        { label: 'UP Angebot (n.z.)',   data: upNotAwd,   backgroundColor: 'rgba(0,190,245,0.18)', stack: 'vol' },
+        { label: 'DOWN Zuschlag',       data: downAwd,    backgroundColor: 'rgba(254,117,0,0.75)',  stack: 'vol' },
+        { label: 'DOWN Angebot (n.z.)', data: downNotAwd, backgroundColor: 'rgba(254,117,0,0.18)',  stack: 'vol' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW` }
+        }
+      },
+      scales: {
+        x: { ...xVolOpts, stacked: true },
+        y: { ...axisStyle({}), stacked: true,
+             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+      }
+    }
+  });
+}
+
+function updateSrlKpis() {
+  const weeks = (allData.srlWeekly || []).filter(w => inRange(w.date));
+  const upM   = weeks.map(w => w.up?.marginal).filter(Boolean);
+  const downM = weeks.map(w => w.down?.marginal).filter(Boolean);
+  const avgSrlWeeklyUp   = weeks.length ? avg(weeks.map(w => (w.up?.awarded   ?? 0) + (w.anticipated?.up?.awarded   ?? 0))) : 0;
+  const avgSrlWeeklyDown = weeks.length ? avg(weeks.map(w => (w.down?.awarded ?? 0) + (w.anticipated?.down?.awarded ?? 0))) : 0;
+  const srlDays = (allData.srlDaily || []).filter(d => inRange(d.date));
+  const srlBlocks = srlDays.flatMap(d => d.blocks);
+  const avgSrlDailyBlockUp   = srlBlocks.length ? avg(srlBlocks.map(b => b.up?.awarded   ?? 0)) : 0;
+  const avgSrlDailyBlockDown = srlBlocks.length ? avg(srlBlocks.map(b => b.down?.awarded ?? 0)) : 0;
+
+  document.getElementById('kpiSrlUpPrice').textContent    = upM.length   ? fmt(avg(upM), 0)   : '—';
+  document.getElementById('kpiSrlDownPrice').textContent  = downM.length ? fmt(avg(downM), 0) : '—';
+  document.getElementById('kpiSrlUpVol').textContent      = weeks.length ? fmt(avgSrlWeeklyUp   + avgSrlDailyBlockUp,   0) : '—';
+  document.getElementById('kpiSrlDownVol').textContent    = weeks.length ? fmt(avgSrlWeeklyDown + avgSrlDailyBlockDown, 0) : '—';
+  document.getElementById('kpiSrlUpMeta').textContent     = `${weeks.length} Wochen · aFRR Kapazität`;
+  document.getElementById('kpiSrlDownMeta').textContent   = `${weeks.length} Wochen · aFRR Kapazität`;
+  document.getElementById('kpiSrlUpVolMeta').textContent  = `Ø verfügbare MW · Wochen- + Tagesauktion`;
+  document.getElementById('kpiSrlDownVolMeta').textContent = `Ø verfügbare MW · Wochen- + Tagesauktion`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SPOT MARKET CHARTS
+═══════════════════════════════════════════════════════════ */
+
+// Snap a raw step to the nearest "nice" interval so x-axis labels land on
+// consistent day boundaries (1, 2, 3, 5, 7, 10, 14, 21, 30, 60, 90, 180, 365)
+function niceDayStep(nDays, maxLabels = 15) {
+  const raw = nDays / maxLabels;
+  const nice = [1, 2, 3, 5, 7, 10, 14, 21, 30, 60, 90, 180, 365];
+  return nice.find(s => s >= raw) ?? 365;
+}
+
+// 30-day rolling average (trailing window)
+function rollingAvg(data, window = 30) {
+  return data.map((_, i) => {
+    const slice = data.slice(Math.max(0, i - window + 1), i + 1).filter(v => v !== null);
+    return slice.length ? Math.round(slice.reduce((a, b) => a + b, 0) / slice.length * 100) / 100 : null;
+  });
+}
+
+// Per-chart view-mode state
+const spotViewMode = { trend: 'raw', spread: 'raw' };
+
+// Period presets per market context
+const SPOT_PRESETS = [
+  { label: '2023', start: '2023-01-01', end: '2023-12-31' },
+  { label: '2024', start: '2024-01-01', end: '2024-12-31' },
+  { label: '2025', start: '2025-01-01', end: '2025-12-31' },
+  { label: '2026', start: '2026-01-01', end: '2026-04-30' },
+];
+const TRL_PRESETS = [
+  { label: '2022', start: '2022-01-01', end: '2022-12-31' },
+  { label: '2023', start: '2023-01-01', end: '2023-12-31' },
+  { label: '2024', start: '2024-01-01', end: '2024-12-31' },
+  { label: '2025', start: '2025-01-01', end: '2025-12-31' },
+  { label: '2026', start: '2026-01-01', end: '2026-04-30' },
+];
+
+function setPresets(presets) {
+  const btns = document.querySelectorAll('.preset-btn');
+  btns.forEach((btn, i) => {
+    if (i < presets.length) {
+      btn.textContent   = presets[i].label;
+      btn.dataset.start = presets[i].start;
+      btn.dataset.end   = presets[i].end;
+      btn.classList.remove('active');
+      btn.style.display = '';
+    } else {
+      btn.style.display = 'none';
+      btn.classList.remove('active');
+    }
+  });
+  // Set last visible preset as active
+  if (btns[presets.length - 1]) btns[presets.length - 1].classList.add('active');
+}
+
+function buildSpotTrendChart() {
+  const mode = spotViewMode.trend;
+
+  if (mode === 'rolling') {
+    // 30-day rolling average of the daily mean hourly price
+    const spots = (allData.spotDaily || []).filter(s => inRange(s.date));
+    const nSpotDays = spots.length;
+    const spotRollStep = Math.max(1, Math.ceil(nSpotDays / 20));
+    const labels = spots.map(s => fmtDateFull(s.date));
+    const avgs = rollingAvg(spots.map(s => s.avg ?? null));
+    createChart('cSpotTrend', {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [lineDataset('30-Tage-Mittel', avgs, C_UP, { thin: true })]
+      },
+      options: {
+        ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh'),
+        plugins: {
+          ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh').plugins,
+          tooltip: {
+            backgroundColor: 'rgba(0,15,30,0.92)',
+            borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} €/MWh` }
+          }
+        },
+        scales: {
+          x: { ...axisStyle({ maxRotation: 45, autoSkip: true, maxTicksLimit: 20 }),
+               ticks: { color: 'rgba(116,164,190,0.7)', maxRotation: 45, autoSkip: true,
+                        maxTicksLimit: 20, callback: (v, i) => i % spotRollStep === 0 ? labels[i] : '' } },
+          y: { ...axisStyle({}), title: { display: false },
+               ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } }
+        }
+      }
+    });
+    return;
+  }
+
+  // Raw mode: scatter chart with full hourly resolution
+  const hourly = (allData.spotHourly || []).filter(s => inRange(s.date));
+  const nSpotHDays = hourly.length;
+  // Aim for ≤20 date labels regardless of period length
+  const spotDayStep = Math.max(1, Math.ceil(nSpotHDays / 20));
+  const spotTickStep = spotDayStep * 24;
+  const spotDates = hourly.map(d => d.date);
+  const priceData = [];
+  hourly.forEach((day, dayIdx) => {
+    day.h.forEach((price, hIdx) => {
+      if (price !== null) priceData.push({ x: dayIdx * 24 + hIdx, y: price });
+    });
+  });
+  const totalHours = nSpotHDays * 24;
+
+  createChart('cSpotTrend', {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Spotpreis (stündlich)',
+        data: priceData,
+        backgroundColor: 'rgba(0,190,245,0.4)',
+        pointRadius: 1.5,
+        pointHoverRadius: 3,
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, labels: { color: '#74A4BE', font: { family: 'ProximaNova, Nunito, sans-serif' } } },
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: {
+            title: items => {
+              const hourIdx = items[0]?.raw?.x ?? 0;
+              const dayIdx = Math.floor(hourIdx / 24);
+              const hour = hourIdx % 24;
+              return spotDates[dayIdx] ? `${fmtDateFull(spotDates[dayIdx])} ${String(hour).padStart(2,'0')}:00` : '';
+            },
+            label: ctx => ` ${ctx.parsed.y.toFixed(2)} €/MWh`,
+          }
+        },
+        decimation: { enabled: false },
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0,
+          max: totalHours,
+          ticks: {
+            stepSize: spotTickStep,
+            color: 'rgba(116,164,190,0.7)',
+            maxRotation: 45,
+            autoSkip: false,
+            callback: val => {
+              const dayIdx = Math.round(val / 24);
+              return spotDates[dayIdx] ? fmtDateFull(spotDates[dayIdx]) : '';
+            },
+            font: { family: 'ProximaNova, Nunito, sans-serif', size: 11 },
+          },
+          grid: { color: 'rgba(116,164,190,0.12)' },
+          border: { color: 'rgba(116,164,190,0.25)' },
+        },
+        y: {
+          ...axisStyle({}), title: { display: false },
+          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' }
+        }
+      }
+    }
+  });
+}
+
+function buildSpotSpreadChart() {
+  const mode = spotViewMode.spread;
+  const spots = (allData.spotDaily || []).filter(s => inRange(s.date));
+  const nSpread = spots.length;
+  const spreadStep = Math.max(1, Math.ceil(nSpread / 20));
+  const labels = spots.map(s => fmtDateFull(s.date));
+  let tb1 = spots.map(s => s.tb1 ?? null);
+  let tb2 = spots.map(s => s.tb2 ?? null);
+  let tb3 = spots.map(s => s.tb3 ?? null);
+  let tb4 = spots.map(s => s.tb4 ?? null);
+
+  if (mode === 'rolling') {
+    tb1 = rollingAvg(tb1);
+    tb2 = rollingAvg(tb2);
+    tb3 = rollingAvg(tb3);
+    tb4 = rollingAvg(tb4);
+  }
+
+  createChart('cSpotSpread', {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        lineDataset('TB1 (höchste – tiefste Stunde)',       tb1, C_UP,       { thin: true }),
+        lineDataset('TB2 (2. höchste – 2. tiefste Stunde)', tb2, C_ANT,      { thin: true }),
+        lineDataset('TB3 (3. höchste – 3. tiefste Stunde)', tb3, C_DOWN,     { thin: true }),
+        lineDataset('TB4 (4. höchste – 4. tiefste Stunde)', tb4, C_ANT_DOWN, { thin: true }),
+      ]
+    },
+    options: {
+      ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh'),
+      plugins: {
+        ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh').plugins,
+        tooltip: {
+          backgroundColor: 'rgba(0,15,30,0.92)',
+          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)} €/MWh` }
+        }
+      },
+      scales: {
+        x: {
+          ...axisStyle({ maxRotation: 45, autoSkip: false }),
+          ticks: {
+            color: 'rgba(116,164,190,0.7)', maxRotation: 45, autoSkip: false,
+            callback: (v, i) => i % spreadStep === 0 ? labels[i] : '',
+          }
+        },
+        y: {
+          ...axisStyle({}), title: { display: false },
+          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' }
+        }
+      }
+    }
+  });
+}
+
+function updateSpotKpis() {
+  const spots = (allData.spotDaily || []).filter(s => inRange(s.date));
+  const avgOf = key => {
+    const vals = spots.map(s => s[key]).filter(v => v !== null);
+    return vals.length ? avg(vals) : null;
+  };
+  const set = (id, val, dec = 1) =>
+    document.getElementById(id).textContent = val !== null ? fmt(val, dec) : '—';
+
+  set('kpiSpotBase', avgOf('avg'));
+  set('kpiSpotPeak', avgOf('maxH'));
+  set('kpiSpotTb1',  avgOf('tb1'));
+  set('kpiSpotTb2',  avgOf('tb2'));
+  const nDays = spots.length;
+  document.getElementById('kpiSpotBaseMeta').textContent = `Ø über ${nDays} Tage`;
+  document.getElementById('kpiSpotPeakMeta').textContent = `Ø über ${nDays} Tage`;
+  document.getElementById('kpiSpotTb1Meta').textContent  = `Ø über ${nDays} Tage`;
+  document.getElementById('kpiSpotTb2Meta').textContent  = `Ø über ${nDays} Tage`;
+}
+
+// Wire up the raw/rolling toggle buttons
+document.querySelectorAll('.chart-toggle').forEach(tog => {
+  tog.querySelectorAll('.ct-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tog.querySelectorAll('.ct-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const chartId = tog.id;
+      const mode = btn.dataset.mode;
+      if (chartId === 'toggleSpotTrend') {
+        spotViewMode.trend = mode;
+        buildSpotTrendChart();
+      } else if (chartId === 'toggleSpotSpread') {
+        spotViewMode.spread = mode;
+        buildSpotSpreadChart();
+      }
+    });
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR NAVIGATION
+═══════════════════════════════════════════════════════════ */
+let activeMarket = 'home';
+
+function switchMarket(market) {
+  if (market === activeMarket) return;
+  const prevMarket = activeMarket;
+  activeMarket = market;
+
+  // Toggle page visibility
+  document.querySelectorAll('.market-page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${market}`).classList.add('active');
+
+  // Toggle nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-market="${market}"]`).classList.add('active');
+
+  // Show/hide period bar
+  const periodBar = document.querySelector('.period-bar');
+  if (market === 'home') {
+    periodBar.classList.add('bar-hidden');
+  } else {
+    periodBar.classList.remove('bar-hidden');
+  }
+
+  // Swap period presets only when crossing the spot ↔ non-spot boundary.
+  // Within the same group, keep the user's current date selection.
+  const prevIsSpot = prevMarket === 'spot';
+  const nowIsSpot  = market === 'spot';
+  if (market === 'home') {
+    // no presets needed
+  } else if (market === 'spot') {
+    setPresets(SPOT_PRESETS);
+    if (!prevIsSpot) {
+      // Coming from a non-spot market — reset to default spot range
+      currentStart = '2026-01-01';
+      currentEnd   = '2026-04-30';
+      document.getElementById('dateFrom').value = currentStart;
+      document.getElementById('dateTo').value   = currentEnd;
+    }
+    document.getElementById('dateFrom').min = '2022-01-01';
+    document.getElementById('dateFrom').max = '2026-12-31';
+    document.getElementById('dateTo').min   = '2022-01-01';
+    document.getElementById('dateTo').max   = '2026-12-31';
+  } else {
+    setPresets(TRL_PRESETS);
+    if (prevIsSpot) {
+      // Coming from spot market — reset to default non-spot range
+      currentStart = '2026-01-01';
+      currentEnd   = '2026-04-30';
+      document.getElementById('dateFrom').value = currentStart;
+      document.getElementById('dateTo').value   = currentEnd;
+    }
+    document.getElementById('dateFrom').min = '2022-01-01';
+    document.getElementById('dateFrom').max = '2026-12-31';
+    document.getElementById('dateTo').min   = '2022-01-01';
+    document.getElementById('dateTo').max   = '2026-12-31';
+  }
+
+  // Build charts for newly visible market (destroy old ones first)
+  if (allData) {
+    if (market === 'home') {
+      buildHomePage();
+    } else if (market === 'srl') {
+      buildSrlWeeklyCharts();
+      buildSrlDailyCharts();
+      updateSrlKpis();
+    } else if (market === 'tre') {
+      buildTreDailyChart();
+      buildTreSlotCharts();
+      updateKpis();
+    } else if (market === 'spot') {
+      buildSpotTrendChart();
+      buildSpotSpreadChart();
+      updateSpotKpis();
+    } else {
+      buildTrlWeeklyCharts();
+      buildTrlDailyCharts();
+      updateKpis();
+    }
+  }
+}
+
+document.querySelectorAll('.nav-item[data-market]').forEach(item => {
+  item.addEventListener('click', () => switchMarket(item.dataset.market));
+});
+
+/* ═══════════════════════════════════════════════════════════
+   FULL REDRAW
+═══════════════════════════════════════════════════════════ */
+function redraw() {
+  if (activeMarket === 'home') {
+    buildHomePage();
+  } else if (activeMarket === 'srl') {
+    buildSrlWeeklyCharts();
+    buildSrlDailyCharts();
+    updateSrlKpis();
+  } else if (activeMarket === 'tre') {
+    buildTreDailyChart();
+    buildTreSlotCharts();
+    updateKpis();
+  } else if (activeMarket === 'spot') {
+    buildSpotTrendChart();
+    buildSpotSpreadChart();
+    updateSpotKpis();
+  } else {
+    buildTrlWeeklyCharts();
+    buildTrlDailyCharts();
+    updateKpis();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PERIOD SELECTOR
+═══════════════════════════════════════════════════════════ */
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentStart = btn.dataset.start;
+    currentEnd   = btn.dataset.end;
+    document.getElementById('dateFrom').value = currentStart;
+    document.getElementById('dateTo').value   = currentEnd;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (allData) redraw();
+  });
+});
+
+function onDateChange() {
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  if (from && to && from <= to) {
+    currentStart = from;
+    currentEnd   = to;
+    // Deactivate all preset buttons (custom range)
+    document.querySelectorAll('.preset-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.start === from && b.dataset.end === to);
+    });
+    if (allData) redraw();
+  }
+}
+document.getElementById('dateFrom').addEventListener('change', onDateChange);
+document.getElementById('dateTo').addEventListener('change', onDateChange);
+
+/* ═══════════════════════════════════════════════════════════
+   DATA LOADING
+═══════════════════════════════════════════════════════════ */
+async function loadData() {
+  let retries = 0;
+  while (retries < 40) {  // wait up to ~2min
+    try {
+      const res = await fetch('/api/data');
+      if (res.status === 503) {
+        await new Promise(r => setTimeout(r, 3000));
+        retries++;
+        continue;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      allData = await res.json();
+      break;
+    } catch (e) {
+      await new Promise(r => setTimeout(r, 3000));
+      retries++;
+    }
+  }
+
+  if (!allData) {
+    document.querySelector('.loading-text').textContent = 'Fehler beim Laden der Daten';
+    return;
+  }
+
+  // Hide loading screen
+  document.getElementById('loading').classList.add('hidden');
+
+  // Hide period bar on home page (initial state)
+  document.querySelector('.period-bar').classList.add('bar-hidden');
+
+  // Update header status
+  document.getElementById('hStatusText').textContent = 'Daten geladen';
+
+  // Update footer
+  const ms = allData.processingMs;
+  document.getElementById('footerProcessed').textContent =
+    `Daten: Swissgrid · Q1 2026 · Verarbeitet in ${(ms/1000).toFixed(1)}s`;
+
+  redraw();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HOME PAGE
+═══════════════════════════════════════════════════════════ */
+function trendEl(elId, current, reference) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (current == null || reference == null || reference === 0) {
+    el.innerHTML = '<span class="home-trend-val neutral">—</span>';
+    return;
+  }
+  const pct = ((current - reference) / Math.abs(reference)) * 100;
+  const cls = pct >= 0 ? 'positive' : 'negative';
+  const arrow = pct >= 0 ? '↑' : '↓';
+  el.innerHTML = `<span class="home-trend-val ${cls}">${arrow} ${Math.abs(pct).toFixed(1).replace('.', ',')}%</span>`;
+}
+
+function buildHomePage() {
+  if (!allData) return;
+
+  // ─── SRL Ø Marginalpreis per 4h block (7d / 4w toggle) ──────────────────────
+  const srlBlockDays = allData.srlDaily || [];
+  if (srlBlockDays.length >= 7) {
+    const SRL_BLOCK_KEYS   = ['00:00-04:00','04:00-08:00','08:00-12:00','12:00-16:00','16:00-20:00','20:00-24:00'];
+    const SRL_BLOCK_LABELS = ['00–04','04–08','08–12','12–16','16–20','20–24'];
+
+    const computeSrlBlocks = (dateFrom, dateTo) => {
+      const days = srlBlockDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
+      return SRL_BLOCK_KEYS.map(blkKey => {
+        const entries = days.flatMap(d => d.blocks.filter(b => b.block === blkKey));
+        const compute = dir => {
+          const marginals  = entries.map(b => b[dir]?.marginal  ?? null).filter(v => v != null);
+          const medianBids = entries.map(b => b[dir]?.medianBid ?? null).filter(v => v != null);
+          return {
+            avg:       marginals.length  ? marginals.reduce((a,b)=>a+b,0)/marginals.length  : null,
+            medianBid: medianBids.length ? medianBids.reduce((a,b)=>a+b,0)/medianBids.length : null,
+          };
+        };
+        return { up: compute('up'), down: compute('down') };
+      });
+    };
+
+    const srlDays7  = srlBlockDays.slice(-7);
+    const srlDays28 = srlBlockDays.slice(-28);
+    const srlBlockData = {
+      7:  computeSrlBlocks(srlDays7[0].date,  srlDays7[srlDays7.length-1].date),
+      28: computeSrlBlocks(srlDays28[0].date, srlDays28[srlDays28.length-1].date),
+    };
+
+    const roundSrl = (arr, dir) => arr.map(b => ({
+      avg:       b[dir].avg       != null ? Math.round(b[dir].avg       * 10) / 10 : null,
+      medianBid: b[dir].medianBid != null ? Math.round(b[dir].medianBid * 10) / 10 : null,
+    }));
+
+    const srlWeekLabel = (n, dir) => {
+      const days = n === 7 ? srlDays7 : srlDays28;
+      return `${dir.toUpperCase()} · Ø ${n === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days[days.length-1].date)}`;
+    };
+
+    createChart('cSrlBlock', {
+      type: 'bar',
+      data: {
+        labels: SRL_BLOCK_LABELS,
+        datasets: [
+          {
+            label: 'Ø Marginalpreis',
+            data: roundSrl(srlBlockData[7], 'down').map(b => b.avg),
+            backgroundColor: '#82DCF5',
+            borderColor: '#4CAFC8',
+            borderWidth: 1,
+            borderRadius: 3,
+            borderSkipped: false,
+            order: 1,
+          },
+          {
+            type: 'line',
+            label: 'Ø Median Gebot',
+            data: roundSrl(srlBlockData[7], 'down').map(b => b.medianBid),
+            borderColor: '#FE7500',
+            borderWidth: 0,
+            pointBackgroundColor: '#FE7500',
+            pointBorderColor: '#FE7500',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            showLine: false,
+            fill: false,
+            order: 0,
+          },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        scales: {
+          x: {
+            ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } },
+            grid:  { color: 'rgba(116,164,190,0.07)' },
+          },
+          y: {
+            ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
+              callback: v => `${v}` },
+            grid: { color: 'rgba(116,164,190,0.07)' },
+          }
+        },
+        plugins: {
+          legend: {
+            display: true, position: 'top', align: 'end',
+            labels: { color: 'rgba(116,164,190,0.7)', font: { size: 9 }, boxWidth: 10, padding: 8,
+              usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const v = ctx.parsed.y;
+                return ` ${ctx.dataset.label}: ${v != null ? fmt(v,1)+' CHF/MW' : '—'}`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    let srlWindow = 7, srlDir = 'down';
+    document.getElementById('homeSrlWeek').textContent = srlWeekLabel(7, 'down');
+
+    const updateSrlChart = () => {
+      const c = charts['cSrlBlock'];
+      if (!c) return;
+      const d = roundSrl(srlBlockData[srlWindow], srlDir);
+      c.data.datasets[0].data = d.map(b => b.avg);
+      c.data.datasets[1].data = d.map(b => b.medianBid);
+      c.update('none');
+      document.getElementById('srlBlockBtn7').classList.toggle('active',  srlWindow === 7);
+      document.getElementById('srlBlockBtn28').classList.toggle('active', srlWindow === 28);
+      document.getElementById('srlBtnDown').classList.toggle('active', srlDir === 'down');
+      document.getElementById('srlBtnUp').classList.toggle('active',   srlDir === 'up');
+      document.getElementById('homeSrlWeek').textContent = srlWeekLabel(srlWindow, srlDir);
+    };
+    window.setSrlBlockWindow = n => { srlWindow = n; updateSrlChart(); };
+    window.setSrlBlockDir   = d => { srlDir   = d; updateSrlChart(); };
+  }
+
+  // ─── TRL Ø Marginalpreis per 4h block (7d / 4w toggle) ──────────────────────
+  const trlBlockDays = allData.trlDaily || [];
+  if (trlBlockDays.length >= 7) {
+    const TRL_BLOCK_KEYS   = ['00:00-04:00','04:00-08:00','08:00-12:00','12:00-16:00','16:00-20:00','20:00-24:00'];
+    const TRL_BLOCK_LABELS = ['00–04','04–08','08–12','12–16','16–20','20–24'];
+
+    const computeTrlBlocks = (dateFrom, dateTo) => {
+      const days = trlBlockDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
+      return TRL_BLOCK_KEYS.map(blkKey => {
+        const entries = days.flatMap(d => d.blocks.filter(b => b.block === blkKey));
+        const compute = dir => {
+          const marginals  = entries.map(b => b[dir]?.marginal  ?? null).filter(v => v != null);
+          const medianBids = entries.map(b => b[dir]?.medianBid ?? null).filter(v => v != null);
+          return {
+            avg:       marginals.length  ? marginals.reduce((a,b)=>a+b,0)/marginals.length  : null,
+            medianBid: medianBids.length ? medianBids.reduce((a,b)=>a+b,0)/medianBids.length : null,
+          };
+        };
+        return { up: compute('up'), down: compute('down') };
+      });
+    };
+
+    const trlDays7  = trlBlockDays.slice(-7);
+    const trlDays28 = trlBlockDays.slice(-28);
+    const trlBlockData = {
+      7:  computeTrlBlocks(trlDays7[0].date,  trlDays7[trlDays7.length-1].date),
+      28: computeTrlBlocks(trlDays28[0].date, trlDays28[trlDays28.length-1].date),
+    };
+
+    const roundTrl = (arr, dir) => arr.map(b => ({
+      avg:       b[dir].avg       != null ? Math.round(b[dir].avg       * 10) / 10 : null,
+      medianBid: b[dir].medianBid != null ? Math.round(b[dir].medianBid * 10) / 10 : null,
+    }));
+
+    const trlWeekLabel = (n, dir) => {
+      const days = n === 7 ? trlDays7 : trlDays28;
+      return `${dir.toUpperCase()} · Ø ${n === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days[days.length-1].date)}`;
+    };
+
+    createChart('cTrlBlock', {
+      type: 'bar',
+      data: {
+        labels: TRL_BLOCK_LABELS,
+        datasets: [
+          {
+            label: 'Ø Marginalpreis',
+            data: roundTrl(trlBlockData[7], 'down').map(b => b.avg),
+            backgroundColor: '#00BEF5',
+            borderColor: '#0090c0',
+            borderWidth: 1,
+            borderRadius: 3,
+            borderSkipped: false,
+            order: 1,
+          },
+          {
+            type: 'line',
+            label: 'Ø Median Gebot',
+            data: roundTrl(trlBlockData[7], 'down').map(b => b.medianBid),
+            borderColor: '#FE7500',
+            borderWidth: 0,
+            pointBackgroundColor: '#FE7500',
+            pointBorderColor: '#FE7500',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            showLine: false,
+            fill: false,
+            order: 0,
+          },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        scales: {
+          x: {
+            ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } },
+            grid:  { color: 'rgba(116,164,190,0.07)' },
+          },
+          y: {
+            ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
+              callback: v => `${v}` },
+            grid: { color: 'rgba(116,164,190,0.07)' },
+          }
+        },
+        plugins: {
+          legend: {
+            display: true, position: 'top', align: 'end',
+            labels: { color: 'rgba(116,164,190,0.7)', font: { size: 9 }, boxWidth: 10, padding: 8,
+              usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const v = ctx.parsed.y;
+                return ` ${ctx.dataset.label}: ${v != null ? fmt(v,1)+' CHF/MW' : '—'}`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    let trlWindow = 7, trlDir = 'down';
+    document.getElementById('homeTrlWeek').textContent = trlWeekLabel(7, 'down');
+
+    const updateTrlChart = () => {
+      const c = charts['cTrlBlock'];
+      if (!c) return;
+      const d = roundTrl(trlBlockData[trlWindow], trlDir);
+      c.data.datasets[0].data = d.map(b => b.avg);
+      c.data.datasets[1].data = d.map(b => b.medianBid);
+      c.update('none');
+      document.getElementById('trlBlockBtn7').classList.toggle('active',  trlWindow === 7);
+      document.getElementById('trlBlockBtn28').classList.toggle('active', trlWindow === 28);
+      document.getElementById('trlBtnDown').classList.toggle('active', trlDir === 'down');
+      document.getElementById('trlBtnUp').classList.toggle('active',   trlDir === 'up');
+      document.getElementById('homeTrlWeek').textContent = trlWeekLabel(trlWindow, trlDir);
+    };
+    window.setTrlBlockWindow = n => { trlWindow = n; updateTrlChart(); };
+    window.setTrlBlockDir   = d => { trlDir   = d; updateTrlChart(); };
+  }
+
+  // ─── TRE (last 7 days vs prev 7 days vs same 7 days last year) ───
+  // ─── TRE Ø Marginalpreis per 4h block (7d / 4w toggle) ─────────────────────
+  const treDays  = allData.treDaily  || [];
+  const treSlots = allData.treSlots  || [];
+  if (treDays.length >= 7) {
+    const TRE_HOUR_BLOCKS = [
+      { label: '00–04', from: '00:00', to: '04:00' },
+      { label: '04–08', from: '04:00', to: '08:00' },
+      { label: '08–12', from: '08:00', to: '12:00' },
+      { label: '12–16', from: '12:00', to: '16:00' },
+      { label: '16–20', from: '16:00', to: '20:00' },
+      { label: '20–24', from: '20:00', to: '24:00' },
+    ];
+
+    const computeBlockAvg = (dateFrom, dateTo) => {
+      const slots = treSlots.filter(s => s.d >= dateFrom && s.d <= dateTo);
+      return TRE_HOUR_BLOCKS.map(blk => {
+        const bSlots = slots.filter(s => s.s >= blk.from && s.s < blk.to);
+        const calcDir = vals => {
+          const filtered = vals.filter(v => v != null);
+          const sorted   = [...filtered].sort((a, b) => a - b);
+          const mid      = Math.floor(sorted.length / 2);
+          const median   = sorted.length === 0 ? null :
+            sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+          return {
+            avg:    filtered.length ? filtered.reduce((a,b)=>a+b,0)/filtered.length : null,
+            median: median,
+          };
+        };
+        return {
+          down: calcDir(bSlots.map(s => s.nm)),
+          up:   calcDir(bSlots.map(s => s.pm)),
+        };
+      });
+    };
+
+    const days7  = treDays.slice(-7);
+    const days28 = treDays.slice(-28);
+    const blockData = {
+      7:  computeBlockAvg(days7[0].date,  days7[days7.length-1].date),
+      28: computeBlockAvg(days28[0].date, days28[days28.length-1].date),
+    };
+
+    const roundArr = (arr, dir) => arr.map(b => ({
+      avg:    b[dir].avg    != null ? Math.round(b[dir].avg    * 10) / 10 : null,
+      median: b[dir].median != null ? Math.round(b[dir].median * 10) / 10 : null,
+    }));
+
+    const weekLabel = (n, dir) => {
+      const days = n === 7 ? days7 : days28;
+      return `${dir.toUpperCase()} · Ø ${n === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days[days.length-1].date)}`;
+    };
+
+    createChart('cTreBlock', {
+      type: 'bar',
+      data: {
+        labels: TRE_HOUR_BLOCKS.map(b => b.label),
+        datasets: [
+          {
+            label: 'Ø Aktivierungspreis',
+            data: roundArr(blockData[7], 'down').map(b => b.avg),
+            backgroundColor: '#FE7500',
+            borderColor: '#C05800',
+            borderWidth: 1,
+            borderRadius: 3,
+            borderSkipped: false,
+            order: 1,
+          },
+          {
+            type: 'line',
+            label: 'Median',
+            data: roundArr(blockData[7], 'down').map(b => b.median),
+            borderColor: '#00BEF5',
+            borderWidth: 0,
+            pointBackgroundColor: '#00BEF5',
+            pointBorderColor: '#00BEF5',
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            showLine: false,
+            fill: false,
+            order: 0,
+          },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        scales: {
+          x: {
+            ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } },
+            grid:  { color: 'rgba(116,164,190,0.07)' },
+          },
+          y: {
+            ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
+              callback: v => `${v}` },
+            grid: { color: 'rgba(116,164,190,0.07)' },
+          }
+        },
+        plugins: {
+          legend: {
+            display: true, position: 'top', align: 'end',
+            labels: { color: 'rgba(116,164,190,0.7)', font: { size: 9 }, boxWidth: 10, padding: 8,
+              usePointStyle: true }
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const v = ctx.parsed.y;
+                return ` ${ctx.dataset.label}: ${v != null ? fmt(v,1)+' EUR/MWh' : '—'}`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    let treWindow = 7, treDir = 'down';
+    document.getElementById('homeTreWeek').textContent = weekLabel(7, 'down');
+
+    const updateTreChart = () => {
+      const c = charts['cTreBlock'];
+      if (!c) return;
+      const d      = roundArr(blockData[treWindow], treDir);
+      const isDown = treDir === 'down';
+      c.data.datasets[0].data            = d.map(b => b.avg);
+      c.data.datasets[0].backgroundColor = isDown ? '#FE7500' : '#00BEF5';
+      c.data.datasets[0].borderColor     = isDown ? '#C05800' : '#0090c0';
+      c.data.datasets[1].data                  = d.map(b => b.median);
+      c.data.datasets[1].borderColor           = isDown ? '#00BEF5' : '#FE7500';
+      c.data.datasets[1].pointBackgroundColor  = isDown ? '#00BEF5' : '#FE7500';
+      c.data.datasets[1].pointBorderColor      = isDown ? '#00BEF5' : '#FE7500';
+      c.update('none');
+      document.getElementById('treBlockBtn7').classList.toggle('active',  treWindow === 7);
+      document.getElementById('treBlockBtn28').classList.toggle('active', treWindow === 28);
+      document.getElementById('treBtnDown').classList.toggle('active', treDir === 'down');
+      document.getElementById('treBtnUp').classList.toggle('active',   treDir === 'up');
+      document.getElementById('homeTreWeek').textContent = weekLabel(treWindow, treDir);
+    };
+    window.setTreBlockWindow = n => { treWindow = n; updateTreChart(); };
+    window.setTreBlockDir   = d => { treDir   = d; updateTreChart(); };
+  }
+
+  // ─── Spot (last 7 days avg) ───
+  const spotDays = allData.spotDaily || [];
+  if (spotDays.length >= 7) {
+    const curDays  = spotDays.slice(-7);
+    const prevDays = spotDays.slice(-14, -7);
+    const avgSpot = days => {
+      const avgs = days.map(d => d.avg).filter(v => v != null);
+      const tb1s = days.map(d => d.tb1).filter(v => v != null);
+      return { avg: avgs.length ? avgs.reduce((a,b)=>a+b,0)/avgs.length : null, tb1: tb1s.length ? tb1s.reduce((a,b)=>a+b,0)/tb1s.length : null };
+    };
+    const yoyStart = new Date(curDays[0].date);  yoyStart.setFullYear(yoyStart.getFullYear()-1);
+    const yoyEnd   = new Date(curDays[6].date);  yoyEnd.setFullYear(yoyEnd.getFullYear()-1);
+    const yoyDays  = spotDays.filter(d => d.date >= yoyStart.toISOString().slice(0,10) && d.date <= yoyEnd.toISOString().slice(0,10));
+
+    const cur  = avgSpot(curDays);
+    const prev = avgSpot(prevDays.length ? prevDays : curDays);
+    const yoy  = yoyDays.length ? avgSpot(yoyDays) : { avg: null, tb1: null };
+
+    document.getElementById('homeSpotAvg').textContent = cur.avg != null ? fmt(cur.avg, 1) : '—';
+    document.getElementById('homeSpotTb1').textContent = cur.tb1 != null ? fmt(cur.tb1, 1) : '—';
+    trendEl('homeSpotAvgWow', cur.avg, prevDays.length ? prev.avg : null);
+    trendEl('homeSpotAvgYoy', cur.avg, yoy.avg);
+    trendEl('homeSpotTb1Wow', cur.tb1, prevDays.length ? prev.tb1 : null);
+    trendEl('homeSpotTb1Yoy', cur.tb1, yoy.tb1);
+    document.getElementById('homeSpotWeek').textContent = `7 Tage bis ${fmtDate(curDays[6].date)}`;
+
+    // ── Spot hourly prices (last 7 days × 24 h = 168 points) — home card ──
+    const spotHourly = allData.spotHourly || [];
+    const hourlyWindow = spotHourly.slice(-7);
+    const hourPrices = [];
+    const hourTooltipLabels = [];
+    const hourDayLabels = [];
+    hourlyWindow.forEach(d => {
+      const dt = new Date(d.date + 'T00:00:00');
+      const dateStr = dt.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit' });
+      (d.h || []).forEach((price, hi) => {
+        hourPrices.push(price != null ? Math.round(price * 10) / 10 : null);
+        hourTooltipLabels.push(`${dateStr}  ${String(hi).padStart(2,'0')}:00`);
+        hourDayLabels.push(hi === 0 ? dateStr : '');
+      });
+    });
+    createChart('cSpotHomeTrend', {
+      type: 'line',
+      data: {
+        labels: hourDayLabels,
+        datasets: [{
+          label: 'Stundenpreis',
+          data: hourPrices,
+          borderColor: '#FE7500',
+          borderWidth: 1.5,
+          backgroundColor: 'rgba(254,117,0,0.07)',
+          fill: true,
+          tension: 0.2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          pointHoverBackgroundColor: '#FE7500',
+          spanGaps: false,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: false,
+        scales: {
+          x: {
+            ticks: {
+              color: 'rgba(116,164,190,0.6)', font: { size: 9 },
+              maxRotation: 0, autoSkip: false,
+              callback: (_, i) => hourDayLabels[i] || null,
+            },
+            grid: { color: 'rgba(116,164,190,0.06)' },
+          },
+          y: {
+            ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
+              callback: v => `${v}` },
+            grid: { color: 'rgba(116,164,190,0.07)' },
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index', intersect: false,
+            callbacks: {
+              title: items => hourTooltipLabels[items[0]?.dataIndex ?? 0],
+              label: ctx => {
+                const v = ctx.parsed.y;
+                return ` ${v != null ? fmt(v,1)+' EUR/MWh' : '—'}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // ─── PV revenue — shared window ──────────────────────────────────────────
+  // TRE and TRL data may end on different dates. Use the earlier of the two
+  // as the common window end so all three revenue figures cover the same period.
+  const pvProfile = allData.pvProfile || {};
+  const trlDays = allData.trlDaily || [];
+  const TRL_BLOCKS = ['08:00-12:00', '12:00-16:00'];
+  const BLOCK_SLOTS = {
+    '08:00-12:00': ['08:00','08:15','08:30','08:45','09:00','09:15','09:30','09:45',
+                    '10:00','10:15','10:30','10:45','11:00','11:15','11:30','11:45'],
+    '12:00-16:00': ['12:00','12:15','12:30','12:45','13:00','13:15','13:30','13:45',
+                    '14:00','14:15','14:30','14:45','15:00','15:15','15:30','15:45'],
+  };
+
+  const treEndDate = treDays.length  ? treDays.at(-1).date  : null;
+  const trlEndDate = trlDays.length  ? trlDays.at(-1).date  : null;
+  const pvEndDate  = (treEndDate && trlEndDate)
+    ? (treEndDate < trlEndDate ? treEndDate : trlEndDate)
+    : (treEndDate || trlEndDate);
+
+  // Slice each dataset to the 7 days ending on pvEndDate
+  const pvTreDays7 = pvEndDate ? treDays.filter(d => d.date <= pvEndDate).slice(-7) : [];
+  const pvTrlDays7 = pvEndDate ? trlDays.filter(d => d.date <= pvEndDate).slice(-7) : [];
+
+  let trlDownRevCur = 0, trlPrevDownRev = 0;
+  if (pvTrlDays7.length >= 7 && Object.keys(pvProfile).length) {
+    const calcTrlRevenue = (dateFrom, dateTo) => {
+      const days = trlDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
+      let upRev = 0, downRev = 0;
+      for (const day of days) {
+        for (const blk of day.blocks) {
+          if (!TRL_BLOCKS.includes(blk.block)) continue;
+          const slots = BLOCK_SLOTS[blk.block];
+          const pvVals = slots.map(t => pvProfile[`${day.date}|${t}`]).filter(v => v != null);
+          if (!pvVals.length) continue;
+          const minPvMW = Math.min(...pvVals) / 1000;
+          if (blk.up?.marginal   != null) upRev   += minPvMW * blk.up.marginal;
+          if (blk.down?.marginal != null) downRev += minPvMW * blk.down.marginal;
+        }
+      }
+      return { upRev, downRev };
+    };
+
+    const prevTrl7  = trlDays.filter(d => d.date < pvTrlDays7[0].date).slice(-7);
+    const trlCur  = calcTrlRevenue(pvTrlDays7[0].date, pvTrlDays7[6].date);
+    const trlPrev = prevTrl7.length ? calcTrlRevenue(prevTrl7[0].date, prevTrl7[6].date) : { upRev: null, downRev: null };
+
+    trlDownRevCur  = trlCur.downRev;
+    trlPrevDownRev = prevTrl7.length ? (trlPrev.downRev ?? 0) : 0;
+  }
+
+  // ─── PV TRE DOWN revenue + feed-in + pie chart ───
+  if (pvTreDays7.length >= 7 && Object.keys(pvProfile).length) {
+    const calcRevenue = (dateFrom, dateTo) => {
+      const slots = treSlots.filter(s =>
+        s.d >= dateFrom && s.d <= dateTo &&
+        s.nm !== null && s.nm <= -200 &&
+        s.s >= '08:00' && s.s < '16:00'
+      );
+      let total = 0, count = 0;
+      for (const slot of slots) {
+        const pvKey = `${slot.d}|${slot.s}`;
+        const pvKw = pvProfile[pvKey];
+        if (!pvKw) continue;
+        total += (pvKw / 1000) * (-slot.nm) * 0.25;
+        count++;
+      }
+      return { total, count };
+    };
+
+    const prevDays7  = treDays.filter(d => d.date < pvTreDays7[0].date).slice(-7);
+
+    const cur7  = calcRevenue(pvTreDays7[0].date, pvTreDays7[6].date);
+    const prev7 = prevDays7.length ? calcRevenue(prevDays7[0].date, prevDays7[6].date) : { total: 0 };
+
+    document.getElementById('homePvWeek').textContent = `7 Tage bis ${fmtDate(pvTreDays7[6].date)}`;
+
+    const FEED_IN_CHF_PER_KWH = 0.12;
+    const calcFeedIn = (dateFrom, dateTo) => {
+      const activated = new Set(
+        treSlots
+          .filter(s => s.d >= dateFrom && s.d <= dateTo && s.nm !== null && s.nm <= -200 && s.s >= '08:00' && s.s < '16:00')
+          .map(s => `${s.d}|${s.s}`)
+      );
+      let total = 0;
+      const days = treDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
+      for (const day of days) {
+        for (const [key, pvKw] of Object.entries(pvProfile)) {
+          if (!key.startsWith(day.date + '|')) continue;
+          const time = key.slice(11); // "YYYY-MM-DD|HH:MM" → slice after the pipe
+          if (activated.has(`${day.date}|${time}`)) continue;
+          total += pvKw * 0.25 * FEED_IN_CHF_PER_KWH;
+        }
+      }
+      return total;
+    };
+
+    const curFI  = calcFeedIn(pvTreDays7[0].date, pvTreDays7[6].date);
+    const prevFI = prevDays7.length ? calcFeedIn(prevDays7[0].date, prevDays7[6].date) : 0;
+
+    const PLANT_MWP = 0.531; // 531 kWp installed capacity
+
+    // Total WoW (percentage change is scale-invariant, so divide both sides)
+    const totalCur  = (cur7.total  || 0) + (trlDownRevCur  || 0) + (curFI  || 0);
+    const totalPrev = ((prev7.total || 0) + (trlPrevDownRev || 0) + (prevFI || 0));
+    trendEl('homePvTotalWow', totalCur, totalPrev > 0 ? totalPrev : null);
+
+    // ── Pie chart — values normalised to CHF·EUR / MWp ────────────────────────
+    const pieSegmentsCur  = [cur7.total / PLANT_MWP, trlDownRevCur / PLANT_MWP, curFI / PLANT_MWP];
+    const pieSegmentsPrev = [(prev7.total || 0) / PLANT_MWP, (trlPrevDownRev || 0) / PLANT_MWP, (prevFI || 0) / PLANT_MWP];
+    const totalCurNorm    = totalCur / PLANT_MWP;
+
+    const pvPieTooltip = ({ chart, tooltip }) => {
+      let el = document.getElementById('pvPieTooltip');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'pvPieTooltip';
+        el.style.cssText = 'position:fixed;pointer-events:none;z-index:300;' +
+          'background:rgba(0,15,30,0.92);border:1px solid rgba(0,190,245,0.2);' +
+          'border-radius:6px;padding:8px 12px;font-size:12px;transition:opacity .12s;';
+        document.body.appendChild(el);
+      }
+      if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
+      const dp = tooltip.dataPoints?.[0];
+      if (!dp) return;
+      const i     = dp.dataIndex;
+      const val   = pieSegmentsCur[i];
+      const total = pieSegmentsCur.reduce((a, b) => a + b, 0);
+      const share = total > 0 ? (val / total * 100).toFixed(1) : '0';
+      const label = ['TRE DOWN', 'TRL DOWN', 'Einspeisung'][i];
+      const prev  = pieSegmentsPrev[i];
+      let wowHtml = '';
+      if (prev > 0) {
+        const wp  = (val - prev) / Math.abs(prev) * 100;
+        const col = wp >= 0 ? '#34d399' : '#ef4444';
+        const arr = wp >= 0 ? '↑' : '↓';
+        wowHtml = `<span style="color:${col};margin-left:10px;font-weight:700;">${arr} ${Math.abs(wp).toFixed(1).replace('.', ',')}%</span>`;
+      }
+      el.innerHTML =
+        `<div style="color:rgba(116,164,190,0.75);font-size:10px;margin-bottom:3px;">${label}</div>` +
+        `<div style="color:#fff;">${fmt(val, 0)} CHF/MWp (${share}%)${wowHtml}</div>`;
+      const rect = chart.canvas.getBoundingClientRect();
+      el.style.opacity = '1';
+      el.style.left = (rect.left + tooltip.caretX + 14) + 'px';
+      el.style.top  = (rect.top  + tooltip.caretY - 16) + 'px';
+    };
+
+    createChart('cPvPie', {
+      type: 'doughnut',
+      plugins: [{
+        id: 'pvCenter',
+        afterDraw(chart) {
+          const { ctx, chartArea: { top, bottom, left, right } } = chart;
+          const cx = (left + right) / 2, cy = (top + bottom) / 2;
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = 'rgba(116,164,190,0.6)';
+          ctx.font = '11px system-ui,sans-serif';
+          ctx.fillText('Total', cx, cy - 22);
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 26px system-ui,sans-serif';
+          ctx.fillText(fmt(totalCurNorm, 0), cx, cy + 4);
+          ctx.fillStyle = 'rgba(116,164,190,0.55)';
+          ctx.font = '10px system-ui,sans-serif';
+          ctx.fillText('CHF / MWp', cx, cy + 22);
+          ctx.restore();
+        }
+      }],
+      data: {
+        labels: ['TRE DOWN', 'TRL DOWN', 'Einspeisung'],
+        datasets: [{
+          data: pieSegmentsCur,
+          backgroundColor: ['rgba(254,117,0,0.85)', 'rgba(0,190,245,0.85)', 'rgba(240,192,64,0.85)'],
+          borderColor:     ['rgba(254,117,0,0.3)',  'rgba(0,190,245,0.3)',  'rgba(240,192,64,0.3)'],
+          borderWidth: 1, hoverOffset: 8,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            display: true, position: 'bottom',
+            labels: { color: 'rgba(116,164,190,0.85)', font: { size: 10 }, boxWidth: 10, padding: 8 }
+          },
+          tooltip: { enabled: false, external: pvPieTooltip }
+        }
+      }
+    });
+
+    // ── PV production chart ────────────────────────────────────────────────────
+    const activatedSet = new Set(
+      treSlots
+        .filter(s => pvTreDays7.some(d => d.date === s.d) && s.nm !== null && s.nm <= -200 && s.s >= '08:00' && s.s < '16:00')
+        .map(s => `${s.d}|${s.s}`)
+    );
+
+    // Map each 15-min time slot → its TRL block name
+    const timeToBlock = {};
+    for (const [blk, slots] of Object.entries(BLOCK_SLOTS)) {
+      for (const t of slots) timeToBlock[t] = blk;
+    }
+
+    // Pre-compute the min PV kW per (date, TRL block) — this is the curtailed volume
+    const trlBlockMin = {};
+    for (const day of pvTreDays7) {
+      for (const [blk, slots] of Object.entries(BLOCK_SLOTS)) {
+        const vals = slots.map(t => pvProfile[`${day.date}|${t}`]).filter(v => v != null);
+        if (vals.length) trlBlockMin[`${day.date}|${blk}`] = Math.min(...vals);
+      }
+    }
+
+    const pvChartLabels = [], pvChartProd = [], pvChartTrl = [], pvChartAct = [];
+    const dayBoundaries = [];
+    for (let di = 0; di < pvTreDays7.length; di++) {
+      const day = pvTreDays7[di];
+      dayBoundaries.push(pvChartLabels.length);
+      for (let h = 0; h < 24; h++) {
+        for (let m = 0; m < 60; m += 15) {
+          const time = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+          const key  = `${day.date}|${time}`;
+          const kw   = pvProfile[key] || 0;
+          pvChartLabels.push(key);
+          pvChartProd.push(kw);
+          const blk      = timeToBlock[time];
+          const trlMin   = blk ? (trlBlockMin[`${day.date}|${blk}`] ?? null) : null;
+          const curtailed = trlMin ?? 0;
+          pvChartTrl.push(trlMin);
+          pvChartAct.push(activatedSet.has(key) ? (curtailed || null) : null);
+        }
+      }
+    }
+    createChart('cPvProduction', {
+      type: 'line',
+      plugins: [{
+        id: 'pvActBands',
+        beforeDatasetsDraw(chart) {
+          const { ctx, chartArea, scales: { x, y } } = chart;
+          const yBase = y.getPixelForValue(0);
+          ctx.save();
+
+          // Layer 1 — PV production fill (yellow) — single closed path, no gaps
+          ctx.fillStyle = '#F0C040';
+          ctx.beginPath();
+          ctx.moveTo(x.getPixelForValue(0), yBase);
+          for (let i = 0; i < pvChartProd.length; i++) {
+            ctx.lineTo(x.getPixelForValue(i), y.getPixelForValue(pvChartProd[i]));
+          }
+          ctx.lineTo(x.getPixelForValue(pvChartProd.length - 1), yBase);
+          ctx.closePath();
+          ctx.fill();
+
+          // Layer 2 — TRL offered volume fill (blue) — one fillRect per constant-value block
+          // Break on value change too: 8-12 and 12-16 are adjacent (no null between them)
+          // but have different trlBlockMin values, so must be drawn as separate rectangles.
+          ctx.fillStyle = '#00BEF5';
+          let segStart = -1;
+          for (let i = 0; i <= pvChartTrl.length; i++) {
+            const val = i < pvChartTrl.length ? pvChartTrl[i] : null;
+            if (segStart === -1) {
+              if (val != null) segStart = i;
+            } else {
+              const segVal = pvChartTrl[segStart];
+              if (val == null || val !== segVal) {
+                ctx.fillRect(
+                  x.getPixelForValue(segStart),
+                  y.getPixelForValue(segVal),
+                  x.getPixelForValue(i) - x.getPixelForValue(segStart),
+                  yBase - y.getPixelForValue(segVal)
+                );
+                segStart = val != null ? i : -1;
+              }
+            }
+          }
+
+          ctx.restore();
+        },
+        afterDatasetsDraw(chart) {
+          const { ctx, chartArea, scales: { x, y } } = chart;
+          // Layer 3 — TRE activation bars (orange), on top of everything
+          const slotW = Math.max(2, chartArea.width / pvChartLabels.length);
+          ctx.save();
+          ctx.fillStyle = '#C05000';
+          for (let i = 0; i < pvChartAct.length; i++) {
+            if (pvChartAct[i] == null || pvChartAct[i] === 0) continue;
+            ctx.fillRect(x.getPixelForValue(i) - slotW / 2, y.getPixelForValue(pvChartAct[i]), slotW, y.getPixelForValue(0) - y.getPixelForValue(pvChartAct[i]));
+          }
+          ctx.restore();
+        }
+      }],
+      data: {
+        labels: pvChartLabels,
+        datasets: [
+          {
+            label: 'PV Produktion',
+            data: pvChartProd,
+            fill: false,
+            borderColor: '#A07810',
+            borderWidth: 1.2,
+            pointRadius: 0,
+            tension: 0.3,
+          },
+          {
+            label: 'TRL Volumen',
+            data: pvChartTrl,
+            fill: false,
+            borderColor: '#007FB0',
+            borderWidth: 1,
+            pointRadius: 0,
+            spanGaps: false,
+            tension: 0,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        scales: {
+          x: {
+            ticks: {
+              autoSkip: false,
+              maxRotation: 0,
+              color: 'rgba(116,164,190,0.7)',
+              font: { size: 9 },
+              callback(val, idx) {
+                const bi = dayBoundaries.indexOf(idx);
+                return bi >= 0 ? pvTreDays7[bi].date.slice(5).replace('-', '.') : null;
+              }
+            },
+            grid: { display: false }
+          },
+          y: {
+            position: 'right',
+            min: 0,
+            ticks: {
+              color: 'rgba(116,164,190,0.6)',
+              font: { size: 9 },
+              maxTicksLimit: 4,
+              callback: v => v === 0 ? '' : `${v} kW`,
+            },
+            grid: { color: 'rgba(116,164,190,0.07)' }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      }
+    });
+  }
+
+  // ─── BESS revenue proxy ───
+  updateBessCard();
+
+  // ─── Timestamp ───
+  const d = new Date();
+  document.getElementById('homeLastUpdate').textContent =
+    `Stand: ${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+}
+
+loadData();
+</script>
+</body>
+</html>

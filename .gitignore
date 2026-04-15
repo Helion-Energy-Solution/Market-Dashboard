@@ -1,0 +1,23 @@
+# Credentials — never commit
+config.py
+.env
+
+# Market data — 3.6 GB, populated locally via update_data.py
+market_data/
+
+# PV raw data — private meter readings
+pv_data/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Internal documents
+brand_assets/Guidelines*.pdf
+
+# Dev artifacts
+temporary screenshots/
+screenshot.mjs
+serve.mjs
+*.ipynb
