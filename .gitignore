@@ -1,5 +1,5 @@
 # Credentials — never commit
-config.py
+keeper_config.json
 .env
 
 # Market data — 3.6 GB, populated locally via update_data.py
