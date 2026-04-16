@@ -2771,7 +2771,7 @@ async function loadData() {
   let retries = 0;
   while (retries < 40) {  // wait up to ~2min
     try {
-      const res = await fetch('/api/data');
+      const res = await fetch('data/data.json');
       if (res.status === 503) {
         await new Promise(r => setTimeout(r, 3000));
         retries++;
