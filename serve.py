@@ -157,7 +157,9 @@ def fin_trl_dir(r: dict) -> dict:
 
 # ─── Main data build ──────────────────────────────────────────────────────────
 
-def build_dashboard_data() -> dict:
+def build_dashboard_data(data_dir=None) -> dict:
+    if data_dir is None:
+        data_dir = DATA_DIR
     t0 = time.time()
     print("[Helion] Loading market data (large files - may take 30-120 s)...")
 
@@ -177,7 +179,7 @@ def build_dashboard_data() -> dict:
     srl_ant_map    = {}  # SRL anticipated (both UP and DOWN: SRL_26_KWxx_S1)
     srl_daily_map  = {}  # { 'date': { 'block': { 'up':{}, 'down':{} } } }
 
-    trl_srl_files = sorted((DATA_DIR / "SRL&TRL").glob("*-PRL-SRL-TRL-Ergebnis.csv"))
+    trl_srl_files = sorted((data_dir / "SRL&TRL").glob("*-PRL-SRL-TRL-Ergebnis.csv"))
     for trl_file in trl_srl_files:
         print(f"  [parse] {trl_file.name}...")
         with open(trl_file, encoding='latin-1', newline='') as f:
@@ -279,7 +281,7 @@ def build_dashboard_data() -> dict:
 
     slot_map = {}   # { 'date|HH:MM': { 'pos': {...}, 'neg': {...} } }
 
-    tre_files = sorted((DATA_DIR / "TRE").rglob("*-TRE-Ergebnis.csv"), key=lambda p: p.name)
+    tre_files = sorted((data_dir / "TRE").rglob("*-TRE-Ergebnis.csv"), key=lambda p: p.name)
     for path in tre_files:
         print(f"  [parse] {path.name}...")
         with open(path, encoding='latin-1', newline='') as f:
@@ -462,7 +464,7 @@ def build_dashboard_data() -> dict:
 
     spot_hour_map = {}   # { 'YYYY-MM-DD': [price_h0..price_h23] }  (None for missing slots)
 
-    spot_files = sorted((DATA_DIR / "Spot").glob("auction_spot_prices_switzerland_*.csv"))
+    spot_files = sorted((data_dir / "Spot").glob("auction_spot_prices_switzerland_*.csv"))
     for path in spot_files:
         is_2022 = '2022' in path.name
         with open(path, encoding='utf-8', errors='replace', newline='') as f:
