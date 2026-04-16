@@ -641,9 +641,7 @@
 <!-- Loading Screen -->
 <div class="loading" id="loading">
   <div class="loading-logo">
-    <svg class="brand-icon" viewBox="0 0 100 100" fill="none">
-      <path d="M10,0 H60 V43 Q60,47 64,47 H100 V90 Q100,100 90,100 H10 Q0,100 0,90 V10 Q0,0 10,0 Z" fill="#00BEF5"/>
-    </svg>
+    <img src="brand_assets/logo.png" class="brand-icon" alt="Helion">
     <span class="loading-name">Helion</span>
   </div>
   <div class="loading-ring"></div>
@@ -656,9 +654,7 @@
   <div class="root">
     <div class="header-inner">
       <a class="brand" href="#">
-        <svg class="brand-icon" viewBox="0 0 100 100" fill="none">
-          <path d="M10,0 H60 V43 Q60,47 64,47 H100 V90 Q100,100 90,100 H10 Q0,100 0,90 V10 Q0,0 10,0 Z" fill="#00BEF5"/>
-        </svg>
+        <img src="brand_assets/logo.png" class="brand-icon" alt="Helion">
         <div class="brand-wordmark">
           <span class="brand-name">Helion</span>
           <span class="brand-tagline">Marktdaten Dashboard</span>
@@ -1919,7 +1915,8 @@ function buildTreDailyChart() {
   const nTreDays = Object.keys(dayStarts).length;
   // Aim for ≤25 date labels regardless of period length
   const treDayStep = Math.max(1, Math.ceil(nTreDays / 25));
-  const treTickStep = treDayStep * 96;
+  // Sorted actual day-start indices (DST days have 92 slots, not 96 — can't use multiples of 96)
+  const dayStartEntries = Object.keys(dayStarts).map(Number).sort((a, b) => a - b);
 
   createChart('cTreDailyPrice', {
     type: 'scatter',
@@ -1965,16 +1962,16 @@ function buildTreDailyChart() {
           type: 'linear',
           min: 0, max: totalSlots - 1,
           ...axisStyle({}),
+          afterBuildTicks: (axis) => {
+            axis.ticks = dayStartEntries
+              .filter((_, i) => i % treDayStep === 0)
+              .map(v => ({ value: v }));
+          },
           ticks: {
             color: 'rgba(116,164,190,0.7)',
             maxRotation: 45,
             autoSkip: false,
-            stepSize: treTickStep,
-            callback: (val) => {
-              // snap to nearest day-start entry for robustness
-              const rounded = Math.round(val / 96) * 96;
-              return dayStarts[rounded] ?? '';
-            },
+            callback: (val) => dayStarts[val] ?? '',
             font: { family: 'ProximaNova, Nunito, sans-serif', size: 11 },
           }
         },
@@ -3515,7 +3512,23 @@ function buildHomePage() {
       }
     }
 
+    // TRL DOWN marginal price per (date, block)
+    const trlBlockPrice = {};
+    for (const day of pvTrlDays7) {
+      for (const blk of (day.blocks || [])) {
+        if (TRL_BLOCKS.includes(blk.block))
+          trlBlockPrice[`${day.date}|${blk.block}`] = blk.down?.marginal ?? null;
+      }
+    }
+
+    // TRE nm price per activated slot
+    const trePriceMap = {};
+    for (const s of treSlots) {
+      if (activatedSet.has(`${s.d}|${s.s}`)) trePriceMap[`${s.d}|${s.s}`] = s.nm;
+    }
+
     const pvChartLabels = [], pvChartProd = [], pvChartTrl = [], pvChartAct = [];
+    const pvChartTrlPrice = [], pvChartTrePrice = [];
     const dayBoundaries = [];
     for (let di = 0; di < pvTreDays7.length; di++) {
       const day = pvTreDays7[di];
@@ -3527,14 +3540,30 @@ function buildHomePage() {
           const kw   = pvProfile[key] || 0;
           pvChartLabels.push(key);
           pvChartProd.push(kw);
-          const blk      = timeToBlock[time];
-          const trlMin   = blk ? (trlBlockMin[`${day.date}|${blk}`] ?? null) : null;
+          const blk       = timeToBlock[time];
+          const trlMin    = blk ? (trlBlockMin[`${day.date}|${blk}`]   ?? null) : null;
+          const trlPrice  = blk ? (trlBlockPrice[`${day.date}|${blk}`] ?? null) : null;
           const curtailed = trlMin ?? 0;
           pvChartTrl.push(trlMin);
+          pvChartTrlPrice.push(trlPrice);
           pvChartAct.push(activatedSet.has(key) ? (curtailed || null) : null);
+          pvChartTrePrice.push(activatedSet.has(key) ? (trePriceMap[key] ?? null) : null);
         }
       }
     }
+
+    const pvTooltipEl = (() => {
+      let el = document.getElementById('pvProdTooltip');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'pvProdTooltip';
+        el.style.cssText = 'position:fixed;pointer-events:none;z-index:300;display:none;' +
+          'background:rgba(0,15,30,0.92);border:1px solid rgba(0,190,245,0.2);' +
+          'border-radius:6px;padding:7px 11px;font-size:12px;line-height:1.6;';
+        document.body.appendChild(el);
+      }
+      return el;
+    })();
     createChart('cPvProduction', {
       type: 'line',
       plugins: [{
@@ -3592,6 +3621,46 @@ function buildHomePage() {
           }
           ctx.restore();
         }
+      }, {
+        id: 'pvHover',
+        afterEvent(chart, args) {
+          const e = args.event;
+          const { chartArea, scales: { x, y } } = chart;
+          if (e.type === 'mouseout' ||
+              e.x < chartArea.left || e.x > chartArea.right ||
+              e.y < chartArea.top  || e.y > chartArea.bottom) {
+            pvTooltipEl.style.display = 'none'; return;
+          }
+          if (e.type !== 'mousemove') return;
+          const i        = Math.max(0, Math.min(pvChartLabels.length - 1, Math.round(x.getValueForPixel(e.x))));
+          const label    = pvChartLabels[i];
+          const cursorKw = y.getValueForPixel(e.y);
+          const trlVol   = pvChartTrl[i];
+          const trlPrc   = pvChartTrlPrice[i];
+          const treVol   = pvChartAct[i];
+          const trePrc   = pvChartTrePrice[i];
+          const pv       = pvChartProd[i];
+
+          let html = `<div style="color:rgba(116,164,190,0.7);font-size:10px;margin-bottom:4px;">${fmtDate(label.slice(0,10))}&nbsp;&nbsp;${label.slice(11)}</div>`;
+          if (trlVol != null && cursorKw <= trlVol) {
+            // Cursor is inside the TRL/TRE block area
+            if (treVol != null) {
+              html += `<div style="color:#FE7500;">TRE&nbsp;&nbsp;${fmt(treVol,1)} kW${trePrc != null ? ' · '+fmt(Math.abs(trePrc),2)+' EUR/MWh' : ''}</div>`;
+            } else {
+              html += `<div style="color:#00BEF5;">TRL&nbsp;&nbsp;${fmt(trlVol,1)} kW${trlPrc != null ? ' · '+fmt(trlPrc,1)+' CHF/MW' : ''}</div>`;
+            }
+          } else {
+            // Above the block or outside TRL hours — show PV power
+            html += `<div style="color:#F0C040;">PV&nbsp;&nbsp;${fmt(pv,1)} kW</div>`;
+          }
+
+          pvTooltipEl.innerHTML = html;
+          const rect = chart.canvas.getBoundingClientRect();
+          const ttW  = pvTooltipEl.offsetWidth || 180;
+          pvTooltipEl.style.left    = (rect.left + (e.x + ttW + 20 > chartArea.right ? e.x - ttW - 10 : e.x + 14)) + 'px';
+          pvTooltipEl.style.top     = (rect.top + e.y - 16) + 'px';
+          pvTooltipEl.style.display = 'block';
+        }
       }],
       data: {
         labels: pvChartLabels,
@@ -3603,6 +3672,7 @@ function buildHomePage() {
             borderColor: '#A07810',
             borderWidth: 1.2,
             pointRadius: 0,
+            pointHoverRadius: 0,
             tension: 0.3,
           },
           {
@@ -3612,6 +3682,7 @@ function buildHomePage() {
             borderColor: '#007FB0',
             borderWidth: 1,
             pointRadius: 0,
+            pointHoverRadius: 0,
             spanGaps: false,
             tension: 0,
           }
