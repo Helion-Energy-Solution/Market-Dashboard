@@ -1109,6 +1109,21 @@
             <div class="chart-body tall"><canvas id="cTrlDailyVol"></canvas></div>
           </div>
         </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="chart-title">Preismuster — Wochentag × 4h-Block</div>
+                <div class="chart-meta">Ø Marginaler Leistungspreis je Wochentag und Block · CHF/MW · ausgewählter Zeitraum</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0;margin-left:16px;">
+                <button class="mini-toggle-btn active" id="trlHeatBtnDown" onclick="setTrlHeatmapDir('down')">DOWN</button>
+                <button class="mini-toggle-btn" id="trlHeatBtnUp" onclick="setTrlHeatmapDir('up')">UP</button>
+              </div>
+            </div>
+            <div><canvas id="cTrlDailyHeatmap" style="display:block;"></canvas></div>
+          </div>
+        </div>
       </section>
 
     </div><!-- end #page-trl -->
@@ -1300,6 +1315,21 @@
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cSrlDailyVol"></canvas></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex;justify-content:space-between;align-items:flex-start;">
+              <div>
+                <div class="chart-title">Preismuster — Wochentag × 4h-Block</div>
+                <div class="chart-meta">Ø Marginaler Leistungspreis je Wochentag und Block · CHF/MW · ausgewählter Zeitraum</div>
+              </div>
+              <div style="display:flex;gap:6px;flex-shrink:0;margin-left:16px;">
+                <button class="mini-toggle-btn active" id="srlHeatBtnDown" onclick="setSrlHeatmapDir('down')">DOWN</button>
+                <button class="mini-toggle-btn" id="srlHeatBtnUp" onclick="setSrlHeatmapDir('up')">UP</button>
+              </div>
+            </div>
+            <div><canvas id="cSrlDailyHeatmap" style="display:block;"></canvas></div>
           </div>
         </div>
       </section>
@@ -1893,6 +1923,7 @@ function buildTrlDailyCharts() {
       }
     }
   });
+  buildDailyHeatmap('cTrlDailyHeatmap', days, trlHeatmapDir, 'CHF/MW');
 }
 
 /* ── TRE Daily Chart (15-min resolution, scatter) ── */
@@ -2327,7 +2358,197 @@ function buildSrlDailyCharts() {
       }
     }
   });
+  buildDailyHeatmap('cSrlDailyHeatmap', days, srlHeatmapDir, 'CHF/MW');
 }
+
+/* ── Daily Auction Heatmap (shared TRL + SRL) ── */
+const HM_DOW      = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+const HM_DOW_FULL = ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'];
+const HM_BLOCKS   = ['00:00-04:00','04:00-08:00','08:00-12:00','12:00-16:00','16:00-20:00','20:00-24:00'];
+const HM_BLABS    = ['00–04','04–08','08–12','12–16','16–20','20–24'];
+
+let trlHeatmapDir = 'down';
+let srlHeatmapDir = 'down';
+
+function setTrlHeatmapDir(dir) {
+  trlHeatmapDir = dir;
+  document.getElementById('trlHeatBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('trlHeatBtnUp').classList.toggle('active', dir === 'up');
+  buildDailyHeatmap('cTrlDailyHeatmap', allData.trlDaily.filter(d => inRange(d.date)), dir, 'CHF/MW');
+}
+
+function setSrlHeatmapDir(dir) {
+  srlHeatmapDir = dir;
+  document.getElementById('srlHeatBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('srlHeatBtnUp').classList.toggle('active', dir === 'up');
+  buildDailyHeatmap('cSrlDailyHeatmap', (allData.srlDaily||[]).filter(d => inRange(d.date)), dir, 'CHF/MW');
+}
+
+function buildDailyHeatmap(canvasId, days, dir, currency) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  // Aggregate sums[weekday 0=Mon..6=Sun][block 0..5]
+  const sums   = Array.from({length: 7}, () => Array(6).fill(0));
+  const counts = Array.from({length: 7}, () => Array(6).fill(0));
+
+  for (const day of days) {
+    const jsDay = new Date(day.date + 'T12:00:00').getDay();
+    const dow   = (jsDay + 6) % 7;  // 0=Mon … 6=Sun
+    for (const blk of (day.blocks || [])) {
+      const bi    = HM_BLOCKS.indexOf(blk.block);
+      if (bi < 0) continue;
+      const price = dir === 'up' ? blk.up?.marginal : blk.down?.marginal;
+      if (price == null) continue;
+      sums[dow][bi]   += price;
+      counts[dow][bi] += 1;
+    }
+  }
+
+  const grid = sums.map((row, r) =>
+    row.map((s, c) => counts[r][c] > 0 ? s / counts[r][c] : null)
+  );
+
+  const allVals = grid.flat().filter(v => v !== null);
+  if (allVals.length === 0) return;
+  const minVal = Math.min(...allVals);
+  const maxVal = Math.max(...allVals);
+
+  // Color scale: dark blue → brand color (UP=cyan, DOWN=orange)
+  const C0 = [0, 25, 50];
+  const C1 = dir === 'up' ? [0, 190, 245] : [254, 117, 0];
+
+  function cellColor(val) {
+    if (val === null) return 'rgba(0,20,40,0.35)';
+    const t = maxVal > minVal ? (val - minVal) / (maxVal - minVal) : 0.5;
+    const r = Math.round(C0[0] + t * (C1[0] - C0[0]));
+    const g = Math.round(C0[1] + t * (C1[1] - C0[1]));
+    const b = Math.round(C0[2] + t * (C1[2] - C0[2]));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  const dpr   = window.devicePixelRatio || 1;
+  const ctnW  = canvas.parentElement.clientWidth;
+  const PAD_L = 46, PAD_T = 28, PAD_R = 16, PAD_B = 26;
+  const cellW = (ctnW - PAD_L - PAD_R) / 6;
+  const cellH = Math.max(32, Math.min(44, Math.floor(cellW * 0.45)));
+  const cssH  = PAD_T + 7 * cellH + PAD_B;
+
+  canvas.style.width  = ctnW + 'px';
+  canvas.style.height = cssH + 'px';
+  canvas.width  = Math.round(ctnW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, ctnW, cssH);
+
+  // Draw cells
+  for (let r = 0; r < 7; r++) {
+    for (let c = 0; c < 6; c++) {
+      const x   = PAD_L + c * cellW;
+      const y   = PAD_T + r * cellH;
+      const val = grid[r][c];
+      ctx.fillStyle = cellColor(val);
+      ctx.beginPath();
+      ctx.roundRect(x + 2, y + 2, cellW - 4, cellH - 4, 5);
+      ctx.fill();
+      if (val !== null) {
+        ctx.save();
+        ctx.shadowColor   = 'rgba(0,0,0,0.55)';
+        ctx.shadowBlur    = 3;
+        ctx.fillStyle     = 'rgba(255,255,255,0.9)';
+        ctx.font          = `bold ${Math.max(9, Math.min(12, Math.floor(cellW * 0.17)))}px ProximaNova, Nunito, sans-serif`;
+        ctx.textAlign     = 'center';
+        ctx.textBaseline  = 'middle';
+        ctx.fillText(Math.round(val).toLocaleString('de-CH'), x + cellW / 2, y + cellH / 2);
+        ctx.restore();
+      }
+    }
+  }
+
+  // Weekday labels (left)
+  ctx.fillStyle    = 'rgba(116,164,190,0.7)';
+  ctx.font         = '12px ProximaNova, Nunito, sans-serif';
+  ctx.textAlign    = 'right';
+  ctx.textBaseline = 'middle';
+  for (let r = 0; r < 7; r++) {
+    ctx.fillText(HM_DOW[r], PAD_L - 8, PAD_T + r * cellH + cellH / 2);
+  }
+
+  // Color legend bar (top)
+  const lgX  = PAD_L, lgY = 5, lgW = ctnW - PAD_L - PAD_R, lgH = 6;
+  const grad = ctx.createLinearGradient(lgX, 0, lgX + lgW, 0);
+  grad.addColorStop(0, `rgb(${C0.join(',')})`);
+  grad.addColorStop(1, `rgb(${C1.join(',')})`);
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.roundRect(lgX, lgY, lgW, lgH, 2);
+  ctx.fill();
+  ctx.fillStyle    = 'rgba(116,164,190,0.55)';
+  ctx.font         = '10px ProximaNova, Nunito, sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.textAlign    = 'left';
+  ctx.fillText(`${Math.round(minVal).toLocaleString('de-CH')} ${currency}`, lgX, lgY + lgH + 3);
+  ctx.textAlign = 'right';
+  ctx.fillText(`${Math.round(maxVal).toLocaleString('de-CH')} ${currency}`, lgX + lgW, lgY + lgH + 3);
+
+  // Block labels (bottom)
+  ctx.fillStyle    = 'rgba(116,164,190,0.7)';
+  ctx.font         = '11px ProximaNova, Nunito, sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'top';
+  for (let c = 0; c < 6; c++) {
+    ctx.fillText(HM_BLABS[c], PAD_L + c * cellW + cellW / 2, PAD_T + 7 * cellH + 7);
+  }
+
+  // Store layout for hover tooltip
+  canvas._hmData = { grid, counts, PAD_L, PAD_T, cellW, cellH, dir, currency, cssW: ctnW, cssH };
+
+  if (!canvas._hmTooltipAttached) {
+    canvas._hmTooltipAttached = true;
+    const tip = document.getElementById('hmTooltip');
+    canvas.addEventListener('mousemove', e => {
+      const d = canvas._hmData;
+      if (!d) return;
+      const rect = canvas.getBoundingClientRect();
+      const mx   = (e.clientX - rect.left) / rect.width  * d.cssW;
+      const my   = (e.clientY - rect.top)  / rect.height * d.cssH;
+      const cc   = Math.floor((mx - d.PAD_L) / d.cellW);
+      const rr   = Math.floor((my - d.PAD_T) / d.cellH);
+      if (cc < 0 || cc >= 6 || rr < 0 || rr >= 7 || d.grid[rr][cc] === null) {
+        tip.style.display = 'none'; return;
+      }
+      const val = d.grid[rr][cc];
+      const col = d.dir === 'up' ? '#00BEF5' : '#FE7500';
+      tip.innerHTML =
+        `<div style="font-weight:600;margin-bottom:3px;">${HM_DOW_FULL[rr]} · ${HM_BLABS[cc]} Uhr</div>` +
+        `<div>${d.dir.toUpperCase()} Ø <span style="color:${col}">${Math.round(val).toLocaleString('de-CH')} ${d.currency}</span></div>` +
+        `<div style="color:rgba(116,164,190,0.5);font-size:10px;margin-top:2px;">${d.counts[rr][cc]} Beobachtungen</div>`;
+      tip.style.display = 'block';
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      let tx = e.clientX + 14, ty = e.clientY - 10;
+      if (tx + tw > window.innerWidth  - 8) tx = e.clientX - tw - 14;
+      if (ty + th > window.innerHeight - 8) ty = e.clientY - th - 10;
+      tip.style.left = tx + 'px';
+      tip.style.top  = ty + 'px';
+    });
+    canvas.addEventListener('mouseleave', () => {
+      document.getElementById('hmTooltip').style.display = 'none';
+    });
+  }
+}
+
+// Redraw heatmaps on window resize
+let _hmResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(_hmResizeTimer);
+  _hmResizeTimer = setTimeout(() => {
+    if (!allData) return;
+    if (activeMarket === 'trl') buildDailyHeatmap('cTrlDailyHeatmap', allData.trlDaily.filter(d => inRange(d.date)), trlHeatmapDir, 'CHF/MW');
+    if (activeMarket === 'srl') buildDailyHeatmap('cSrlDailyHeatmap', (allData.srlDaily||[]).filter(d => inRange(d.date)), srlHeatmapDir, 'CHF/MW');
+  }, 200);
+});
 
 function updateSrlKpis() {
   const weeks = (allData.srlWeekly || []).filter(w => inRange(w.date));
@@ -3737,5 +3958,6 @@ function buildHomePage() {
 
 loadData();
 </script>
+<div id="hmTooltip" style="position:fixed;display:none;background:rgba(0,15,30,0.92);border:1px solid rgba(0,190,245,0.2);border-radius:8px;padding:8px 12px;font-size:12px;color:#fff;pointer-events:none;z-index:1000;white-space:nowrap;line-height:1.5;"></div>
 </body>
 </html>
