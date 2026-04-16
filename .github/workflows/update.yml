@@ -22,14 +22,12 @@ jobs:
           cache: pip
 
       - name: Install dependencies
-        run: pip install paramiko requests
+        run: pip install keeper-secrets-manager paramiko requests
+
+      - name: Write Keeper config
+        run: echo "${{ secrets.KEEPER_CONFIG }}" | base64 -d > keeper_config.json
 
       - name: Run patch_data.py
-        env:
-          SM_EMAIL:    ${{ secrets.SM_EMAIL }}
-          SM_PASSWORD: ${{ secrets.SM_PASSWORD }}
-          SFTP_USER:   ${{ secrets.SFTP_USER }}
-          SFTP_PASS:   ${{ secrets.SFTP_PASS }}
         run: python patch_data.py
 
       - name: Commit and push if data changed
