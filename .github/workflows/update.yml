@@ -2,7 +2,8 @@ name: Daily Market Data Update
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # 06:00 UTC = 07:00 CET / 08:00 CEST
+    - cron: '30 6 * * *'  # 06:30 UTC = 07:30 CET / 08:30 CEST
+    - cron: '0 10 * * *'  # 10:00 UTC = 11:00 CET / 12:00 CEST
   workflow_dispatch:       # allow manual trigger from the GitHub Actions tab
 
 jobs:
