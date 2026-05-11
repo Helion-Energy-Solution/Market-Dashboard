@@ -214,11 +214,11 @@
     .card-menu-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
     .card-menu-btn {
       background: none; border: none; cursor: pointer;
-      color: rgba(116,164,190,0.45); font-size: 17px; line-height: 1;
+      color: rgba(255,255,255,0.7); font-size: 17px; line-height: 1;
       padding: 2px 5px; border-radius: 4px;
       transition: color 0.15s, background 0.15s;
     }
-    .card-menu-btn:hover { color: rgba(116,164,190,0.9); background: rgba(116,164,190,0.1); }
+    .card-menu-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
     .card-menu-dropdown {
       display: none; position: absolute; top: calc(100% + 6px); right: 0;
       background: #141e2d; border: 1px solid rgba(116,164,190,0.18);
@@ -692,11 +692,6 @@
         </div>
       </a>
       <div class="header-right">
-        <span class="hbadge">mFRR / Spot</span>
-        <div class="hstatus">
-          <div class="pulse"></div>
-          <span id="hStatusText">Laden …</span>
-        </div>
       </div>
     </div>
   </div>
@@ -1286,7 +1281,7 @@
           <div class="chart-card">
             <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
               <div>
-                <div class="chart-title">Marginalpreise (15-Min-Auflösung)</div>
+                <div class="chart-title">Preise (15-Min-Auflösung)</div>
                 <div class="chart-meta" id="treDailyMeta">UP: höchster aktivierter Preis · DOWN: niedrigster aktivierter Preis</div>
                 <div class="chart-legend">
                   <div class="leg"><div class="leg-pip up"></div>UP</div>
@@ -1363,7 +1358,7 @@
                   <div class="card-menu-group-label" style="margin-top:7px;">Preismetrik</div>
                   <div class="card-menu-group" style="flex-direction:column; gap:4px;">
                     <button class="mini-toggle-btn active" id="treSlotMetricBtnMarg" onclick="setTreSlotMetric('marginal')">Marginal</button>
-                    <button class="mini-toggle-btn"        id="treSlotMetricBtnVwap" onclick="setTreSlotMetric('vwap')">VWAP</button>
+                    <button class="mini-toggle-btn"        id="treSlotMetricBtnVwap" onclick="setTreSlotMetric('vwap')">Ø-Preis</button>
                   </div>
                 </div>
               </div>
@@ -2338,9 +2333,11 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
   const isLog  = yType === 'symlog';
   const isDown = dir === 'down';
 
-  // DOWN: reverse so most positive (non-activated, expensive) is on the left and
-  // most negative (cheapest, activated) is on the right — mirrors the UP convention.
-  const orderedBids = isDown ? [...bidStack].reverse() : bidStack;
+  // Only reverse for TRE DOWN (negative prices): cheapest (most negative) on the right.
+  // For SRL/TRL DOWN (positive prices), natural ascending order = low price at low volume.
+  const hasNegPrices = bidStack.some(b => b.p < 0);
+  const doFlip = isDown && hasNegPrices;
+  const orderedBids = doFlip ? [...bidStack].reverse() : bidStack;
   const totalVolume = bidStack.reduce((s, b) => s + b.v, 0);
 
   const solidBorder = dir === 'up' ? 'rgba(0,190,245,1)'    : 'rgba(254,117,0,1)';
@@ -2350,8 +2347,8 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
 
   const totalAwarded  = dirData.awarded  ?? 0;
   const clearingPrice = dirData.marginal ?? null;
-  // DOWN (reversed): awarded bids are on the RIGHT, so the split is at the end
-  const splitX = isDown ? totalVolume - totalAwarded : totalAwarded;
+  // TRE DOWN (flipped): awarded bids are on the RIGHT; SRL/TRL DOWN: awarded on the LEFT
+  const splitX = doFlip ? totalVolume - totalAwarded : totalAwarded;
 
   // Build two partial staircases split at splitX.
   // ptsL = left side (x ≤ splitX), ptsR = right side (x ≥ splitX).
@@ -2386,12 +2383,12 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
     cumVol = rightX;
   }
 
-  // UP: left = awarded (solid), right = non-awarded (dim)
-  // DOWN: left = non-awarded (dim), right = awarded (solid)
-  const lBorder = isDown ? dimBorder   : solidBorder;
-  const lFill   = isDown ? dimFill     : solidFill;
-  const rBorder = isDown ? solidBorder : dimBorder;
-  const rFill   = isDown ? solidFill   : dimFill;
+  // UP / SRL+TRL DOWN: left = awarded (solid), right = non-awarded (dim)
+  // TRE DOWN (flipped): left = non-awarded (dim), right = awarded (solid)
+  const lBorder = doFlip ? dimBorder   : solidBorder;
+  const lFill   = doFlip ? dimFill     : solidFill;
+  const rBorder = doFlip ? solidBorder : dimBorder;
+  const rFill   = doFlip ? solidFill   : dimFill;
 
   const maxBidPrice = bidStack.reduce((m, b) => Math.max(m, b.p), 0);
 
@@ -2633,13 +2630,13 @@ function buildTreDailyChart() {
     afterBuildTicks: axis => {
       axis.ticks = [-4, -3, -2, -1, 0, 1, 2, 3, 4].map(v => ({ value: v }));
     },
-    title: { display: false },
-    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(sli(v), 0) + ' €' }
+    title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(sli(v), 0) }
   } : {
     ...axisStyle({}),
     type: 'linear',
-    title: { display: false },
-    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) + ' €' }
+    title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) }
   };
 
   if (isLine) {
@@ -2764,7 +2761,7 @@ function buildTreSlotCharts() {
         },
         scales: {
           x: { ticks: { color: 'rgba(116,164,190,0.7)' }, grid: { color: GRID } },
-          y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' %' } }
+          y: { ...axisStyle({}), title: { display: true, text: '%', color: 'rgba(116,164,190,0.45)', font: { size: 9 } }, ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v } }
         }
       }
     });
@@ -2799,7 +2796,7 @@ function buildTreSlotCharts() {
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 1) : '—'} %` }
         }},
-        scales: { x: slotXOpts, y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' %' } } }
+        scales: { x: slotXOpts, y: { ...axisStyle({}), title: { display: true, text: '%', color: 'rgba(116,164,190,0.45)', font: { size: 9 } }, ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v } } }
       }
     });
   }
@@ -2807,7 +2804,7 @@ function buildTreSlotCharts() {
   // ── Slot price chart ─────────────────────────────────────────
   document.getElementById('treSlotPriceMeta').textContent =
     (treSlotGran === '4h' ? 'Je 4h-Block' : 'Je 15-Min-Block') + ' · ' +
-    (treSlotMetric === 'vwap' ? 'VWAP (volumengewichtet)' : 'Ø Marginalpreis');
+    (treSlotMetric === 'vwap' ? 'Ø-Preis (volumengewichtet)' : 'Ø Marginalpreis');
 
   if (treSlotGran === '4h') {
     const blockMap = {};
@@ -2835,7 +2832,7 @@ function buildTreSlotCharts() {
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 2) : '—'} EUR/MWh` }
         }},
         scales: { x: { ticks: { color: 'rgba(116,164,190,0.7)' }, grid: { color: GRID } },
-                  y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } } }
+                  y: { ...axisStyle({}), title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } }, ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) } } }
       }
     });
   } else {
@@ -2857,8 +2854,8 @@ function buildTreSlotCharts() {
       ticks: { color: 'rgba(116,164,190,0.7)', callback: (val, idx) => idx % 16 === 0 ? slotTimes2[idx] : null, maxRotation: 0 } };
     createChart('cTreSlotPrice', {
       type: 'line', data: { labels: slotTimes2, datasets: [
-        lineDataset('UP ' + (treSlotMetric==='vwap'?'VWAP':'Ø Marginalpreis'), upP, C_UP, { thin: true }),
-        lineDataset('DOWN ' + (treSlotMetric==='vwap'?'VWAP':'Ø Marginalpreis'), downP, C_DOWN, { thin: true }),
+        lineDataset('UP ' + (treSlotMetric==='vwap'?'Ø-Preis':'Ø Marginalpreis'), upP, C_UP, { thin: true }),
+        lineDataset('DOWN ' + (treSlotMetric==='vwap'?'Ø-Preis':'Ø Marginalpreis'), downP, C_DOWN, { thin: true }),
       ]},
       options: {
         responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -2867,7 +2864,7 @@ function buildTreSlotCharts() {
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 2) : '—'} EUR/MWh` }
         }},
-        scales: { x: slotXOpts2, y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } } }
+        scales: { x: slotXOpts2, y: { ...axisStyle({}), title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } }, ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) } } }
       }
     });
   }
@@ -3872,10 +3869,112 @@ window.setTrlDailyBidDir   = dir   => {
   buildTrlDailyBidStackChart();
 };
 
+function updatePvPieSegments() {
+  const isM = pvTreMetric === 'marginal';
+  const mwp = pvRevData.plantMWp;
+  pvPieSegsCur[0]  = ((isM ? pvRevData.treRevCurM  : pvRevData.treRevCurV)  || 0) / mwp;
+  pvPieSegsCur[1]  = ((isM ? pvRevData.trlRevCurM  : pvRevData.trlRevCurV)  || 0) / mwp;
+  pvPieSegsCur[2]  = (pvRevData.fiRevCur  || 0) / mwp;
+  pvPieSegsPrev[0] = ((isM ? pvRevData.treRevPrevM : pvRevData.treRevPrevV) || 0) / mwp;
+  pvPieSegsPrev[1] = ((isM ? pvRevData.trlRevPrevM : pvRevData.trlRevPrevV) || 0) / mwp;
+  pvPieSegsPrev[2] = (pvRevData.fiRevPrev || 0) / mwp;
+  pvPieTotalNorm   = pvPieSegsCur[0] + pvPieSegsCur[1] + pvPieSegsCur[2];
+}
+
+function buildPvPieChart() {
+  createChart('cPvPie', {
+    type: 'doughnut',
+    plugins: [{
+      id: 'pvCenter',
+      afterDraw(chart) {
+        const { ctx, chartArea: { top, bottom, left, right } } = chart;
+        const cx = (left + right) / 2, cy = (top + bottom) / 2;
+        ctx.save();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'rgba(116,164,190,0.6)';
+        ctx.font = '11px system-ui,sans-serif';
+        ctx.fillText('Total', cx, cy - 22);
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 26px system-ui,sans-serif';
+        ctx.fillText(fmt(pvPieTotalNorm, 0), cx, cy + 4);
+        ctx.fillStyle = 'rgba(116,164,190,0.55)';
+        ctx.font = '10px system-ui,sans-serif';
+        ctx.fillText('CHF / MWp', cx, cy + 22);
+        ctx.restore();
+      }
+    }],
+    data: {
+      labels: ['TRE DOWN', 'TRL DOWN', 'Einspeisung'],
+      datasets: [{
+        data: pvPieSegsCur.slice(),
+        backgroundColor: ['rgba(254,117,0,0.85)', 'rgba(0,190,245,0.85)', 'rgba(240,192,64,0.85)'],
+        borderColor:     ['rgba(254,117,0,0.3)',  'rgba(0,190,245,0.3)',  'rgba(240,192,64,0.3)'],
+        borderWidth: 1, hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          display: true, position: 'bottom',
+          labels: { color: 'rgba(116,164,190,0.85)', font: { size: 10 }, boxWidth: 10, padding: 8 }
+        },
+        tooltip: {
+          enabled: false,
+          external({ chart, tooltip }) {
+            let el = document.getElementById('pvPieTooltip');
+            if (!el) {
+              el = document.createElement('div');
+              el.id = 'pvPieTooltip';
+              el.style.cssText = 'position:fixed;pointer-events:none;z-index:300;' +
+                'background:rgba(0,15,30,0.92);border:1px solid rgba(0,190,245,0.2);' +
+                'border-radius:6px;padding:8px 12px;font-size:12px;transition:opacity .12s;';
+              document.body.appendChild(el);
+            }
+            if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
+            const dp = tooltip.dataPoints?.[0];
+            if (!dp) return;
+            const i     = dp.dataIndex;
+            const val   = pvPieSegsCur[i];
+            const total = pvPieSegsCur.reduce((a, b) => a + b, 0);
+            const share = total > 0 ? (val / total * 100).toFixed(1) : '0';
+            const label = ['TRE DOWN', 'TRL DOWN', 'Einspeisung'][i];
+            const prev  = pvPieSegsPrev[i];
+            let wowHtml = '';
+            if (prev > 0) {
+              const wp  = (val - prev) / Math.abs(prev) * 100;
+              const col = wp >= 0 ? '#34d399' : '#ef4444';
+              const arr = wp >= 0 ? '↑' : '↓';
+              wowHtml = `<span style="color:${col};margin-left:10px;font-weight:700;">${arr} ${Math.abs(wp).toFixed(1).replace('.', ',')}%</span>`;
+            }
+            el.innerHTML =
+              `<div style="color:rgba(116,164,190,0.75);font-size:10px;margin-bottom:3px;">${label}</div>` +
+              `<div style="color:#fff;">${fmt(val, 0)} CHF/MWp (${share}%)${wowHtml}</div>`;
+            const rect = chart.canvas.getBoundingClientRect();
+            el.style.opacity = '1';
+            el.style.left = (rect.left + tooltip.caretX + 14) + 'px';
+            el.style.top  = (rect.top  + tooltip.caretY - 16) + 'px';
+          }
+        }
+      }
+    }
+  });
+}
+
 window.setPvTreMetric = m => {
   pvTreMetric = m;
   document.getElementById('pvTreMetricBtnMarginal').classList.toggle('active', m === 'marginal');
   document.getElementById('pvTreMetricBtnVwap').classList.toggle('active',     m === 'vwap');
+  if (pvRevData.treRevCurM !== undefined) {
+    const isM = m === 'marginal';
+    trendEl('homePvTotalWow',
+      isM ? pvRevData.totalCurM : pvRevData.totalCurV,
+      (isM ? pvRevData.totalPrevM : pvRevData.totalPrevV) > 0
+        ? (isM ? pvRevData.totalPrevM : pvRevData.totalPrevV) : null);
+    updatePvPieSegments();
+    buildPvPieChart();
+  }
 };
 
 window.setSrlWeeklyMetric = m => {
@@ -4177,9 +4276,6 @@ async function loadData() {
 
   // Hide period bar on home page (initial state)
   document.querySelector('.period-bar').classList.add('bar-hidden');
-
-  // Update header status
-  document.getElementById('hStatusText').textContent = 'Daten geladen';
 
   // Update footer
   const ms = allData.processingMs;
@@ -4818,11 +4914,10 @@ function buildHomePage() {
   const pvTreDays7 = pvEndDate ? treDays.filter(d => d.date <= pvEndDate).slice(-7) : [];
   const pvTrlDays7 = pvEndDate ? trlDays.filter(d => d.date <= pvEndDate).slice(-7) : [];
 
-  let trlDownRevCur = 0, trlPrevDownRev = 0;
   if (pvTrlDays7.length >= 7 && Object.keys(pvProfile).length) {
-    const calcTrlRevenue = (dateFrom, dateTo) => {
+    const calcTrlRevenue = (dateFrom, dateTo, priceKey) => {
       const days = trlDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
-      let upRev = 0, downRev = 0;
+      let downRev = 0;
       for (const day of days) {
         for (const blk of day.blocks) {
           if (!TRL_BLOCKS.includes(blk.block)) continue;
@@ -4830,44 +4925,44 @@ function buildHomePage() {
           const pvVals = slots.map(t => pvProfile[`${day.date}|${t}`]).filter(v => v != null);
           if (!pvVals.length) continue;
           const minPvMW = Math.min(...pvVals) / 1000;
-          if (blk.up?.marginal   != null) upRev   += minPvMW * blk.up.marginal;
-          if (blk.down?.marginal != null) downRev += minPvMW * blk.down.marginal;
+          if (blk.down?.[priceKey] != null) downRev += minPvMW * blk.down[priceKey];
         }
       }
-      return { upRev, downRev };
+      return downRev;
     };
 
-    const prevTrl7  = trlDays.filter(d => d.date < pvTrlDays7[0].date).slice(-7);
-    const trlCur  = calcTrlRevenue(pvTrlDays7[0].date, pvTrlDays7[6].date);
-    const trlPrev = prevTrl7.length ? calcTrlRevenue(prevTrl7[0].date, prevTrl7[6].date) : { upRev: null, downRev: null };
-
-    trlDownRevCur  = trlCur.downRev;
-    trlPrevDownRev = prevTrl7.length ? (trlPrev.downRev ?? 0) : 0;
+    const prevTrl7 = trlDays.filter(d => d.date < pvTrlDays7[0].date).slice(-7);
+    pvRevData.trlRevCurM  = calcTrlRevenue(pvTrlDays7[0].date, pvTrlDays7[6].date, 'marginal');
+    pvRevData.trlRevCurV  = calcTrlRevenue(pvTrlDays7[0].date, pvTrlDays7[6].date, 'vwap');
+    pvRevData.trlRevPrevM = prevTrl7.length ? calcTrlRevenue(prevTrl7[0].date, prevTrl7[6].date, 'marginal') : 0;
+    pvRevData.trlRevPrevV = prevTrl7.length ? calcTrlRevenue(prevTrl7[0].date, prevTrl7[6].date, 'vwap')     : 0;
+  } else {
+    pvRevData.trlRevCurM = pvRevData.trlRevCurV = pvRevData.trlRevPrevM = pvRevData.trlRevPrevV = 0;
   }
 
   // ─── PV TRE DOWN revenue + feed-in + pie chart ───
   if (pvTreDays7.length >= 7 && Object.keys(pvProfile).length) {
-    const calcRevenue = (dateFrom, dateTo) => {
+    const calcRevenue = (dateFrom, dateTo, priceKey) => {
       const slots = treSlots.filter(s =>
         s.d >= dateFrom && s.d <= dateTo &&
         s.nm !== null && s.nm <= -200 &&
         s.s >= '08:00' && s.s < '16:00'
       );
-      let total = 0, count = 0;
+      let total = 0;
       for (const slot of slots) {
-        const pvKey = `${slot.d}|${slot.s}`;
-        const pvKw = pvProfile[pvKey];
-        if (!pvKw) continue;
-        total += (pvKw / 1000) * (-slot.nm) * 0.25;
-        count++;
+        const pvKw = pvProfile[`${slot.d}|${slot.s}`];
+        const price = slot[priceKey];
+        if (!pvKw || price == null) continue;
+        total += (pvKw / 1000) * (-price) * 0.25;
       }
-      return { total, count };
+      return total;
     };
 
-    const prevDays7  = treDays.filter(d => d.date < pvTreDays7[0].date).slice(-7);
-
-    const cur7  = calcRevenue(pvTreDays7[0].date, pvTreDays7[6].date);
-    const prev7 = prevDays7.length ? calcRevenue(prevDays7[0].date, prevDays7[6].date) : { total: 0 };
+    const prevDays7 = treDays.filter(d => d.date < pvTreDays7[0].date).slice(-7);
+    pvRevData.treRevCurM  = calcRevenue(pvTreDays7[0].date, pvTreDays7[6].date, 'nm');
+    pvRevData.treRevCurV  = calcRevenue(pvTreDays7[0].date, pvTreDays7[6].date, 'nv');
+    pvRevData.treRevPrevM = prevDays7.length ? calcRevenue(prevDays7[0].date, prevDays7[6].date, 'nm') : 0;
+    pvRevData.treRevPrevV = prevDays7.length ? calcRevenue(prevDays7[0].date, prevDays7[6].date, 'nv') : 0;
 
     document.getElementById('homePvWeek').textContent = `7 Tage bis ${fmtDate(pvTreDays7[6].date)}`;
 
@@ -4891,99 +4986,24 @@ function buildHomePage() {
       return total;
     };
 
-    const curFI  = calcFeedIn(pvTreDays7[0].date, pvTreDays7[6].date);
-    const prevFI = prevDays7.length ? calcFeedIn(prevDays7[0].date, prevDays7[6].date) : 0;
-
     const PLANT_MWP = 0.531; // 531 kWp installed capacity
+    pvRevData.plantMWp  = PLANT_MWP;
+    pvRevData.fiRevCur  = calcFeedIn(pvTreDays7[0].date, pvTreDays7[6].date);
+    pvRevData.fiRevPrev = prevDays7.length ? calcFeedIn(prevDays7[0].date, prevDays7[6].date) : 0;
 
-    // Total WoW (percentage change is scale-invariant, so divide both sides)
-    const totalCur  = (cur7.total  || 0) + (trlDownRevCur  || 0) + (curFI  || 0);
-    const totalPrev = ((prev7.total || 0) + (trlPrevDownRev || 0) + (prevFI || 0));
-    trendEl('homePvTotalWow', totalCur, totalPrev > 0 ? totalPrev : null);
+    pvRevData.totalCurM  = (pvRevData.treRevCurM  || 0) + (pvRevData.trlRevCurM  || 0) + pvRevData.fiRevCur;
+    pvRevData.totalCurV  = (pvRevData.treRevCurV  || 0) + (pvRevData.trlRevCurV  || 0) + pvRevData.fiRevCur;
+    pvRevData.totalPrevM = (pvRevData.treRevPrevM || 0) + (pvRevData.trlRevPrevM || 0) + pvRevData.fiRevPrev;
+    pvRevData.totalPrevV = (pvRevData.treRevPrevV || 0) + (pvRevData.trlRevPrevV || 0) + pvRevData.fiRevPrev;
 
-    // ── Pie chart — values normalised to CHF·EUR / MWp ────────────────────────
-    const pieSegmentsCur  = [cur7.total / PLANT_MWP, trlDownRevCur / PLANT_MWP, curFI / PLANT_MWP];
-    const pieSegmentsPrev = [(prev7.total || 0) / PLANT_MWP, (trlPrevDownRev || 0) / PLANT_MWP, (prevFI || 0) / PLANT_MWP];
-    const totalCurNorm    = totalCur / PLANT_MWP;
+    const isM = pvTreMetric === 'marginal';
+    trendEl('homePvTotalWow',
+      isM ? pvRevData.totalCurM : pvRevData.totalCurV,
+      (isM ? pvRevData.totalPrevM : pvRevData.totalPrevV) > 0
+        ? (isM ? pvRevData.totalPrevM : pvRevData.totalPrevV) : null);
 
-    const pvPieTooltip = ({ chart, tooltip }) => {
-      let el = document.getElementById('pvPieTooltip');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = 'pvPieTooltip';
-        el.style.cssText = 'position:fixed;pointer-events:none;z-index:300;' +
-          'background:rgba(0,15,30,0.92);border:1px solid rgba(0,190,245,0.2);' +
-          'border-radius:6px;padding:8px 12px;font-size:12px;transition:opacity .12s;';
-        document.body.appendChild(el);
-      }
-      if (tooltip.opacity === 0) { el.style.opacity = '0'; return; }
-      const dp = tooltip.dataPoints?.[0];
-      if (!dp) return;
-      const i     = dp.dataIndex;
-      const val   = pieSegmentsCur[i];
-      const total = pieSegmentsCur.reduce((a, b) => a + b, 0);
-      const share = total > 0 ? (val / total * 100).toFixed(1) : '0';
-      const label = ['TRE DOWN', 'TRL DOWN', 'Einspeisung'][i];
-      const prev  = pieSegmentsPrev[i];
-      let wowHtml = '';
-      if (prev > 0) {
-        const wp  = (val - prev) / Math.abs(prev) * 100;
-        const col = wp >= 0 ? '#34d399' : '#ef4444';
-        const arr = wp >= 0 ? '↑' : '↓';
-        wowHtml = `<span style="color:${col};margin-left:10px;font-weight:700;">${arr} ${Math.abs(wp).toFixed(1).replace('.', ',')}%</span>`;
-      }
-      el.innerHTML =
-        `<div style="color:rgba(116,164,190,0.75);font-size:10px;margin-bottom:3px;">${label}</div>` +
-        `<div style="color:#fff;">${fmt(val, 0)} CHF/MWp (${share}%)${wowHtml}</div>`;
-      const rect = chart.canvas.getBoundingClientRect();
-      el.style.opacity = '1';
-      el.style.left = (rect.left + tooltip.caretX + 14) + 'px';
-      el.style.top  = (rect.top  + tooltip.caretY - 16) + 'px';
-    };
-
-    createChart('cPvPie', {
-      type: 'doughnut',
-      plugins: [{
-        id: 'pvCenter',
-        afterDraw(chart) {
-          const { ctx, chartArea: { top, bottom, left, right } } = chart;
-          const cx = (left + right) / 2, cy = (top + bottom) / 2;
-          ctx.save();
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = 'rgba(116,164,190,0.6)';
-          ctx.font = '11px system-ui,sans-serif';
-          ctx.fillText('Total', cx, cy - 22);
-          ctx.fillStyle = '#fff';
-          ctx.font = '700 26px system-ui,sans-serif';
-          ctx.fillText(fmt(totalCurNorm, 0), cx, cy + 4);
-          ctx.fillStyle = 'rgba(116,164,190,0.55)';
-          ctx.font = '10px system-ui,sans-serif';
-          ctx.fillText('CHF / MWp', cx, cy + 22);
-          ctx.restore();
-        }
-      }],
-      data: {
-        labels: ['TRE DOWN', 'TRL DOWN', 'Einspeisung'],
-        datasets: [{
-          data: pieSegmentsCur,
-          backgroundColor: ['rgba(254,117,0,0.85)', 'rgba(0,190,245,0.85)', 'rgba(240,192,64,0.85)'],
-          borderColor:     ['rgba(254,117,0,0.3)',  'rgba(0,190,245,0.3)',  'rgba(240,192,64,0.3)'],
-          borderWidth: 1, hoverOffset: 8,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: true,
-        cutout: '60%',
-        plugins: {
-          legend: {
-            display: true, position: 'bottom',
-            labels: { color: 'rgba(116,164,190,0.85)', font: { size: 10 }, boxWidth: 10, padding: 8 }
-          },
-          tooltip: { enabled: false, external: pvPieTooltip }
-        }
-      }
-    });
+    updatePvPieSegments();
+    buildPvPieChart();
 
     // ── PV production chart ────────────────────────────────────────────────────
     const activatedSet = new Set(
