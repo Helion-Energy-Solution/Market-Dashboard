@@ -635,7 +635,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(b'{"error":"Data still loading, please retry"}')
                 return
-            payload = json.dumps(DASHBOARD_DATA, ensure_ascii=False).encode('utf-8')
+            # Serve the pre-written file directly — avoids re-serialising 200+ MB in-memory
+            data_file = BASE_DIR / 'data' / 'data.json'
+            if data_file.exists():
+                payload = data_file.read_bytes()
+            else:
+                payload = json.dumps(DASHBOARD_DATA, ensure_ascii=False).encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(payload)))
