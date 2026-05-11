@@ -207,6 +207,14 @@
     .mini-toggle-btn:hover { background: var(--accent-dim); border-color: var(--accent-border); color: var(--helion-blau); transform: translateY(-1px); }
     .mini-toggle-btn:active { transform: translateY(0); }
     .mini-toggle-btn.active { background: var(--accent-dim); border-color: var(--helion-blau); color: var(--helion-blau); }
+    .drag-zoom-clear-btn {
+      position: absolute; top: 6px; right: 6px; z-index: 10;
+      padding: 3px 10px; font-size: 11px; font-family: inherit;
+      background: rgba(0,15,30,0.88); color: rgba(0,190,245,0.9);
+      border: 1px solid rgba(0,190,245,0.35); border-radius: 4px;
+      cursor: pointer; transition: background 0.12s, border-color 0.12s;
+    }
+    .drag-zoom-clear-btn:hover { background: rgba(0,40,60,0.95); border-color: rgba(0,190,245,0.65); }
     .mini-select { background: rgba(116,164,190,0.07); border: 1px solid rgba(116,164,190,0.2); color: rgba(116,164,190,0.85); border-radius: 5px; padding: 3px 6px; font-size: 10px; font-family: inherit; cursor: pointer; outline: none; max-width: 140px; }
     .mini-select:hover { border-color: rgba(116,164,190,0.4); }
     .mini-select option { background: #141e2d; color: rgba(116,164,190,0.85); }
@@ -2078,6 +2086,214 @@ function updateChart(id, labels, datasets) {
   c.update('none');
 }
 
+/* ── Drag-to-zoom (shared utility) ── */
+const _dzSavedBounds = {};
+
+function setupDragZoom(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const parent = canvas.parentElement;
+  if (!parent) return;
+
+  _dzSavedBounds[canvasId] = null;
+
+  let overlay  = parent.querySelector(`.dz-ov[data-c="${canvasId}"]`);
+  let clearBtn = parent.querySelector(`.dz-cb[data-c="${canvasId}"]`);
+  if (clearBtn) clearBtn.style.display = 'none';
+  if (overlay) return; // events already wired
+
+  // Visual-only overlay — pointer-events:none so Chart.js tooltip events pass through
+  overlay = document.createElement('canvas');
+  overlay.className = 'dz-ov';
+  overlay.dataset.c = canvasId;
+  overlay.style.cssText = 'position:absolute;top:0;left:0;z-index:5;pointer-events:none;';
+  parent.appendChild(overlay);
+
+  clearBtn = document.createElement('button');
+  clearBtn.className = 'dz-cb drag-zoom-clear-btn';
+  clearBtn.dataset.c = canvasId;
+  clearBtn.textContent = 'Zoom zurücksetzen';
+  clearBtn.style.display = 'none';
+  parent.appendChild(clearBtn);
+
+  const octx = overlay.getContext('2d');
+  let dragging = false, startPx = 0, startPy = 0;
+
+  // Resize overlay to match chart canvas (called at drag start when canvas is visible)
+  function syncOverlay() {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    if (w > 0 && h > 0 && (overlay.width !== w || overlay.height !== h)) {
+      overlay.width = w; overlay.height = h;
+      overlay.style.width = w + 'px'; overlay.style.height = h + 'px';
+    }
+  }
+
+  // Cursor: crosshair while hovering the chart area, default otherwise
+  canvas.style.cursor = 'crosshair';
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    syncOverlay();
+    const r = canvas.getBoundingClientRect();
+    startPx = e.clientX - r.left;
+    startPy = e.clientY - r.top;
+    dragging = true;
+    // Hide tooltip while dragging — takes effect on next Chart.js event, no update needed
+    const chart = charts[canvasId];
+    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = false;
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    if (e.buttons === 0) { dragging = false; octx.clearRect(0, 0, overlay.width, overlay.height); return; }
+    syncOverlay();
+    const r = canvas.getBoundingClientRect();
+    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    // True corner-to-corner rectangle (like MS Paint) — only X span used for zoom
+    const bx = Math.min(startPx, cx), bw = Math.abs(cx - startPx);
+    const by = Math.min(startPy, cy), bh = Math.abs(cy - startPy);
+    octx.fillStyle   = 'rgba(0,190,245,0.07)';
+    octx.strokeStyle = 'rgba(0,190,245,0.45)';
+    octx.lineWidth = 1;
+    octx.fillRect(bx, by, bw, bh);
+    octx.strokeRect(bx, by, bw, bh);
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (!dragging) return;
+    dragging = false;
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    const endPx = e.clientX - canvas.getBoundingClientRect().left;
+
+    // Re-enable tooltip before applying zoom (applyZoom calls chart.update which redraws tooltip correctly)
+    const chart = charts[canvasId];
+    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = true;
+
+    applyZoom(endPx);
+  });
+
+  function applyZoom(endPx) {
+    const chart = charts[canvasId];
+    if (!chart) return;
+    const pxMin = Math.min(startPx, endPx), pxMax = Math.max(startPx, endPx);
+    if (pxMax - pxMin < 3) return; // ignore tiny drags
+
+    const xScale = chart.scales.x;
+    let scaleMin, scaleMax, dataMin, dataMax;
+
+    if (xScale.type === 'category') {
+      const labels = chart.data.labels || [];
+      const iMin = Math.max(0, Math.round(xScale.getValueForPixel(pxMin)));
+      const iMax = Math.min(labels.length - 1, Math.round(xScale.getValueForPixel(pxMax)));
+      if (iMin >= iMax) return;
+      scaleMin = labels[iMin]; scaleMax = labels[iMax];
+      dataMin = iMin; dataMax = iMax;
+    } else {
+      scaleMin = dataMin = xScale.getValueForPixel(pxMin);
+      scaleMax = dataMax = xScale.getValueForPixel(pxMax);
+      if (dataMin >= dataMax) return;
+    }
+
+    // On first zoom: save original axis bounds + Y-axis label width (to lock axis position)
+    if (!_dzSavedBounds[canvasId]) {
+      const saved = { axes: {}, yWidth: null, yAfterFit: null };
+      for (const axId of Object.keys(chart.scales)) {
+        const opts = chart.options.scales[axId];
+        saved.axes[axId] = { min: opts?.min, max: opts?.max };
+      }
+      if (chart.scales.y) {
+        saved.yWidth    = chart.scales.y.width;
+        saved.yAfterFit = chart.options.scales.y?.afterFit ?? null;
+      }
+      _dzSavedBounds[canvasId] = saved;
+    }
+
+    chart.options.scales.x.min = scaleMin;
+    chart.options.scales.x.max = scaleMax;
+
+    // Lock Y-axis label width so chart area doesn't shift when tick values change
+    const saved = _dzSavedBounds[canvasId];
+    if (saved.yWidth != null && saved.yAfterFit === null && chart.options.scales?.y) {
+      const lockedW = saved.yWidth;
+      chart.options.scales.y.afterFit = sc => { sc.width = lockedW; };
+    }
+
+    // Y auto-fit to data within the zoomed X interval
+    const isStacked = Object.values(chart.scales).some(sc => sc.options?.stacked);
+    let yLo = Infinity, yHi = -Infinity;
+
+    if (isStacked) {
+      const pos = {}, neg = {};
+      for (const ds of chart.data.datasets) {
+        if (ds.hidden) continue;
+        for (let j = Math.floor(dataMin); j <= Math.ceil(dataMax); j++) {
+          const v = Array.isArray(ds.data) ? ds.data[j] : null;
+          if (v == null || !isFinite(v)) continue;
+          if (v >= 0) pos[j] = (pos[j] || 0) + v;
+          else        neg[j] = (neg[j] || 0) + v;
+        }
+      }
+      const all = [...Object.values(pos), ...Object.values(neg), 0];
+      yLo = Math.min(...all); yHi = Math.max(...all);
+    } else {
+      for (const ds of chart.data.datasets) {
+        if (ds.hidden) continue;
+        for (let j = 0; j < (ds.data?.length ?? 0); j++) {
+          const pt = ds.data[j];
+          const xv = (pt != null && typeof pt === 'object') ? pt.x : j;
+          const yv = (pt != null && typeof pt === 'object') ? pt.y : pt;
+          if (yv == null || !isFinite(yv)) continue;
+          if (xv >= dataMin && xv <= dataMax) {
+            if (yv < yLo) yLo = yv;
+            if (yv > yHi) yHi = yv;
+          }
+        }
+      }
+    }
+
+    if (isFinite(yLo) && isFinite(yHi)) {
+      const pad = (yHi - yLo) * 0.1 || Math.abs(yHi) * 0.1 || 1;
+      for (const axId of Object.keys(chart.scales)) {
+        if (axId === 'x') continue;
+        const axOpts = chart.options.scales[axId];
+        if (axOpts) { axOpts.min = yLo - pad; axOpts.max = yHi + pad; }
+      }
+    }
+
+    chart.update('none');
+    clearBtn.style.display = '';
+  }
+
+  clearBtn.addEventListener('click', () => {
+    const chart = charts[canvasId];
+    if (!chart) return;
+    const saved = _dzSavedBounds[canvasId];
+
+    // Restore original Y afterFit (or remove if we added it)
+    if (chart.options.scales?.y) {
+      if (saved?.yAfterFit != null) {
+        chart.options.scales.y.afterFit = saved.yAfterFit;
+      } else {
+        delete chart.options.scales.y.afterFit;
+      }
+    }
+
+    // Restore original axis bounds
+    for (const axId of Object.keys(chart.scales)) {
+      const axOpts = chart.options.scales[axId];
+      if (!axOpts) continue;
+      const orig = saved?.axes?.[axId];
+      if (orig?.min !== undefined) axOpts.min = orig.min; else delete axOpts.min;
+      if (orig?.max !== undefined) axOpts.max = orig.max; else delete axOpts.max;
+    }
+
+    _dzSavedBounds[canvasId] = null;
+    chart.update('none');
+    clearBtn.style.display = 'none';
+  });
+}
+
 /* ── TRL Weekly Charts ── */
 function buildTrlWeeklyCharts() {
   const weeks = allData.trlWeekly.filter(w => inRange(w.date));
@@ -2320,6 +2536,8 @@ function buildTrlDailyCharts() {
   });
   buildDailyHeatmap('cTrlDailyHeatmap', days, trlHeatmapDir, 'CHF/MW');
   buildTrlDailyBidStackChart();
+  setupDragZoom('cTrlDailyPrice');
+  setupDragZoom('cTrlDailyVol');
 }
 
 /* ── TRL Bid Stack Charts ── */
@@ -2592,12 +2810,14 @@ function buildTreDailyChart() {
   for (let i = 0; i < slots.length; i++) {
     const s = slots[i];
     if (s.d !== prevDate) { dayStarts[i] = fmtDate(s.d); prevDate = s.d; }
-    const pm = (s.pm != null && isLog) ? sl(s.pm) : s.pm;
-    const nm = (s.nm != null && isLog) ? sl(s.nm) : s.nm;
-    if (s.pm !== null) { upData.push({ x: i, y: pm }); }
-    if (s.nm !== null) { downData.push({ x: i, y: nm }); }
-    upLine.push(pm);
-    downLine.push(nm);
+    const rawPm = isAvg ? s.pv : s.pm;
+    const rawNm = isAvg ? s.nv : s.nm;
+    const pm = (rawPm != null && isLog) ? sl(rawPm) : rawPm;
+    const nm = (rawNm != null && isLog) ? sl(rawNm) : rawNm;
+    if (rawPm != null) { upData.push({ x: i, y: pm }); }
+    if (rawNm != null) { downData.push({ x: i, y: nm }); }
+    upLine.push(pm ?? null);
+    downLine.push(nm ?? null);
   }
 
   const totalSlots = slots.length;
@@ -2606,7 +2826,7 @@ function buildTreDailyChart() {
   const dayStartEntries = Object.keys(dayStarts).map(Number).sort((a, b) => a - b);
 
   document.getElementById('treDailyMeta').textContent = isAvg
-    ? 'Gleitender Ø (20 Slots) der Aktivierungspreise'
+    ? (isLine ? 'Gleitender Ø (20 Slots) des Ø-Preises' : 'Volumengewichteter Ø-Preis (VWAP) pro Slot')
     : 'UP: höchster aktivierter Preis · DOWN: niedrigster aktivierter Preis';
 
   const xAxis = {
@@ -2706,6 +2926,7 @@ function buildTreDailyChart() {
       }
     });
   }
+  setupDragZoom('cTreDailyPrice');
 }
 
 /* ── TRE Slot Charts ── */
@@ -3281,6 +3502,8 @@ function buildSrlDailyCharts() {
   });
   buildDailyHeatmap('cSrlDailyHeatmap', days, srlHeatmapDir, 'CHF/MW');
   buildSrlDailyBidStackChart();
+  setupDragZoom('cSrlDailyPrice');
+  setupDragZoom('cSrlDailyVol');
 }
 
 /* ── Daily Auction Heatmap (shared TRL + SRL) ── */
@@ -3748,6 +3971,7 @@ function buildSpotTrendChart() {
       }
     }
   });
+  setupDragZoom('cSpotTrend');
 }
 
 function buildSpotSpreadChart() {
@@ -3826,6 +4050,7 @@ function updateSpotKpis() {
   document.getElementById('kpiSpotPeakMeta').textContent = `Ø über ${nDays} Tage`;
   document.getElementById('kpiSpotTb1Meta').textContent  = `Ø über ${nDays} Tage`;
   document.getElementById('kpiSpotTb2Meta').textContent  = `Ø über ${nDays} Tage`;
+  setupDragZoom('cSpotSpread');
 }
 
 window.setTrlWeeklyMetric = m => {
