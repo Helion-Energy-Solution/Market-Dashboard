@@ -2088,6 +2088,7 @@ function updateChart(id, labels, datasets) {
 
 /* ── Drag-to-zoom (shared utility) ── */
 const _dzSavedBounds = {};
+const _dzActiveZoom  = {}; // persists zoom range across chart rebuilds (option toggles)
 
 function setupDragZoom(canvasId) {
   const canvas = document.getElementById(canvasId);
@@ -2100,26 +2101,11 @@ function setupDragZoom(canvasId) {
   let overlay  = parent.querySelector(`.dz-ov[data-c="${canvasId}"]`);
   let clearBtn = parent.querySelector(`.dz-cb[data-c="${canvasId}"]`);
   if (clearBtn) clearBtn.style.display = 'none';
-  if (overlay) return; // events already wired
 
-  // Visual-only overlay — pointer-events:none so Chart.js tooltip events pass through
-  overlay = document.createElement('canvas');
-  overlay.className = 'dz-ov';
-  overlay.dataset.c = canvasId;
-  overlay.style.cssText = 'position:absolute;top:0;left:0;z-index:5;pointer-events:none;';
-  parent.appendChild(overlay);
-
-  clearBtn = document.createElement('button');
-  clearBtn.className = 'dz-cb drag-zoom-clear-btn';
-  clearBtn.dataset.c = canvasId;
-  clearBtn.textContent = 'Zoom zurücksetzen';
-  clearBtn.style.display = 'none';
-  parent.appendChild(clearBtn);
-
-  const octx = overlay.getContext('2d');
+  // octx is null on first call (overlay not yet created); set properly below
+  let octx = overlay?.getContext('2d') ?? null;
   let dragging = false, startPx = 0, startPy = 0;
 
-  // Resize overlay to match chart canvas (called at drag start when canvas is visible)
   function syncOverlay() {
     const w = canvas.offsetWidth, h = canvas.offsetHeight;
     if (w > 0 && h > 0 && (overlay.width !== w || overlay.height !== h)) {
@@ -2128,76 +2114,40 @@ function setupDragZoom(canvasId) {
     }
   }
 
-  // Cursor: crosshair while hovering the chart area, default otherwise
-  canvas.style.cursor = 'crosshair';
-
-  canvas.addEventListener('mousedown', e => {
-    if (e.button !== 0) return;
-    syncOverlay();
-    const r = canvas.getBoundingClientRect();
-    startPx = e.clientX - r.left;
-    startPy = e.clientY - r.top;
-    dragging = true;
-    // Hide tooltip while dragging — takes effect on next Chart.js event, no update needed
-    const chart = charts[canvasId];
-    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = false;
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    if (e.buttons === 0) { dragging = false; octx.clearRect(0, 0, overlay.width, overlay.height); return; }
-    syncOverlay();
-    const r = canvas.getBoundingClientRect();
-    const cx = e.clientX - r.left, cy = e.clientY - r.top;
-    octx.clearRect(0, 0, overlay.width, overlay.height);
-    // True corner-to-corner rectangle (like MS Paint) — only X span used for zoom
-    const bx = Math.min(startPx, cx), bw = Math.abs(cx - startPx);
-    const by = Math.min(startPy, cy), bh = Math.abs(cy - startPy);
-    octx.fillStyle   = 'rgba(0,190,245,0.07)';
-    octx.strokeStyle = 'rgba(0,190,245,0.45)';
-    octx.lineWidth = 1;
-    octx.fillRect(bx, by, bw, bh);
-    octx.strokeRect(bx, by, bw, bh);
-  });
-
-  document.addEventListener('mouseup', e => {
-    if (!dragging) return;
-    dragging = false;
-    octx.clearRect(0, 0, overlay.width, overlay.height);
-    const endPx = e.clientX - canvas.getBoundingClientRect().left;
-
-    // Re-enable tooltip before applying zoom (applyZoom calls chart.update which redraws tooltip correctly)
-    const chart = charts[canvasId];
-    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = true;
-
-    applyZoom(endPx);
-  });
-
-  function applyZoom(endPx) {
+  // applyZoom is defined before the early-return check so it can be called on chart rebuild.
+  // Pass directRange = { scaleMin, scaleMax } to skip pixel-based computation (re-apply path).
+  function applyZoom(endPx, directRange) {
     const chart = charts[canvasId];
     if (!chart) return;
-    const pxMin = Math.min(startPx, endPx), pxMax = Math.max(startPx, endPx);
-    if (pxMax - pxMin < 3) return; // ignore tiny drags
 
     const xScale = chart.scales.x;
     let scaleMin, scaleMax, dataMin, dataMax;
 
-    if (xScale.type === 'category') {
-      const labels = chart.data.labels || [];
-      const iMin = Math.max(0, Math.round(xScale.getValueForPixel(pxMin)));
-      const iMax = Math.min(labels.length - 1, Math.round(xScale.getValueForPixel(pxMax)));
-      if (iMin >= iMax) return;
-      // Use integer indices, not label strings — sparse label arrays contain many "" values
-      // that would all resolve to the same first-occurrence index in Chart.js
-      scaleMin = iMin; scaleMax = iMax;
-      dataMin = iMin; dataMax = iMax;
+    if (directRange) {
+      ({ scaleMin, scaleMax } = directRange);
+      dataMin = scaleMin; dataMax = scaleMax;
     } else {
-      scaleMin = dataMin = xScale.getValueForPixel(pxMin);
-      scaleMax = dataMax = xScale.getValueForPixel(pxMax);
-      if (dataMin >= dataMax) return;
+      const pxMin = Math.min(startPx, endPx), pxMax = Math.max(startPx, endPx);
+      if (pxMax - pxMin < 3) return;
+
+      if (xScale.type === 'category') {
+        const labels = chart.data.labels || [];
+        const iMin = Math.max(0, Math.round(xScale.getValueForPixel(pxMin)));
+        const iMax = Math.min(labels.length - 1, Math.round(xScale.getValueForPixel(pxMax)));
+        if (iMin >= iMax) return;
+        // Use integer indices — sparse label arrays have many "" entries that all
+        // resolve to the same first-occurrence index if used as label strings
+        scaleMin = iMin; scaleMax = iMax;
+        dataMin = iMin; dataMax = iMax;
+      } else {
+        scaleMin = dataMin = xScale.getValueForPixel(pxMin);
+        scaleMax = dataMax = xScale.getValueForPixel(pxMax);
+        if (dataMin >= dataMax) return;
+      }
+      _dzActiveZoom[canvasId] = { scaleMin, scaleMax };
     }
 
-    // On first zoom: save original axis bounds + Y-axis label width (to lock axis position)
+    // On first zoom: save original axis bounds + Y-axis label width
     if (!_dzSavedBounds[canvasId]) {
       const saved = { axes: {}, yWidth: null, yAfterFit: null, xStepSize: undefined, xAfterBuildTicks: null };
       for (const axId of Object.keys(chart.scales)) {
@@ -2224,15 +2174,13 @@ function setupDragZoom(canvasId) {
       chart.options.scales.y.afterFit = sc => { sc.width = lockedW; };
     }
 
-    // For linear axes: adjust tick generation so labels appear in the zoomed range
+    // For linear axes: adjust ticks so labels appear in the zoomed range
     if (xScale.type !== 'category') {
       const xOpts = chart.options.scales.x;
       const range = scaleMax - scaleMin;
-      // Reduce stepSize proportionally so ~4 ticks fall in the zoomed range
       if (xOpts?.ticks?.stepSize != null && range > 0) {
         xOpts.ticks.stepSize = Math.max(1, Math.round(range / 4));
       }
-      // For afterBuildTicks charts (e.g. TRE): filter generated ticks to the zoomed range
       if (saved.xAfterBuildTicks) {
         const origFn = saved.xAfterBuildTicks;
         const smin = scaleMin, smax = scaleMax;
@@ -2287,15 +2235,75 @@ function setupDragZoom(canvasId) {
     }
 
     chart.update('none');
-    clearBtn.style.display = '';
+    if (clearBtn) clearBtn.style.display = '';
   }
+
+  // If overlay already exists the events are wired — but re-apply zoom if chart was rebuilt
+  // (e.g. user toggled marginal→avg while zoomed)
+  if (overlay) {
+    if (_dzActiveZoom[canvasId]) applyZoom(null, _dzActiveZoom[canvasId]);
+    return;
+  }
+
+  // First-time setup: create overlay canvas + clear button, wire events
+  overlay = document.createElement('canvas');
+  overlay.className = 'dz-ov';
+  overlay.dataset.c = canvasId;
+  overlay.style.cssText = 'position:absolute;top:0;left:0;z-index:5;pointer-events:none;';
+  parent.appendChild(overlay);
+  octx = overlay.getContext('2d');
+
+  clearBtn = document.createElement('button');
+  clearBtn.className = 'dz-cb drag-zoom-clear-btn';
+  clearBtn.dataset.c = canvasId;
+  clearBtn.textContent = 'Zoom zurücksetzen';
+  clearBtn.style.display = 'none';
+  parent.appendChild(clearBtn);
+
+  canvas.style.cursor = 'crosshair';
+
+  canvas.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    syncOverlay();
+    const r = canvas.getBoundingClientRect();
+    startPx = e.clientX - r.left;
+    startPy = e.clientY - r.top;
+    dragging = true;
+    const chart = charts[canvasId];
+    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = false;
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    if (e.buttons === 0) { dragging = false; octx.clearRect(0, 0, overlay.width, overlay.height); return; }
+    syncOverlay();
+    const r = canvas.getBoundingClientRect();
+    const cx = e.clientX - r.left, cy = e.clientY - r.top;
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    const bx = Math.min(startPx, cx), bw = Math.abs(cx - startPx);
+    const by = Math.min(startPy, cy), bh = Math.abs(cy - startPy);
+    octx.fillStyle   = 'rgba(0,190,245,0.07)';
+    octx.strokeStyle = 'rgba(0,190,245,0.45)';
+    octx.lineWidth = 1;
+    octx.fillRect(bx, by, bw, bh);
+    octx.strokeRect(bx, by, bw, bh);
+  });
+
+  document.addEventListener('mouseup', e => {
+    if (!dragging) return;
+    dragging = false;
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    const endPx = e.clientX - canvas.getBoundingClientRect().left;
+    const chart = charts[canvasId];
+    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = true;
+    applyZoom(endPx);
+  });
 
   clearBtn.addEventListener('click', () => {
     const chart = charts[canvasId];
     if (!chart) return;
     const saved = _dzSavedBounds[canvasId];
 
-    // Restore original Y afterFit (or remove if we added it)
     if (chart.options.scales?.y) {
       if (saved?.yAfterFit != null) {
         chart.options.scales.y.afterFit = saved.yAfterFit;
@@ -2304,7 +2312,6 @@ function setupDragZoom(canvasId) {
       }
     }
 
-    // Restore x-axis tick config
     const xOpts = chart.options.scales?.x;
     if (xOpts) {
       if (saved?.xStepSize !== undefined) {
@@ -2317,7 +2324,6 @@ function setupDragZoom(canvasId) {
       }
     }
 
-    // Restore original axis bounds
     for (const axId of Object.keys(chart.scales)) {
       const axOpts = chart.options.scales[axId];
       if (!axOpts) continue;
@@ -2327,6 +2333,7 @@ function setupDragZoom(canvasId) {
     }
 
     _dzSavedBounds[canvasId] = null;
+    delete _dzActiveZoom[canvasId];
     chart.update('none');
     clearBtn.style.display = 'none';
   });
@@ -3883,6 +3890,7 @@ function buildSpotTrendChart() {
         }
       }
     });
+    setupDragZoom('cSpotTrend');
     return;
   }
 
@@ -3945,6 +3953,7 @@ function buildSpotTrendChart() {
         }
       }
     });
+    setupDragZoom('cSpotTrend');
     return;
   }
 
@@ -4068,6 +4077,7 @@ function buildSpotSpreadChart() {
       }
     }
   });
+  setupDragZoom('cSpotSpread');
 }
 
 function updateSpotKpis() {
@@ -4088,7 +4098,6 @@ function updateSpotKpis() {
   document.getElementById('kpiSpotPeakMeta').textContent = `Ø über ${nDays} Tage`;
   document.getElementById('kpiSpotTb1Meta').textContent  = `Ø über ${nDays} Tage`;
   document.getElementById('kpiSpotTb2Meta').textContent  = `Ø über ${nDays} Tage`;
-  setupDragZoom('cSpotSpread');
 }
 
 window.setTrlWeeklyMetric = m => {
