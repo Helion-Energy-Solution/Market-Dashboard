@@ -412,7 +412,7 @@ def build_dashboard_data(data_dir=None) -> dict:
     # Bid stacks (pbs/nbs) included for the last 30 days only (each slot ~320 bids → large).
     # Bids stored as [price, volume, activated] arrays for compactness.
     tre_slots = []
-    bid_stack_cutoff = (_date.today() - _timedelta(days=365)).isoformat()
+    bid_stack_cutoff = (_date.today() - _timedelta(days=30)).isoformat()
     for key in sorted(slot_map):
         date_str, slot = key.split('|', 1)
         s = slot_map[key]

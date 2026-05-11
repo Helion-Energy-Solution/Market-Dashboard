@@ -4249,10 +4249,19 @@ document.getElementById('dateTo').addEventListener('change', onDateChange);
 ═══════════════════════════════════════════════════════════ */
 async function loadData() {
   const loadingText = document.querySelector('.loading-text');
+
+  // Detect environment: serve.py exposes /api/data with proper 503-while-loading;
+  // Vercel (static hosting) does not — fall back to the pre-built static file.
+  let endpoint = 'data/data.json';
+  try {
+    const probe = await fetch('/api/data');
+    if (probe.status !== 404) endpoint = '/api/data'; // serve.py is running
+  } catch (_) { /* static host — use file */ }
+
   let retries = 0;
   while (retries < 60) {  // wait up to ~3min
     try {
-      const res = await fetch('/api/data');
+      const res = await fetch(endpoint);
       if (res.status === 503) {
         const elapsed = Math.round(retries * 3);
         loadingText.textContent = `Marktdaten werden verarbeitet … (${elapsed}s)`;
