@@ -27,6 +27,7 @@
       --night-5:          #74A4BE;
       --scarlet:          #FC3200;
       --flush-orange:     #FE7500;
+      --spot-pink:        #C0457A;
       --amber:            #FFA500;
 
       --bg:               #000F1E;
@@ -206,6 +207,37 @@
     .mini-toggle-btn:hover { background: var(--accent-dim); border-color: var(--accent-border); color: var(--helion-blau); transform: translateY(-1px); }
     .mini-toggle-btn:active { transform: translateY(0); }
     .mini-toggle-btn.active { background: var(--accent-dim); border-color: var(--helion-blau); color: var(--helion-blau); }
+    .mini-select { background: rgba(116,164,190,0.07); border: 1px solid rgba(116,164,190,0.2); color: rgba(116,164,190,0.85); border-radius: 5px; padding: 3px 6px; font-size: 10px; font-family: inherit; cursor: pointer; outline: none; max-width: 140px; }
+    .mini-select:hover { border-color: rgba(116,164,190,0.4); }
+    .mini-select option { background: #141e2d; color: rgba(116,164,190,0.85); }
+    /* Three-dot card menu */
+    .card-menu-wrap { position: relative; margin-left: auto; flex-shrink: 0; }
+    .card-menu-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(116,164,190,0.45); font-size: 17px; line-height: 1;
+      padding: 2px 5px; border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .card-menu-btn:hover { color: rgba(116,164,190,0.9); background: rgba(116,164,190,0.1); }
+    .card-menu-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); right: 0;
+      background: #141e2d; border: 1px solid rgba(116,164,190,0.18);
+      border-radius: 8px; padding: 8px 10px; z-index: 200; min-width: 130px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    }
+    .card-menu-dropdown::before {
+      content: ''; position: absolute; top: -10px; right: 0; left: 0; height: 10px;
+    }
+    .card-menu-wrap:hover .card-menu-dropdown { display: block; }
+    .card-menu-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .card-menu-group + .card-menu-group {
+      margin-top: 7px; padding-top: 7px;
+      border-top: 1px solid rgba(116,164,190,0.1);
+    }
+    .card-menu-group-label {
+      font-size: 9px; color: rgba(116,164,190,0.45); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 4px;
+    }
     .period-sep {
       width: 1px; height: 20px;
       background: var(--border);
@@ -335,7 +367,7 @@
     .home-card.card-sre { --hc-accent: var(--blau-4); --hc-hover-border: rgba(176,230,244,0.35); }
     .home-card.card-trl { --hc-accent: var(--helion-blau); --hc-hover-border: rgba(0,190,245,0.35); }
     .home-card.card-tre { --hc-accent: #74c8e0; --hc-hover-border: rgba(116,200,224,0.35); }
-    .home-card.card-spot { --hc-accent: var(--flush-orange); --hc-hover-border: rgba(254,117,0,0.3); }
+    .home-card.card-spot { --hc-accent: var(--spot-pink); --hc-hover-border: rgba(192,69,122,0.3); }
     .home-card.card-pv   { --hc-accent: #f0c040; --hc-hover-border: rgba(240,192,64,0.3); }
     .home-card.card-pv::before { background: #f0c040; }
     .home-pv-note { font-size: 10px; color: var(--text-subtle); margin-top: 12px; line-height: 1.5; }
@@ -378,8 +410,8 @@
     .bess-note { font-size: 10px; color: var(--text-subtle); margin-top: 12px; line-height: 1.5; }
 
     .home-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .home-card-name { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); }
-    .home-card-week { font-size: 10px; color: var(--text-subtle); margin-bottom: 18px; letter-spacing: 0.05em; }
+    .home-card-name { font-size: 15px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: rgba(255,255,255,0.88); }
+    .home-card-week { font-size: 10px; color: var(--text-subtle); margin-bottom: 8px; letter-spacing: 0.05em; }
 
     .home-metrics-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
 
@@ -392,11 +424,10 @@
     .home-trend-row { display: flex; align-items: center; gap: 6px; }
     .home-trend-val { font-size: 12px; font-weight: 700; min-width: 60px; display: inline-block; }
     .home-trend-val.positive { color: #34d399; }
-    .home-trend-val.negative { color: var(--flush-orange); }
+    .home-trend-val.negative { color: #ef4444; }
     .home-trend-val.neutral  { color: var(--text-subtle); }
     .home-trend-label { font-size: 10px; color: var(--text-subtle); }
     #homePvTotalWow .home-trend-val { font-size: 22px; font-weight: 700; min-width: unset; white-space: nowrap; }
-    #homePvTotalWow .home-trend-val.negative { color: #ef4444; }
 
     .home-card-btn {
       background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -596,13 +627,13 @@
     .nav-badge.trl  { background: var(--accent-dim); border-color: var(--accent-border); color: var(--helion-blau); }
     .nav-badge.tre  { background: rgba(0,190,245,0.08); border-color: rgba(0,190,245,0.2); color: #74c8e0; }
     .nav-badge.srl  { background: rgba(130,220,245,0.10); border-color: rgba(130,220,245,0.25); color: var(--blau-3); }
-    .nav-badge.spot { background: rgba(254,117,0,0.12); border-color: rgba(254,117,0,0.28); color: var(--flush-orange); }
+    .nav-badge.spot { background: rgba(192,69,122,0.12); border-color: rgba(192,69,122,0.28); color: var(--spot-pink); }
     .nav-badge.home { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); color: var(--text-muted); }
     .nav-item.active .nav-badge.home { background: rgba(255,255,255,0.1); }
     .nav-item.active .nav-badge.trl  { background: rgba(0,190,245,0.2); }
     .nav-item.active .nav-badge.tre  { background: rgba(0,190,245,0.2); }
     .nav-item.active .nav-badge.srl  { background: rgba(130,220,245,0.2); }
-    .nav-item.active .nav-badge.spot { background: rgba(254,117,0,0.22); }
+    .nav-item.active .nav-badge.spot { background: rgba(192,69,122,0.22); }
     .nav-text { display: flex; flex-direction: column; gap: 1px; }
     .nav-name { font-size: 13px; font-weight: 700; color: var(--text-strong); line-height: 1; }
     .nav-sub  { font-size: 10px; color: var(--text-muted); line-height: 1.3; }
@@ -680,7 +711,7 @@
       <button class="preset-btn" data-start="2023-01-01" data-end="2023-12-31">2023</button>
       <button class="preset-btn" data-start="2024-01-01" data-end="2024-12-31">2024</button>
       <button class="preset-btn" data-start="2025-01-01" data-end="2025-12-31">2025</button>
-      <button class="preset-btn active" data-start="2026-01-01" data-end="2026-04-30">2026</button>
+      <button class="preset-btn" data-start="2026-01-01" data-end="2026-04-30">2026</button>
       <div class="period-sep"></div>
       <input type="date" class="date-input" id="dateFrom" value="2026-01-01" min="2022-01-01" max="2026-12-31">
       <span class="period-to">bis</span>
@@ -701,6 +732,14 @@
       <div class="nav-text">
         <span class="nav-name">Übersicht</span>
         <span class="nav-sub">Marktüberblick</span>
+      </div>
+    </div>
+
+    <div class="nav-item" data-market="spot">
+      <span class="nav-badge spot">Spot</span>
+      <div class="nav-text">
+        <span class="nav-name">Spot</span>
+        <span class="nav-sub">EPEX Spotmarkt CH</span>
       </div>
     </div>
 
@@ -727,14 +766,6 @@
         <span class="nav-sub">Sekundärregelleistung</span>
       </div>
     </div>
-
-    <div class="nav-item" data-market="spot">
-      <span class="nav-badge spot">Spot</span>
-      <div class="nav-text">
-        <span class="nav-name">Spot</span>
-        <span class="nav-sub">EPEX Spotmarkt CH</span>
-      </div>
-    </div>
   </nav>
 
   <!-- ── Main Content ── -->
@@ -751,83 +782,6 @@
       </section>
 
       <div class="home-grid reveal d2">
-
-        <!-- SRL -->
-        <div class="home-card card-srl">
-          <div class="home-card-header">
-            <span class="nav-badge srl">aFRR</span>
-            <span class="home-card-name">Sekundärregelleistung (SRL)</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div class="home-card-week" id="homeSrlWeek" style="margin:0;">—</div>
-            <div style="display:flex; gap:4px; align-items:center;">
-              <button class="mini-toggle-btn active" id="srlBtnDown" onclick="setSrlBlockDir('down')">DOWN</button>
-              <button class="mini-toggle-btn"        id="srlBtnUp"   onclick="setSrlBlockDir('up')">UP</button>
-              <div style="width:1px; height:14px; background:var(--border); margin:0 2px;"></div>
-              <button class="mini-toggle-btn active" id="srlBlockBtn7"  onclick="setSrlBlockWindow(7)">7 Tage</button>
-              <button class="mini-toggle-btn"        id="srlBlockBtn28" onclick="setSrlBlockWindow(28)">4 Wochen</button>
-            </div>
-          </div>
-          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
-            <canvas id="cSrlBlock"></canvas>
-          </div>
-          <button class="home-card-btn" onclick="switchMarket('srl')">SRL Details →</button>
-        </div>
-
-        <!-- SRE -->
-        <div class="home-card card-sre">
-          <div class="home-card-header">
-            <span class="nav-badge srl">aFRR</span>
-            <span class="home-card-name">Sekundärregelenergie (SRE)</span>
-          </div>
-          <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-            <span style="font-size:12px; color:var(--text-subtle); font-style:italic;">Daten noch nicht verfügbar</span>
-          </div>
-        </div>
-
-        <!-- TRL -->
-        <div class="home-card card-trl">
-          <div class="home-card-header">
-            <span class="nav-badge trl">mFRR</span>
-            <span class="home-card-name">Tertiärregelleistung (TRL)</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div class="home-card-week" id="homeTrlWeek" style="margin:0;">—</div>
-            <div style="display:flex; gap:4px; align-items:center;">
-              <button class="mini-toggle-btn active" id="trlBtnDown" onclick="setTrlBlockDir('down')">DOWN</button>
-              <button class="mini-toggle-btn"        id="trlBtnUp"   onclick="setTrlBlockDir('up')">UP</button>
-              <div style="width:1px; height:14px; background:var(--border); margin:0 2px;"></div>
-              <button class="mini-toggle-btn active" id="trlBlockBtn7"  onclick="setTrlBlockWindow(7)">7 Tage</button>
-              <button class="mini-toggle-btn"        id="trlBlockBtn28" onclick="setTrlBlockWindow(28)">4 Wochen</button>
-            </div>
-          </div>
-          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
-            <canvas id="cTrlBlock"></canvas>
-          </div>
-          <button class="home-card-btn" onclick="switchMarket('trl')">TRL Details →</button>
-        </div>
-
-        <!-- TRE -->
-        <div class="home-card card-tre">
-          <div class="home-card-header">
-            <span class="nav-badge tre">mFRR</span>
-            <span class="home-card-name">Tertiärregelenergie (TRE)</span>
-          </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div class="home-card-week" id="homeTreWeek" style="margin:0;">—</div>
-            <div style="display:flex; gap:4px; align-items:center;">
-              <button class="mini-toggle-btn active" id="treBtnDown" onclick="setTreBlockDir('down')">DOWN</button>
-              <button class="mini-toggle-btn"        id="treBtnUp"   onclick="setTreBlockDir('up')">UP</button>
-              <div style="width:1px; height:14px; background:var(--border); margin:0 2px;"></div>
-              <button class="mini-toggle-btn active" id="treBlockBtn7"  onclick="setTreBlockWindow(7)">7 Tage</button>
-              <button class="mini-toggle-btn"        id="treBlockBtn28" onclick="setTreBlockWindow(28)">4 Wochen</button>
-            </div>
-          </div>
-          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
-            <canvas id="cTreBlock"></canvas>
-          </div>
-          <button class="home-card-btn" onclick="switchMarket('tre')">TRE Details →</button>
-        </div>
 
         <!-- Spot -->
         <div class="home-card card-spot" style="grid-column: 1 / -1;">
@@ -864,6 +818,137 @@
           </div>
         </div>
 
+        <!-- SRL -->
+        <div class="home-card card-srl">
+          <div class="home-card-header">
+            <span class="nav-badge srl">aFRR</span>
+            <span class="home-card-name">Sekundärregelleistung (SRL)</span>
+            <div class="card-menu-wrap">
+              <button class="card-menu-btn" title="Einstellungen">⋮</button>
+              <div class="card-menu-dropdown">
+                <div class="card-menu-group-label">Zeitraum</div>
+                <div class="card-menu-group">
+                  <button class="mini-toggle-btn active" id="srlBlockBtn7"  onclick="setSrlBlockWindow(7)">7 Tage</button>
+                  <button class="mini-toggle-btn"        id="srlBlockBtn28" onclick="setSrlBlockWindow(28)">4 Wochen</button>
+                </div>
+                <div class="card-menu-group-label" style="margin-top:7px;">Preismetrik</div>
+                <div class="card-menu-group">
+                  <button class="mini-toggle-btn active" id="srlMetricBtnMarginal" onclick="setSrlMetric('marginal')">Marginal</button>
+                  <button class="mini-toggle-btn"        id="srlMetricBtnAvg"      onclick="setSrlMetric('vwap')">Ø-Preis</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="home-card-week" id="homeSrlWeek">—</div>
+          <div style="display:flex; justify-content:center; gap:4px; margin-bottom:8px;">
+            <button class="mini-toggle-btn active" id="srlBtnDown" onclick="setSrlBlockDir('down')">DOWN</button>
+            <button class="mini-toggle-btn"        id="srlBtnUp"   onclick="setSrlBlockDir('up')">UP</button>
+          </div>
+          <div style="flex:1; height:160px; position:relative; margin-bottom:10px;">
+            <canvas id="cSrlBlock"></canvas>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:12px;">
+            <div style="flex:1;font-size:11px;color:rgba(116,164,190,0.65);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                <div style="width:22px;border-top:2.5px dashed #fff;flex-shrink:0;"></div>
+                <span id="srlWeeklyLabel">—</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div id="srlBarSwatch" style="width:10px;height:10px;background:rgba(254,117,0,0.75);border-radius:2px;flex-shrink:0;"></div>
+                <span>Tagesauktion 4 Stunden Blocks</span>
+              </div>
+            </div>
+            <button class="home-card-btn" style="flex-shrink:0;margin-bottom:0;" onclick="switchMarket('srl')">SRL Details →</button>
+          </div>
+        </div>
+
+        <!-- SRE -->
+        <div class="home-card card-sre">
+          <div class="home-card-header">
+            <span class="nav-badge srl">aFRR</span>
+            <span class="home-card-name">Sekundärregelenergie (SRE)</span>
+          </div>
+          <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+            <span style="font-size:12px; color:var(--text-subtle); font-style:italic;">Daten noch nicht verfügbar</span>
+          </div>
+        </div>
+
+        <!-- TRL -->
+        <div class="home-card card-trl">
+          <div class="home-card-header">
+            <span class="nav-badge trl">mFRR</span>
+            <span class="home-card-name">Tertiärregelleistung (TRL)</span>
+            <div class="card-menu-wrap">
+              <button class="card-menu-btn" title="Einstellungen">⋮</button>
+              <div class="card-menu-dropdown">
+                <div class="card-menu-group-label">Zeitraum</div>
+                <div class="card-menu-group">
+                  <button class="mini-toggle-btn active" id="trlBlockBtn7"  onclick="setTrlBlockWindow(7)">7 Tage</button>
+                  <button class="mini-toggle-btn"        id="trlBlockBtn28" onclick="setTrlBlockWindow(28)">4 Wochen</button>
+                </div>
+                <div class="card-menu-group-label" style="margin-top:7px;">Preismetrik</div>
+                <div class="card-menu-group">
+                  <button class="mini-toggle-btn active" id="trlMetricBtnMarginal" onclick="setTrlMetric('marginal')">Marginal</button>
+                  <button class="mini-toggle-btn"        id="trlMetricBtnVwap"     onclick="setTrlMetric('vwap')">Ø-Preis</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="home-card-week" id="homeTrlWeek">—</div>
+          <div style="display:flex; justify-content:center; gap:4px; margin-bottom:8px;">
+            <button class="mini-toggle-btn active" id="trlBtnDown" onclick="setTrlBlockDir('down')">DOWN</button>
+            <button class="mini-toggle-btn"        id="trlBtnUp"   onclick="setTrlBlockDir('up')">UP</button>
+          </div>
+          <div style="flex:1; height:160px; position:relative; margin-bottom:10px;">
+            <canvas id="cTrlBlock"></canvas>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:12px;">
+            <div style="flex:1;font-size:11px;color:rgba(116,164,190,0.65);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                <div style="width:22px;border-top:2.5px dashed #fff;flex-shrink:0;"></div>
+                <span id="trlWeeklyLabel">—</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div id="trlBarSwatch" style="width:10px;height:10px;background:rgba(254,117,0,0.75);border-radius:2px;flex-shrink:0;"></div>
+                <span>Tagesauktion 4 Stunden Blocks</span>
+              </div>
+            </div>
+            <button class="home-card-btn" style="flex-shrink:0;margin-bottom:0;" onclick="switchMarket('trl')">TRL Details →</button>
+          </div>
+        </div>
+
+        <!-- TRE -->
+        <div class="home-card card-tre">
+          <div class="home-card-header">
+            <span class="nav-badge tre">mFRR</span>
+            <span class="home-card-name">Tertiärregelenergie (TRE)</span>
+            <div class="card-menu-wrap">
+              <button class="card-menu-btn" title="Einstellungen">⋮</button>
+              <div class="card-menu-dropdown">
+                <div class="card-menu-group-label">Zeitraum</div>
+                <div class="card-menu-group">
+                  <button class="mini-toggle-btn active" id="treBlockBtn7"  onclick="setTreBlockWindow(7)">7 Tage</button>
+                  <button class="mini-toggle-btn"        id="treBlockBtn28" onclick="setTreBlockWindow(28)">4 Wochen</button>
+                </div>
+                <div class="card-menu-group-label" style="margin-top:7px;">Preismetrik</div>
+                <div class="card-menu-group">
+                  <button class="mini-toggle-btn active" id="treMetricBtnMarginal" onclick="setTreMetric('marginal')">Marginal</button>
+                  <button class="mini-toggle-btn"        id="treMetricBtnVwap"     onclick="setTreMetric('vwap')">Ø-Preis</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="home-card-week" id="homeTreWeek">—</div>
+          <div style="display:flex; justify-content:center; gap:4px; margin-bottom:8px;">
+            <button class="mini-toggle-btn active" id="treBtnDown" onclick="setTreBlockDir('down')">DOWN</button>
+            <button class="mini-toggle-btn"        id="treBtnUp"   onclick="setTreBlockDir('up')">UP</button>
+          </div>
+          <div style="flex:1; height:160px; position:relative; margin-bottom:16px;">
+            <canvas id="cTreBlock"></canvas>
+          </div>
+          <button class="home-card-btn" onclick="switchMarket('tre')">TRE Details →</button>
+        </div>
+
         <!-- PV Revenue -->
         <div class="home-card card-pv" style="grid-column: 1 / -1;">
           <div class="home-card-header">
@@ -886,6 +971,16 @@
               <line x1="15.3" y1="14" x2="15.3" y2="21"/>
             </svg>
             <span class="home-card-name">Ertragspotenzial PV-Anlage — letzte 7 Tage</span>
+            <div class="card-menu-wrap">
+              <button class="card-menu-btn" title="Preismetrik">⋮</button>
+              <div class="card-menu-dropdown">
+                <div class="card-menu-group-label">TRE Preismetrik</div>
+                <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                  <button class="mini-toggle-btn active" id="pvTreMetricBtnMarginal" onclick="setPvTreMetric('marginal')">Marginal</button>
+                  <button class="mini-toggle-btn"        id="pvTreMetricBtnVwap"     onclick="setPvTreMetric('vwap')">Ø-Preis</button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="home-card-week" id="homePvWeek">—</div>
           <div style="display:flex; gap:24px; align-items:center; margin-bottom:16px;">
@@ -1012,28 +1107,6 @@
         </p>
       </section>
 
-      <div class="kpi-strip reveal d2">
-        <div class="kpi k-up">
-          <div class="kpi-label">TRL UP — Ø Marginalpreis</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlUpPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
-          <div class="kpi-meta" id="kpiTrlUpMeta">Wochenauktion · mFRR Kapazität</div>
-        </div>
-        <div class="kpi k-down">
-          <div class="kpi-label">TRL DOWN — Ø Marginalpreis</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlDownPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
-          <div class="kpi-meta" id="kpiTrlDownMeta">Wochenauktion · mFRR Kapazität</div>
-        </div>
-        <div class="kpi k-vol">
-          <div class="kpi-label">TRL UP — Ø Zuschlag</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlUpVol">—</div><span class="kpi-unit">MW</span></div>
-          <div class="kpi-meta" id="kpiTrlUpVolMeta">Ø zugeschlagenes Volumen</div>
-        </div>
-        <div class="kpi k-vol">
-          <div class="kpi-label">TRL DOWN — Ø Zuschlag</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrlDownVol">—</div><span class="kpi-unit">MW</span></div>
-          <div class="kpi-meta" id="kpiTrlDownVolMeta">Ø zugeschlagenes Volumen</div>
-        </div>
-      </div>
 
       <!-- TRL Wochenauktion -->
       <section class="market-section reveal d3">
@@ -1046,13 +1119,25 @@
         </div>
         <div class="charts-grid-2">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Marginale Leistungspreise</div>
-              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je Woche</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
-                <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #82DCF5;vertical-align:middle"></span>&nbsp;Anticipiert DOWN</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Leistungspreise</div>
+                <div class="chart-meta" id="trlWeeklyPriceMeta">Volumengewichteter Durchschnittspreis je Woche</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                  <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #82DCF5;vertical-align:middle"></span>&nbsp;Anticipiert DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0;">
+                <button class="card-menu-btn" title="Preismetrik">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Preismetrik</div>
+                  <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                    <button class="mini-toggle-btn"        id="trlWeeklyMetricBtnMarginal" onclick="setTrlWeeklyMetric('marginal')">Marginal</button>
+                    <button class="mini-toggle-btn active" id="trlWeeklyMetricBtnVwap"     onclick="setTrlWeeklyMetric('vwap')">Ø-Preis</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body"><canvas id="cTrlWeeklyPrice"></canvas></div>
@@ -1072,6 +1157,22 @@
             <div class="chart-body"><canvas id="cTrlWeeklyVol"></canvas></div>
           </div>
         </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div class="chart-title">Gebotsstack</div>
+                <div class="chart-meta" id="trlWeeklyBidMeta">Alle Angebote sortiert nach Preis · Wochenauktion</div>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+                <select id="trlWeeklyBidWeekSel" class="mini-select" onchange="setTrlWeeklyBidWeek(this.value)"></select>
+                <button class="mini-toggle-btn"        id="trlWeeklyBidDirBtnDown" onclick="setTrlWeeklyBidDir('down')">DOWN</button>
+                <button class="mini-toggle-btn active" id="trlWeeklyBidDirBtnUp"   onclick="setTrlWeeklyBidDir('up')">UP</button>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTrlWeeklyBidStack"></canvas></div>
+          </div>
+        </div>
       </section>
 
       <!-- TRL Tagesauktion -->
@@ -1085,12 +1186,29 @@
         </div>
         <div class="charts-grid-2">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Marginale Leistungspreise</div>
-              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je 4h-Block</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title" id="trlDailyPriceTitle">Leistungspreise</div>
+                <div class="chart-meta" id="trlDailyPriceMeta">Volumengewichteter Durchschnittspreis je 4h-Block</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0; margin-left:12px;">
+                <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Preismetrik</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn"        id="trlDailyMetricBtnMarginal" onclick="setTrlDailyMetric('marginal')">Marginal</button>
+                    <button class="mini-toggle-btn active" id="trlDailyMetricBtnVwap"     onclick="setTrlDailyMetric('vwap')">Ø-Preis</button>
+                  </div>
+                  <div class="card-menu-group-label" style="margin-top:7px;">Darstellung</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn"        id="trlDailyStyleBtnScatter" onclick="setTrlDailyStyle('scatter')">Streudiagramm</button>
+                    <button class="mini-toggle-btn active" id="trlDailyStyleBtnLine"    onclick="setTrlDailyStyle('line')">Linie</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cTrlDailyPrice"></canvas></div>
@@ -1107,6 +1225,23 @@
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cTrlDailyVol"></canvas></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div class="chart-title">Gebotsstack</div>
+                <div class="chart-meta" id="trlDailyBidMeta">Alle Angebote sortiert nach Preis · Tagesauktion</div>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+                <select id="trlDailyBidDateSel"  class="mini-select" onchange="setTrlDailyBidDate(this.value)"></select>
+                <select id="trlDailyBidBlockSel" class="mini-select" onchange="setTrlDailyBidBlock(this.value)"></select>
+                <button class="mini-toggle-btn"        id="trlDailyBidDirBtnDown" onclick="setTrlDailyBidDir('down')">DOWN</button>
+                <button class="mini-toggle-btn active" id="trlDailyBidDirBtnUp"   onclick="setTrlDailyBidDir('up')">UP</button>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTrlDailyBidStack"></canvas></div>
           </div>
         </div>
         <div style="margin-top:20px;">
@@ -1139,24 +1274,6 @@
         </p>
       </section>
 
-      <div class="kpi-strip reveal d2" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="kpi k-up">
-          <div class="kpi-label">TRE — Aktivierte Energie UP</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTrePosActivated">—</div><span class="kpi-unit">MWh/Tag</span></div>
-          <div class="kpi-meta" id="kpiTrePosActivatedMeta">Positive Regelenergie · mFRR</div>
-        </div>
-        <div class="kpi k-down">
-          <div class="kpi-label">TRE — Aktivierte Energie DOWN</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTreNegActivated">—</div><span class="kpi-unit">MWh/Tag</span></div>
-          <div class="kpi-meta" id="kpiTreNegActivatedMeta">Negative Regelenergie · mFRR</div>
-        </div>
-        <div class="kpi k-rate">
-          <div class="kpi-label">TRE — Ø Aktivierungsrate</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiTreRate">—</div><span class="kpi-unit">%</span></div>
-          <div class="kpi-meta" id="kpiTreRateMeta">Verhältnis Abruf / Angebot</div>
-        </div>
-      </div>
-
       <section class="market-section reveal d3">
         <div class="section-head">
           <span class="section-tag tre">TRE</span>
@@ -1167,40 +1284,121 @@
         </div>
         <div class="charts-grid-full">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Marginalpreise (15-Min-Auflösung)</div>
-              <div class="chart-meta">UP: höchster aktivierter Angebotspreis · DOWN: niedrigster aktivierter Angebotspreis</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP — höchster aktivierter Preis</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN — niedrigster aktivierter Preis</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Marginalpreise (15-Min-Auflösung)</div>
+                <div class="chart-meta" id="treDailyMeta">UP: höchster aktivierter Preis · DOWN: niedrigster aktivierter Preis</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0;">
+                <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Y-Achse</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn active" id="treDailyScaleBtnLinear" onclick="setTreDailyScale('linear')">Linear</button>
+                    <button class="mini-toggle-btn"        id="treDailyScaleBtnLog"    onclick="setTreDailyScale('log')">Log</button>
+                  </div>
+                  <div class="card-menu-group-label" style="margin-top:7px;">Darstellung</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn active" id="treDailyStyleBtnScatter" onclick="setTreDailyStyleMode('scatter')">Scatter</button>
+                    <button class="mini-toggle-btn"        id="treDailyStyleBtnLine"    onclick="setTreDailyStyleMode('line')">Linie</button>
+                  </div>
+                  <div class="card-menu-group-label" style="margin-top:7px;">Preismetrik</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn active" id="treDailyMetricBtnMarginal" onclick="setTreDailyMetric('marginal')">Marginal</button>
+                    <button class="mini-toggle-btn"        id="treDailyMetricBtnAvg"      onclick="setTreDailyMetric('avg')">Ø Preis</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cTreDailyPrice"></canvas></div>
           </div>
         </div>
-        <div class="subsection-label">Tagesgang (15-Minuten-Zeitblöcke, Ø über Periode)</div>
+        <div class="subsection-label">Tagesgang (Ø über Periode)</div>
         <div class="charts-grid-slot">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Aktivierungsrate nach Zeitblock</div>
-              <div class="chart-meta">Anteil abgerufener Menge an angebotener Menge</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Aktivierungsrate nach Zeitblock</div>
+                <div class="chart-meta" id="treRateMeta">Anteil abgerufener Menge an angebotener Menge</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0;">
+                <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Granularität</div>
+                  <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                    <button class="mini-toggle-btn active" id="treRateGranBtn15" onclick="setTreRateGran('15min')">15 Min</button>
+                    <button class="mini-toggle-btn"        id="treRateGranBtn4h" onclick="setTreRateGran('4h')">4h-Block</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cTreSlotRate"></canvas></div>
           </div>
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Ø Marginalpreis nach Zeitblock</div>
-              <div class="chart-meta">Durchschnitt der täglichen Marginalpreise je Zeitblock</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Preisprofil nach Zeitblock</div>
+                <div class="chart-meta" id="treSlotPriceMeta">Ø Marginalpreis je 15-Min-Block über Periode</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0;">
+                <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Granularität</div>
+                  <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                    <button class="mini-toggle-btn active" id="treSlotGranBtn15" onclick="setTreSlotGran('15min')">15 Min</button>
+                    <button class="mini-toggle-btn"        id="treSlotGranBtn4h" onclick="setTreSlotGran('4h')">4h-Block</button>
+                  </div>
+                  <div class="card-menu-group-label" style="margin-top:7px;">Preismetrik</div>
+                  <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                    <button class="mini-toggle-btn active" id="treSlotMetricBtnMarg" onclick="setTreSlotMetric('marginal')">Marginal</button>
+                    <button class="mini-toggle-btn"        id="treSlotMetricBtnVwap" onclick="setTreSlotMetric('vwap')">VWAP</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cTreSlotPrice"></canvas></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Gebotsstack (Preisdauerkurve)</div>
+                <div class="chart-meta" id="treBidMeta">Alle Aktivierungen sortiert nach Marginalpreis · Periode</div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+                <input type="date" id="treBidDateInp" class="date-input" onchange="setTreBidDate(this.value)">
+                <select id="treBidBlockSel" class="mini-select" onchange="setTreBidBlock(this.value)"></select>
+                <div class="card-menu-wrap" style="flex-shrink:0;">
+                  <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                  <div class="card-menu-dropdown">
+                    <div class="card-menu-group-label">Richtung</div>
+                    <div class="card-menu-group">
+                      <button class="mini-toggle-btn active" id="treBidDirBtnUp"   onclick="setTreBidDir('up')">UP</button>
+                      <button class="mini-toggle-btn"        id="treBidDirBtnDown" onclick="setTreBidDir('down')">DOWN</button>
+                    </div>
+                    <div class="card-menu-group-label" style="margin-top:7px;">Y-Achse</div>
+                    <div class="card-menu-group">
+                      <button class="mini-toggle-btn active" id="treBidScaleBtnLinear" onclick="setTreBidScale('linear')">Linear</button>
+                      <button class="mini-toggle-btn"        id="treBidScaleBtnLog"    onclick="setTreBidScale('log')">Log</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTreBidStack"></canvas></div>
           </div>
         </div>
       </section>
@@ -1218,29 +1416,6 @@
         </p>
       </section>
 
-      <div class="kpi-strip reveal d2">
-        <div class="kpi k-up">
-          <div class="kpi-label">SRL UP — Ø Marginalpreis</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlUpPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
-          <div class="kpi-meta" id="kpiSrlUpMeta">Wochenauktion · aFRR Kapazität</div>
-        </div>
-        <div class="kpi k-down">
-          <div class="kpi-label">SRL DOWN — Ø Marginalpreis</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlDownPrice">—</div><span class="kpi-unit">CHF/MW/Wo</span></div>
-          <div class="kpi-meta" id="kpiSrlDownMeta">Wochenauktion · aFRR Kapazität</div>
-        </div>
-        <div class="kpi k-vol">
-          <div class="kpi-label">SRL UP — Ø Zuschlag</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlUpVol">—</div><span class="kpi-unit">MW</span></div>
-          <div class="kpi-meta" id="kpiSrlUpVolMeta">Ø zugeschlagenes Volumen</div>
-        </div>
-        <div class="kpi k-vol">
-          <div class="kpi-label">SRL DOWN — Ø Zuschlag</div>
-          <div class="kpi-value-row"><div class="kpi-value" id="kpiSrlDownVol">—</div><span class="kpi-unit">MW</span></div>
-          <div class="kpi-meta" id="kpiSrlDownVolMeta">Ø zugeschlagenes Volumen</div>
-        </div>
-      </div>
-
       <!-- SRL Wochenauktion -->
       <section class="market-section reveal d3">
         <div class="section-head">
@@ -1252,14 +1427,26 @@
         </div>
         <div class="charts-grid-2">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Marginale Leistungspreise</div>
-              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je Woche</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
-                <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #82DCF5;vertical-align:middle"></span>&nbsp;Anticipiert UP</div>
-                <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #FFA500;vertical-align:middle"></span>&nbsp;Anticipiert DOWN</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Leistungspreise</div>
+                <div class="chart-meta" id="srlWeeklyPriceMeta">Volumengewichteter Durchschnittspreis je Woche</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                  <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #82DCF5;vertical-align:middle"></span>&nbsp;Anticipiert UP</div>
+                  <div class="leg"><span style="display:inline-block;width:20px;height:0;border-top:2px dashed #FFA500;vertical-align:middle"></span>&nbsp;Anticipiert DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0;">
+                <button class="card-menu-btn" title="Preismetrik">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Preismetrik</div>
+                  <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                    <button class="mini-toggle-btn"        id="srlWeeklyMetricBtnMarginal" onclick="setSrlWeeklyMetric('marginal')">Marginal</button>
+                    <button class="mini-toggle-btn active" id="srlWeeklyMetricBtnVwap"     onclick="setSrlWeeklyMetric('vwap')">Ø-Preis</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body"><canvas id="cSrlWeeklyPrice"></canvas></div>
@@ -1280,6 +1467,22 @@
             <div class="chart-body"><canvas id="cSrlWeeklyVol"></canvas></div>
           </div>
         </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div class="chart-title">Gebotsstack</div>
+                <div class="chart-meta" id="srlWeeklyBidMeta">Alle Angebote sortiert nach Preis · Wochenauktion</div>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+                <select id="srlWeeklyBidWeekSel" class="mini-select" onchange="setSrlWeeklyBidWeek(this.value)"></select>
+                <button class="mini-toggle-btn"        id="srlWeeklyBidDirBtnDown" onclick="setSrlWeeklyBidDir('down')">DOWN</button>
+                <button class="mini-toggle-btn active" id="srlWeeklyBidDirBtnUp"   onclick="setSrlWeeklyBidDir('up')">UP</button>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cSrlWeeklyBidStack"></canvas></div>
+          </div>
+        </div>
       </section>
 
       <!-- SRL Tagesauktion -->
@@ -1293,12 +1496,29 @@
         </div>
         <div class="charts-grid-2">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Marginale Leistungspreise</div>
-              <div class="chart-meta">Höchster zugeschlagener Angebotspreis je 4h-Block</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>UP</div>
-                <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title" id="srlDailyPriceTitle">Leistungspreise</div>
+                <div class="chart-meta" id="srlDailyPriceMeta">Volumengewichteter Durchschnittspreis je 4h-Block</div>
+                <div class="chart-legend">
+                  <div class="leg"><div class="leg-pip up"></div>UP</div>
+                  <div class="leg"><div class="leg-pip down"></div>DOWN</div>
+                </div>
+              </div>
+              <div class="card-menu-wrap" style="flex-shrink:0; margin-left:12px;">
+                <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Preismetrik</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn"        id="srlDailyMetricBtnMarginal" onclick="setSrlDailyMetric('marginal')">Marginal</button>
+                    <button class="mini-toggle-btn active" id="srlDailyMetricBtnVwap"     onclick="setSrlDailyMetric('vwap')">Ø-Preis</button>
+                  </div>
+                  <div class="card-menu-group-label" style="margin-top:7px;">Darstellung</div>
+                  <div class="card-menu-group">
+                    <button class="mini-toggle-btn"        id="srlDailyStyleBtnScatter" onclick="setSrlDailyStyle('scatter')">Streudiagramm</button>
+                    <button class="mini-toggle-btn active" id="srlDailyStyleBtnLine"    onclick="setSrlDailyStyle('line')">Linie</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cSrlDailyPrice"></canvas></div>
@@ -1330,6 +1550,23 @@
               </div>
             </div>
             <div><canvas id="cSrlDailyHeatmap" style="display:block;"></canvas></div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <div>
+                <div class="chart-title">Gebotsstack</div>
+                <div class="chart-meta" id="srlDailyBidMeta">Alle Angebote sortiert nach Preis · Tagesauktion</div>
+              </div>
+              <div style="display:flex; gap:6px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+                <select id="srlDailyBidDateSel"  class="mini-select" onchange="setSrlDailyBidDate(this.value)"></select>
+                <select id="srlDailyBidBlockSel" class="mini-select" onchange="setSrlDailyBidBlock(this.value)"></select>
+                <button class="mini-toggle-btn"        id="srlDailyBidDirBtnDown" onclick="setSrlDailyBidDir('down')">DOWN</button>
+                <button class="mini-toggle-btn active" id="srlDailyBidDirBtnUp"   onclick="setSrlDailyBidDir('up')">UP</button>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cSrlDailyBidStack"></canvas></div>
           </div>
         </div>
       </section>
@@ -1381,15 +1618,24 @@
         </div>
         <div class="charts-grid-full">
           <div class="chart-card">
-            <div class="chart-head">
-              <div class="chart-title">Tägliche Spotpreise</div>
-              <div class="chart-meta">Stündliche EPEX Day-Ahead-Auktionspreise</div>
-              <div class="chart-legend">
-                <div class="leg"><div class="leg-pip up"></div>Spotpreis (stündlich)</div>
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Tägliche Spotpreise</div>
+                <div class="chart-meta">Stündliche EPEX Day-Ahead-Auktionspreise</div>
+                <div class="chart-toggle" id="toggleSpotTrend" style="margin-top:8px;">
+                  <button class="ct-btn active" data-mode="raw">Rohdaten</button>
+                  <button class="ct-btn" data-mode="rolling">30-Tage Ø</button>
+                </div>
               </div>
-              <div class="chart-toggle" id="toggleSpotTrend">
-                <button class="ct-btn active" data-mode="raw">Rohdaten</button>
-                <button class="ct-btn" data-mode="rolling">30-Tage Ø</button>
+              <div class="card-menu-wrap" style="flex-shrink:0;">
+                <button class="card-menu-btn" title="Rohdaten-Darstellung">⋮</button>
+                <div class="card-menu-dropdown">
+                  <div class="card-menu-group-label">Rohdaten als</div>
+                  <div class="card-menu-group" style="flex-direction:column; gap:4px;">
+                    <button class="mini-toggle-btn"        id="spotRawBtnScatter" onclick="setSpotRawStyle('scatter')">Streudiagramm</button>
+                    <button class="mini-toggle-btn active" id="spotRawBtnLine"    onclick="setSpotRawStyle('line')">Linie</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cSpotTrend"></canvas></div>
@@ -1436,12 +1682,7 @@
 <footer>
   <div class="root">
     <div class="footer-inner">
-      <div class="footer-brand">
-        <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
-          <path d="M10,0 H60 V43 Q60,47 64,47 H100 V90 Q100,100 90,100 H10 Q0,100 0,90 V10 Q0,0 10,0 Z" fill="#367088"/>
-        </svg>
-        <span class="footer-text">Helion Energy AG</span>
-      </div>
+      <div></div>
       <span class="footer-text" id="footerProcessed">Daten: Swissgrid · Q1 2026</span>
     </div>
   </div>
@@ -1456,6 +1697,95 @@ Chart.defaults.borderColor = 'rgba(0,190,245,0.08)';
 Chart.defaults.font.family = "'Proxima Nova','ProximaNova','Nunito',sans-serif";
 Chart.defaults.font.size = 11;
 Chart.defaults.plugins.decimation = { enabled: false };
+
+// Tooltip positioner: follows the actual cursor position (x and y)
+Chart.Tooltip.positioners.cursorFollow = function(_elements, eventPosition) {
+  if (!eventPosition) return false;
+  return { x: eventPosition.x, y: eventPosition.y };
+};
+
+// Crosshair plugin: draws a vertical dashed line at the cursor x on all line charts
+Chart.register({
+  id: 'crosshair',
+  afterEvent(chart, args) {
+    if (!chart.options.plugins?.crosshair || chart.config.type === 'bar') return;
+    const evt = args.event;
+    if      (evt.type === 'mousemove') chart._xhairX = evt.x;
+    else if (evt.type === 'mouseout')  chart._xhairX = null;
+    args.changed = true;
+  },
+  afterDraw(chart) {
+    if (!chart.options.plugins?.crosshair || chart.config.type === 'bar') return;
+    const x = chart._xhairX;
+    if (x == null) return;
+    const { ctx, chartArea } = chart;
+    if (x < chartArea.left || x > chartArea.right) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
+  }
+});
+
+// Symmetric-log transform (T=10): linear in (-10,10), log outside.
+// sl(10^n) = n+1 for n≥0, so decade ticks land at integers — equal pixel spacing.
+const SL_T = 10;
+function sl(v) {
+  const a = Math.abs(v);
+  if (a <= SL_T) return v / SL_T;
+  return Math.sign(v) * (Math.log10(a / SL_T) + 1);
+}
+function sli(t) {
+  const a = Math.abs(t);
+  if (a <= 1) return t * SL_T;
+  return Math.sign(t) * SL_T * Math.pow(10, a - 1);
+}
+
+// SymlogScale: used only for bid-stack charts. TRE daily chart uses the
+// data-transform approach (sl/sli on y values + plain linear axis) instead,
+// which avoids Chart.js 4 LinearScale internals shadowing getDecimalForValue.
+(function() {
+  const T = SL_T;
+
+  class SymlogScale extends Chart.LinearScale {
+    static id       = 'symlog';
+    static defaults = {};
+    buildTicks() {
+      const { min, max } = this;
+      const ticks = [];
+      if (min <= 0 && max >= 0) ticks.push({ value: 0 });
+      // Negative decades: -T, -10T, -100T, … as long as they are ≥ min
+      for (let e = 0; ; e++) {
+        const v = -T * Math.pow(10, e);
+        if (v < min) break;
+        ticks.push({ value: v });
+      }
+      // Positive decades: T, 10T, 100T, … as long as they are ≤ max
+      for (let e = 0; ; e++) {
+        const v = T * Math.pow(10, e);
+        if (v > max) break;
+        ticks.push({ value: v });
+      }
+      ticks.sort((a, b) => a.value - b.value);
+      return ticks.length ? ticks : [{ value: min }, { value: max }];
+    }
+    getDecimalForValue(value) {
+      const tMin = sl(this.min), tMax = sl(this.max);
+      return tMax === tMin ? 0 : (sl(value) - tMin) / (tMax - tMin);
+    }
+    getValueForDecimal(decimal) {
+      if (this._reversePixels) decimal = 1 - decimal;
+      const tMin = sl(this.min), tMax = sl(this.max);
+      return sli(tMin + decimal * (tMax - tMin));
+    }
+  }
+  Chart.register(SymlogScale);
+})();
 
 /* ═══════════════════════════════════════════════════════════
    CONSTANTS
@@ -1481,6 +1811,17 @@ const PRESETS = [
 let allData = null;
 let currentStart = '2026-01-01';
 let currentEnd   = '2026-04-30';
+let defaultNonSpotStart = '2026-01-01';
+let defaultNonSpotEnd   = '2026-04-30';
+
+function lastMonthRange(lastDate) {
+  const endD   = new Date(lastDate + 'T12:00:00');
+  const startD = new Date(endD);
+  startD.setDate(1);
+  startD.setMonth(startD.getMonth() - 1);
+  startD.setDate(Math.min(endD.getDate(), new Date(startD.getFullYear(), startD.getMonth() + 1, 0).getDate()));
+  return { start: startD.toISOString().slice(0, 10), end: lastDate };
+}
 
 // BESS parameters (reactive via sliders)
 let bessParams = { P: 1.0, gamma: 0.5, alpha: 0.30, beta: 0.50 };
@@ -1665,7 +2006,9 @@ function baseLineOpts(xTitle, yTitle, yUnit) {
     interaction: { mode: 'index', intersect: false },
     plugins: {
       legend: { display: false },
+      crosshair: true,
       tooltip: {
+        position: 'cursorFollow',
         backgroundColor: 'rgba(0,15,30,0.92)',
         borderColor: 'rgba(0,190,245,0.2)',
         borderWidth: 1,
@@ -1744,19 +2087,21 @@ function updateChart(id, labels, datasets) {
 function buildTrlWeeklyCharts() {
   const weeks = allData.trlWeekly.filter(w => inRange(w.date));
   const labels = weeks.map(w => w.id);
+  const step = { extra: { stepped: 'middle', tension: 0 } };
 
-  // Chart 1: Marginal prices
+  // Chart 1: Leistungspreise (metric-aware, stepped)
+  const weeklyPriceOpts = baseLineOpts('', 'CHF/MW', 'CHF/MW');
   createChart('cTrlWeeklyPrice', {
     type: 'line',
     data: {
       labels,
       datasets: [
-        lineDataset('Aufreglung UP', weeks.map(w => w.up?.marginal ?? null), C_UP),
-        lineDataset('Abreglung DOWN', weeks.map(w => w.down?.marginal ?? null), C_DOWN),
-        lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.marginal ?? null), C_ANT, { dashed: true, thin: true }),
+        lineDataset('Aufreglung UP',    weeks.map(w => w.up?.[trlWeeklyMetric]          ?? null), C_UP,  step),
+        lineDataset('Abreglung DOWN',   weeks.map(w => w.down?.[trlWeeklyMetric]         ?? null), C_DOWN, step),
+        lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.[trlWeeklyMetric]  ?? null), C_ANT, { dashed: true, thin: true, ...step }),
       ]
     },
-    options: baseLineOpts('', 'CHF/MW', 'CHF/MW'),
+    options: weeklyPriceOpts,
   });
 
   // Chart 2: Volumes (mirrored bars) — regular + anticipated stacked together
@@ -1796,6 +2141,7 @@ function buildTrlWeeklyCharts() {
       }
     }
   });
+  buildTrlWeeklyBidStackChart();
 }
 
 /* ── TRL Daily Charts ── */
@@ -1806,6 +2152,8 @@ function buildTrlDailyCharts() {
   const dateStep = niceDayStep(nDays);
   const volLabels = [];
   const upPriceScatter = [], downPriceScatter = [];
+  const upPriceLine = [], downPriceLine = [], priceLineLabels = [];
+  const tipLabels = [];
   const upAwd = [], upNotAwd = [];
   const downAwd = [], downNotAwd = [];
   const dayStarts = {};
@@ -1820,11 +2168,19 @@ function buildTrlDailyCharts() {
         dayCount++;
         if ((dayCount - 1) % dateStep === 0) dayStarts[idx] = fmtDate(day.date);
       }
-      volLabels.push(isFirst && (dayCount - 1) % dateStep === 0 ? fmtDate(day.date) : '');
+      const lbl = isFirst && (dayCount - 1) % dateStep === 0 ? fmtDate(day.date) : '';
+      volLabels.push(lbl);
+      priceLineLabels.push(lbl);
+      tipLabels.push(`${fmtDateFull(day.date)}  ${blk.block}`);
       prevDate = day.date;
 
-      if (blk.up?.marginal   != null) upPriceScatter.push({ x: idx, y: blk.up.marginal });
-      if (blk.down?.marginal != null) downPriceScatter.push({ x: idx, y: blk.down.marginal });
+      const upVal   = blk.up?.[trlDailyMetric]   ?? null;
+      const downVal = blk.down?.[trlDailyMetric]  ?? null;
+      if (upVal   != null) upPriceScatter.push({ x: idx, y: upVal });
+      if (downVal != null) downPriceScatter.push({ x: idx, y: downVal });
+      upPriceLine.push(upVal   != null ? Math.round(upVal   * 10) / 10 : null);
+      downPriceLine.push(downVal != null ? Math.round(downVal * 10) / 10 : null);
+
       upAwd.push(blk.up?.awarded ?? 0);
       upNotAwd.push(Math.max(0, (blk.up?.offered ?? 0) - (blk.up?.awarded ?? 0)));
       downAwd.push(-(blk.down?.awarded ?? 0));
@@ -1860,38 +2216,76 @@ function buildTrlDailyCharts() {
     }
   };
 
-  createChart('cTrlDailyPrice', {
-    type: 'scatter',
-    data: {
-      datasets: [
-        { label: 'Aufreglung UP',   data: upPriceScatter,   backgroundColor: `rgba(0,190,245,0.6)`,   pointRadius: 3, pointHoverRadius: 5 },
-        { label: 'Abreglung DOWN',  data: downPriceScatter, backgroundColor: `rgba(254,117,0,0.6)`,   pointRadius: 3, pointHoverRadius: 5 },
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'nearest', intersect: true },
-      plugins: {
-        legend: { display: true, labels: { color: 'rgba(116,164,190,0.85)', font: { size: 11 }, boxWidth: 12 } },
-        tooltip: {
-          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
-          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
-          callbacks: {
-            title: ctx => {
-              const xi = Math.round(ctx[0].parsed.x);
-              const near = Object.keys(dayStarts).map(Number).sort((a,b)=>a-b).reverse().find(k => k <= xi);
-              return near != null ? dayStarts[near] : '';
-            },
-            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW`
-          }
-        }
+  const yPriceAxis = {
+    ...axisStyle({}),
+    title: { display: true, text: 'CHF/MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) }
+  };
+
+  if (trlDailyStyle === 'scatter') {
+    createChart('cTrlDailyPrice', {
+      type: 'scatter',
+      data: {
+        datasets: [
+          { label: 'Aufreglung UP',   data: upPriceScatter,   backgroundColor: 'rgba(0,190,245,0.6)', pointRadius: 3, pointHoverRadius: 5 },
+          { label: 'Abreglung DOWN',  data: downPriceScatter, backgroundColor: 'rgba(254,117,0,0.6)', pointRadius: 3, pointHoverRadius: 5 },
+        ]
       },
-      scales: {
-        x: xScatterOpts,
-        y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) + ' CHF/MW' } }
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: true },
+        plugins: {
+          legend: { display: false },
+          crosshair: true,
+          tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: ctx => tipLabels[Math.round(ctx[0].parsed.x)] ?? '',
+              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW`
+            }
+          }
+        },
+        scales: { x: xScatterOpts, y: yPriceAxis }
       }
-    }
-  });
+    });
+  } else {
+    createChart('cTrlDailyPrice', {
+      type: 'line',
+      data: {
+        labels: priceLineLabels,
+        datasets: [
+          { label: 'Aufreglung UP',  data: upPriceLine,   borderColor: C_UP,   backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 3, tension: 0, spanGaps: false },
+          { label: 'Abreglung DOWN', data: downPriceLine, borderColor: C_DOWN, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 3, tension: 0, spanGaps: false },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          crosshair: true,
+          tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: ctx => tipLabels[ctx[0].dataIndex] ?? '',
+              label: ctx => ctx.parsed.y != null ? ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW` : null
+            }
+          }
+        },
+        scales: {
+          x: {
+            ...axisStyle({ maxRotation: 90, autoSkip: false, font: { size: 9 } }),
+            ticks: { color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false, callback: (v, i) => priceLineLabels[i] || null, font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 } }
+          },
+          y: yPriceAxis
+        }
+      }
+    });
+  }
 
   createChart('cTrlDailyVol', {
     type: 'bar',
@@ -1913,221 +2307,715 @@ function buildTrlDailyCharts() {
           backgroundColor: 'rgba(0,15,30,0.92)',
           borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW` }
+          callbacks: {
+            title: ctx => tipLabels[ctx[0].dataIndex] ?? '',
+            label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW`
+          }
         }
       },
       scales: {
         x: { ...xVolOpts, stacked: true },
-        y: { ...axisStyle({}), stacked: true,
-             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+        y: {
+          ...axisStyle({}), stacked: true,
+          title: { display: true, text: 'MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') }
+        }
       }
     }
   });
   buildDailyHeatmap('cTrlDailyHeatmap', days, trlHeatmapDir, 'CHF/MW');
+  buildTrlDailyBidStackChart();
 }
 
-/* ── TRE Daily Chart (15-min resolution, scatter) ── */
-function buildTreDailyChart() {
-  const slots = allData.treSlots.filter(s => inRange(s.d));
-
-  // Build a numeric x-axis index → label map for date ticks
-  const dayStarts = {};   // index → date label (only at first slot of day)
-  let prevDate = '';
-  const upData = [], downData = [];
-
-  for (let i = 0; i < slots.length; i++) {
-    const s = slots[i];
-    if (s.d !== prevDate) { dayStarts[i] = fmtDate(s.d); prevDate = s.d; }
-    if (s.pm !== null) upData.push({ x: i, y: s.pm });
-    if (s.nm !== null) downData.push({ x: i, y: s.nm });
+/* ── TRL Bid Stack Charts ── */
+function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
+  const bidStack = dirData?.bidStack;
+  if (!bidStack || bidStack.length === 0) {
+    if (charts[canvasId]) { charts[canvasId].destroy(); delete charts[canvasId]; }
+    return;
   }
 
-  const totalSlots = slots.length;
-  const nTreDays = Object.keys(dayStarts).length;
-  // Aim for ≤25 date labels regardless of period length
-  const treDayStep = Math.max(1, Math.ceil(nTreDays / 25));
-  // Sorted actual day-start indices (DST days have 92 slots, not 96 — can't use multiples of 96)
-  const dayStartEntries = Object.keys(dayStarts).map(Number).sort((a, b) => a - b);
+  const isLog  = yType === 'symlog';
+  const isDown = dir === 'down';
 
-  createChart('cTreDailyPrice', {
-    type: 'scatter',
+  // DOWN: reverse so most positive (non-activated, expensive) is on the left and
+  // most negative (cheapest, activated) is on the right — mirrors the UP convention.
+  const orderedBids = isDown ? [...bidStack].reverse() : bidStack;
+  const totalVolume = bidStack.reduce((s, b) => s + b.v, 0);
+
+  const solidBorder = dir === 'up' ? 'rgba(0,190,245,1)'    : 'rgba(254,117,0,1)';
+  const solidFill   = dir === 'up' ? 'rgba(0,190,245,1)'    : 'rgba(254,117,0,1)';
+  const dimBorder   = dir === 'up' ? 'rgba(0,80,110,0.8)'   : 'rgba(100,50,0,0.8)';
+  const dimFill     = dir === 'up' ? 'rgba(0,65,90,1)'      : 'rgba(85,40,0,1)';
+
+  const totalAwarded  = dirData.awarded  ?? 0;
+  const clearingPrice = dirData.marginal ?? null;
+  // DOWN (reversed): awarded bids are on the RIGHT, so the split is at the end
+  const splitX = isDown ? totalVolume - totalAwarded : totalAwarded;
+
+  // Build two partial staircases split at splitX.
+  // ptsL = left side (x ≤ splitX), ptsR = right side (x ≥ splitX).
+  // For UP: left = awarded (solid), right = non-awarded (dim).
+  // For DOWN: left = non-awarded (dim), right = awarded (solid).
+  const ptsL = [], ptBL = [];
+  const ptsR = [], ptBR = [];
+  let cumVol = 0;
+
+  for (let i = 0; i < orderedBids.length; i++) {
+    const bid    = orderedBids[i];
+    const leftX  = cumVol;
+    const rightX = cumVol + bid.v;
+    const py     = isLog ? sl(bid.p) : bid.p;
+
+    if (rightX <= splitX) {
+      if (i === 0) { ptsL.push({ x: 0,     y: py }); ptBL.push(i); }
+      else          { ptsL.push({ x: leftX, y: py }); ptBL.push(i); }
+      ptsL.push({ x: rightX, y: py }); ptBL.push(i);
+    } else if (leftX >= splitX) {
+      if (ptsR.length === 0) { ptsR.push({ x: splitX, y: py }); ptBR.push(i); }
+      else                    { ptsR.push({ x: leftX,  y: py }); ptBR.push(i); }
+      ptsR.push({ x: rightX, y: py }); ptBR.push(i);
+    } else {
+      // straddles the split
+      if (i === 0) { ptsL.push({ x: 0,      y: py }); ptBL.push(i); }
+      else          { ptsL.push({ x: leftX,  y: py }); ptBL.push(i); }
+      ptsL.push({ x: splitX, y: py }); ptBL.push(i);
+      ptsR.push({ x: splitX, y: py }); ptBR.push(i);
+      ptsR.push({ x: rightX, y: py }); ptBR.push(i);
+    }
+    cumVol = rightX;
+  }
+
+  // UP: left = awarded (solid), right = non-awarded (dim)
+  // DOWN: left = non-awarded (dim), right = awarded (solid)
+  const lBorder = isDown ? dimBorder   : solidBorder;
+  const lFill   = isDown ? dimFill     : solidFill;
+  const rBorder = isDown ? solidBorder : dimBorder;
+  const rFill   = isDown ? solidFill   : dimFill;
+
+  const maxBidPrice = bidStack.reduce((m, b) => Math.max(m, b.p), 0);
+
+  const cutoffData = totalAwarded > 0 && clearingPrice != null ? [
+    { x: splitX, y: 0 },
+    { x: splitX, y: isLog ? sl(clearingPrice)     : clearingPrice },
+    { x: splitX, y: isLog ? sl(maxBidPrice * 1.2) : maxBidPrice * 1.2 },
+  ] : [];
+
+  const supplyDs = (label, data, border, bg) => ({
+    label, data, borderColor: border, backgroundColor: bg,
+    borderWidth: 1, tension: 0, pointRadius: 0, pointHoverRadius: 0,
+    fill: 'origin',
+  });
+
+  // Inline plugin: draws full-height dividers at every bid boundary (afterDatasetsDraw
+  // so the tooltip — a global afterDraw plugin — renders on top)
+  const bidDividersPlugin = {
+    id: 'bidDividers',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      ctx.save();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([]);
+      let cv = 0;
+      for (let i = 0; i < orderedBids.length; i++) {
+        if (i > 0) {
+          const px   = scales.x.getPixelForValue(cv);
+          const py0r = scales.y.getPixelForValue(0);
+          const py0  = Math.max(Math.min(py0r, chartArea.bottom), chartArea.top);
+          const py1  = scales.y.getPixelForValue(isLog ? sl(orderedBids[i].p) : orderedBids[i].p);
+          if (px >= chartArea.left && px <= chartArea.right) {
+            ctx.beginPath();
+            ctx.moveTo(px, py0);
+            ctx.lineTo(px, py1);
+            ctx.stroke();
+          }
+        }
+        cv += orderedBids[i].v;
+      }
+      ctx.restore();
+    }
+  };
+
+  const yAxis = isLog ? {
+    ...axisStyle({}),
+    type: 'linear',
+    afterBuildTicks: axis => {
+      axis.ticks = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
+        .filter(v => v >= axis.min - 0.01 && v <= axis.max + 0.01)
+        .map(v => ({ value: v }));
+    },
+    title: { display: true, text: 'CHF/MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(sli(v), 0) },
+  } : {
+    ...axisStyle({}),
+    type: 'linear',
+    title: { display: true, text: 'CHF/MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) },
+  };
+
+  createChart(canvasId, {
+    type: 'line',
     data: {
       datasets: [
-        {
-          label: 'UP — höchster aktivierter Preis',
-          data: upData,
-          backgroundColor: 'rgba(0,190,245,0.55)',
-          pointRadius: 2,
-          pointHoverRadius: 5,
-        },
-        {
-          label: 'DOWN — niedrigster aktivierter Preis',
-          data: downData,
-          backgroundColor: 'rgba(254,117,0,0.55)',
-          pointRadius: 2,
-          pointHoverRadius: 5,
-        },
+        supplyDs('_left',  ptsL, lBorder, lFill),
+        supplyDs('_right', ptsR, rBorder, rFill),
+        ...(cutoffData.length ? [{
+          label: '_cutoff',
+          data: cutoffData,
+          borderColor: 'rgba(255,255,255,0.5)',
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+          tension: 0,
+          pointRadius:      [0, 5, 0],
+          pointHoverRadius: [0, 7, 0],
+          pointBackgroundColor: 'rgba(255,255,255,0.8)',
+          fill: false,
+        }] : [])
       ]
     },
+    plugins: [bidDividersPlugin],
     options: {
       responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
       plugins: {
-        decimation: { enabled: false },
         legend: { display: false },
+        crosshair: true,
         tooltip: {
+          position: 'cursorFollow',
           backgroundColor: 'rgba(0,15,30,0.92)',
           borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
           callbacks: {
-            title: (items) => {
-              const idx = items[0]?.raw?.x;
-              const s = slots[idx];
-              return s ? `${s.d} ${s.s}` : '';
+            title: ctx => {
+              if (!ctx.length) return '';
+              const item = ctx[0];
+              if (item.dataset.label === '_cutoff') return 'Zuschlagsgrenze';
+              const bidIdx = item.datasetIndex === 0 ? ptBL[item.dataIndex] : ptBR[item.dataIndex];
+              const bid = orderedBids[bidIdx];
+              return bid ? `${fmt(bid.p, 1)} CHF/MW` : '';
             },
-            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} EUR/MWh`,
+            label: ctx => {
+              if (ctx.dataset.label === '_cutoff') {
+                const lines = [];
+                if (clearingPrice != null) lines.push(` Clearing: ${fmt(clearingPrice, 1)} CHF/MW`);
+                if (totalAwarded > 0) lines.push(` Zugeschlagen: ${Math.round(totalAwarded).toLocaleString('de-CH')} MW`);
+                return lines;
+              }
+              const bidIdx = ctx.datasetIndex === 0 ? ptBL[ctx.dataIndex] : ptBR[ctx.dataIndex];
+              const bid = orderedBids[bidIdx];
+              if (!bid) return '';
+              const lines = [` Angebot: ${Math.round(bid.v).toLocaleString('de-CH')} MW`];
+              if ((bid.a ?? 0) > 0) lines.push(` Zuschlag: ${Math.round(bid.a).toLocaleString('de-CH')} MW`);
+              return lines;
+            }
           }
         }
       },
       scales: {
-        x: {
-          type: 'linear',
-          min: 0, max: totalSlots - 1,
-          ...axisStyle({}),
-          afterBuildTicks: (axis) => {
-            axis.ticks = dayStartEntries
-              .filter((_, i) => i % treDayStep === 0)
-              .map(v => ({ value: v }));
-          },
-          ticks: {
-            color: 'rgba(116,164,190,0.7)',
-            maxRotation: 45,
-            autoSkip: false,
-            callback: (val) => dayStarts[val] ?? '',
-            font: { family: 'ProximaNova, Nunito, sans-serif', size: 11 },
-          }
-        },
-        y: {
-          ...axisStyle({}),
-          title: { display: false },
-          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' }
-        }
+        x: { ...axisStyle({}), type: 'linear',
+             title: { display: true, text: 'Kumuliertes Angebotsvolumen (MW)', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+             ticks: { color: 'rgba(116,164,190,0.7)' } },
+        y: yAxis,
       }
     }
   });
 }
 
-/* ── TRE Slot Charts ── */
-function buildTreSlotCharts() {
-  // Filter slots by date range
-  const filtered = allData.treSlots.filter(s => inRange(s.d));
+function buildTrlWeeklyBidStackChart() {
+  const weeks = (allData.trlWeekly || []).filter(w => inRange(w.date));
+  if (weeks.length === 0) return;
 
-  // Aggregate by slot time
-  const slotMap = {};
-  for (const s of filtered) {
-    if (!slotMap[s.s]) {
-      slotMap[s.s] = { po: 0, pa: 0, pmSum: 0, pmCnt: 0, no: 0, na: 0, nmSum: 0, nmCnt: 0 };
-    }
-    const m = slotMap[s.s];
-    m.po += s.po; m.pa += s.pa;
-    if (s.pm !== null) { m.pmSum += s.pm; m.pmCnt++; }
-    m.no += s.no; m.na += s.na;
-    if (s.nm !== null) { m.nmSum += s.nm; m.nmCnt++; }
+  const sel = document.getElementById('trlWeeklyBidWeekSel');
+  const prevVal = trlWeeklyBidWeek ?? sel.value;
+  const available = weeks.map(w => w.id);
+  const selId = available.includes(prevVal) ? prevVal : weeks.at(-1).id;
+  trlWeeklyBidWeek = selId;
+  sel.innerHTML = weeks.map(w =>
+    `<option value="${w.id}"${w.id === selId ? ' selected' : ''}>${w.id} · ${fmtDate(w.date)}</option>`
+  ).join('');
+
+  const week = weeks.find(w => w.id === selId) ?? weeks.at(-1);
+  document.getElementById('trlWeeklyBidMeta').textContent =
+    `${week.id} · ${fmtDateFull(week.date)} · ${trlWeeklyBidDir.toUpperCase()}`;
+
+  buildBidStackChart('cTrlWeeklyBidStack', week[trlWeeklyBidDir], trlWeeklyBidDir);
+}
+
+function buildTrlDailyBidStackChart() {
+  const days = (allData.trlDaily || []).filter(d => inRange(d.date));
+  if (days.length === 0) return;
+
+  const dateSel  = document.getElementById('trlDailyBidDateSel');
+  const blockSel = document.getElementById('trlDailyBidBlockSel');
+
+  const prevDate = trlDailyBidDate ?? dateSel.value;
+  const availDates = days.map(d => d.date);
+  const selDate = availDates.includes(prevDate) ? prevDate : days.at(-1).date;
+  trlDailyBidDate = selDate;
+  dateSel.innerHTML = days.map(d =>
+    `<option value="${d.date}"${d.date === selDate ? ' selected' : ''}>${fmtDateFull(d.date)}</option>`
+  ).join('');
+
+  const day = days.find(d => d.date === selDate) ?? days.at(-1);
+  const availBlocks = day.blocks.map(b => b.block);
+  const selBlock = availBlocks.includes(trlDailyBidBlock) ? trlDailyBidBlock : availBlocks[0];
+  trlDailyBidBlock = selBlock;
+  blockSel.innerHTML = availBlocks.map(b =>
+    `<option value="${b}"${b === selBlock ? ' selected' : ''}>${b}</option>`
+  ).join('');
+
+  const block = day.blocks.find(b => b.block === selBlock);
+  document.getElementById('trlDailyBidMeta').textContent =
+    `${fmtDateFull(selDate)} · ${selBlock} · ${trlDailyBidDir.toUpperCase()}`;
+
+  buildBidStackChart('cTrlDailyBidStack', block?.[trlDailyBidDir], trlDailyBidDir);
+}
+
+/* ── TRE Daily Chart (15-min resolution) ── */
+function buildTreDailyChart() {
+  const slots = allData.treSlots.filter(s => inRange(s.d));
+  const isLog  = treRawScale   === 'log';
+  const isLine = treRawStyle   === 'line';
+  const isAvg  = treRawMetric  === 'avg';
+
+  const dayStarts = {};
+  let prevDate = '';
+  const upData = [], downData = [];
+  const upLine = [], downLine = [];
+
+  // Rolling average helper (window = 20 slots ≈ 5h)
+  function rollingAvgSlots(arr, w) {
+    return arr.map((_, i) => {
+      const slice = arr.slice(Math.max(0, i - w + 1), i + 1).filter(v => v !== null);
+      return slice.length ? slice.reduce((a,b)=>a+b,0)/slice.length : null;
+    });
   }
 
-  // Build 96-slot ordered labels
-  const slotTimes = [];
-  for (let h = 0; h < 24; h++) {
-    for (let min = 0; min < 60; min += 15) {
-      slotTimes.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
-    }
+  for (let i = 0; i < slots.length; i++) {
+    const s = slots[i];
+    if (s.d !== prevDate) { dayStarts[i] = fmtDate(s.d); prevDate = s.d; }
+    const pm = (s.pm != null && isLog) ? sl(s.pm) : s.pm;
+    const nm = (s.nm != null && isLog) ? sl(s.nm) : s.nm;
+    if (s.pm !== null) { upData.push({ x: i, y: pm }); }
+    if (s.nm !== null) { downData.push({ x: i, y: nm }); }
+    upLine.push(pm);
+    downLine.push(nm);
   }
 
-  const upRate = [], downRate = [], upAvgPrice = [], downAvgPrice = [];
-  for (const t of slotTimes) {
-    const m = slotMap[t];
-    if (!m) {
-      upRate.push(null); downRate.push(null);
-      upAvgPrice.push(null); downAvgPrice.push(null);
-    } else {
-      upRate.push(m.po > 0 ? Math.round(m.pa / m.po * 1000) / 10 : 0);
-      downRate.push(m.no > 0 ? Math.round(m.na / m.no * 1000) / 10 : 0);
-      upAvgPrice.push(m.pmCnt > 0 ? Math.round(m.pmSum / m.pmCnt * 100) / 100 : null);
-      downAvgPrice.push(m.nmCnt > 0 ? Math.round(m.nmSum / m.nmCnt * 100) / 100 : null);
-    }
-  }
+  const totalSlots = slots.length;
+  const nTreDays = Object.keys(dayStarts).length;
+  const treDayStep = Math.max(1, Math.ceil(nTreDays / 25));
+  const dayStartEntries = Object.keys(dayStarts).map(Number).sort((a, b) => a - b);
 
-  // Show only hourly tick labels on x-axis
-  const hourlyLabels = slotTimes.map((t, i) => i % 4 === 0 ? t : '');
+  document.getElementById('treDailyMeta').textContent = isAvg
+    ? 'Gleitender Ø (20 Slots) der Aktivierungspreise'
+    : 'UP: höchster aktivierter Preis · DOWN: niedrigster aktivierter Preis';
 
-  const slotXOpts = {
-    ...axisStyle({ maxRotation: 0, autoSkip: false }),
-    ticks: {
-      color: 'rgba(116,164,190,0.7)',
-      callback: (val, idx) => idx % 16 === 0 ? slotTimes[idx] : null,
-      maxRotation: 0,
-    }
+  const xAxis = {
+    type: 'linear', min: 0, max: totalSlots - 1,
+    ...axisStyle({}),
+    afterBuildTicks: (axis) => {
+      axis.ticks = dayStartEntries.filter((_, i) => i % treDayStep === 0).map(v => ({ value: v }));
+    },
+    ticks: { color: 'rgba(116,164,190,0.7)', maxRotation: 45, autoSkip: false,
+             callback: (val) => dayStarts[val] ?? '',
+             font: { family: 'ProximaNova, Nunito, sans-serif', size: 11 } }
   };
 
-  createChart('cTreSlotRate', {
-    type: 'line',
-    data: {
-      labels: slotTimes,
-      datasets: [
+  // Log mode: y values are pre-transformed via sl(), so the axis is a plain linear
+  // scale from sl(-15000)≈-4.18 to sl(15000)≈4.18. Integer ticks (-4…4) correspond
+  // to decade prices (-10000…10000); the callback inverts them for display.
+  const yAxis = isLog ? {
+    ...axisStyle({}),
+    type: 'linear',
+    min: sl(-15000), max: sl(15000),
+    afterBuildTicks: axis => {
+      axis.ticks = [-4, -3, -2, -1, 0, 1, 2, 3, 4].map(v => ({ value: v }));
+    },
+    title: { display: false },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(sli(v), 0) + ' €' }
+  } : {
+    ...axisStyle({}),
+    type: 'linear',
+    title: { display: false },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) + ' €' }
+  };
+
+  if (isLine) {
+    const upVals  = isAvg ? rollingAvgSlots(upLine,  20) : upLine;
+    const downVals = isAvg ? rollingAvgSlots(downLine, 20) : downLine;
+    const dayLbls = slots.map((s, i) => dayStarts[i] ?? '');
+    createChart('cTreDailyPrice', {
+      type: 'line',
+      data: {
+        labels: Array.from({length: totalSlots}, (_, i) => i),
+        datasets: [
+          { label: 'UP',   data: upVals,   borderColor: C_UP,   backgroundColor: 'transparent',
+            borderWidth: 1, pointRadius: 0, pointHoverRadius: 3, tension: 0, spanGaps: false },
+          { label: 'DOWN', data: downVals, borderColor: C_DOWN, backgroundColor: 'transparent',
+            borderWidth: 1, pointRadius: 0, pointHoverRadius: 3, tension: 0, spanGaps: false },
+        ]
+      },
+      options: {
+        animation: false, responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }, crosshair: true,
+          tooltip: {
+            position: 'cursorFollow', mode: 'index', intersect: false,
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: items => { const i = items[0]?.dataIndex; const s = slots[i]; return s ? `${s.d} ${s.s}` : ''; },
+              label: ctx => ctx.parsed.y != null ? ` ${ctx.dataset.label}: ${fmt(isLog ? sli(ctx.parsed.y) : ctx.parsed.y, 2)} EUR/MWh` : null
+            }
+          }
+        },
+        scales: {
+          x: { ...xAxis, ticks: { ...xAxis.ticks, callback: (_, i) => dayStarts[i] ?? '' } },
+          y: yAxis
+        }
+      }
+    });
+  } else {
+    // In scatter mode the rolling-average values form dense bands that look like lines,
+    // so always use raw scatter data here — avg only differentiates in line mode.
+    const usedUpData   = upData;
+    const usedDownData = downData;
+    createChart('cTreDailyPrice', {
+      type: 'scatter',
+      data: {
+        datasets: [
+          { label: 'UP',   data: usedUpData,   backgroundColor: 'rgba(0,190,245,0.55)', pointRadius: 2, pointHoverRadius: 5 },
+          { label: 'DOWN', data: usedDownData, backgroundColor: 'rgba(254,117,0,0.55)',  pointRadius: 2, pointHoverRadius: 5 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+        plugins: {
+          decimation: { enabled: false }, legend: { display: false }, crosshair: true,
+          tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: items => { const idx = items[0]?.raw?.x; const s = slots[idx]; return s ? `${s.d} ${s.s}` : ''; },
+              label: ctx => ` ${ctx.dataset.label}: ${fmt(isLog ? sli(ctx.parsed.y) : ctx.parsed.y, 2)} EUR/MWh`
+            }
+          }
+        },
+        scales: { x: xAxis, y: yAxis }
+      }
+    });
+  }
+}
+
+/* ── TRE Slot Charts ── */
+function buildTreSlotCharts() {
+  const filtered = allData.treSlots.filter(s => inRange(s.d));
+
+  const BLOCKS_4H = ['00:00-04:00','04:00-08:00','08:00-12:00','12:00-16:00','16:00-20:00','20:00-24:00'];
+  const BLOCKS_4H_LABELS = ['00–04','04–08','08–12','12–16','16–20','20–24'];
+
+  function slotTo4hBlock(t) {
+    const [h] = t.split(':').map(Number);
+    const idx = Math.floor(h / 4);
+    return BLOCKS_4H[idx];
+  }
+
+  // ── Activation rate chart ────────────────────────────────────
+  document.getElementById('treRateMeta').textContent = 'Anteil abgerufener Menge an angebotener Menge';
+
+  if (treRateGran === '4h') {
+    // Per 4h block: sum(activated) / sum(offered) across all 15-min slots in the block
+    const upBlockRate = BLOCKS_4H.map(blk => {
+      const slots = filtered.filter(s => slotTo4hBlock(s.s) === blk);
+      const totalPo = slots.reduce((s, x) => s + x.po, 0);
+      const totalPa = slots.reduce((s, x) => s + x.pa, 0);
+      return totalPo > 0 ? Math.round(totalPa / totalPo * 1000) / 10 : 0;
+    });
+    const downBlockRate = BLOCKS_4H.map(blk => {
+      const slots = filtered.filter(s => slotTo4hBlock(s.s) === blk);
+      const totalNo = slots.reduce((s, x) => s + x.no, 0);
+      const totalNa = slots.reduce((s, x) => s + x.na, 0);
+      return totalNo > 0 ? Math.round(totalNa / totalNo * 1000) / 10 : 0;
+    });
+    createChart('cTreSlotRate', {
+      type: 'bar',
+      data: {
+        labels: BLOCKS_4H_LABELS,
+        datasets: [
+          { label: 'UP',   data: upBlockRate,   backgroundColor: 'rgba(0,190,245,0.65)', borderColor: C_UP,   borderWidth: 1, borderRadius: 3 },
+          { label: 'DOWN', data: downBlockRate, backgroundColor: 'rgba(254,117,0,0.65)',  borderColor: C_DOWN, borderWidth: 1, borderRadius: 3 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 1)} %` }
+          }
+        },
+        scales: {
+          x: { ticks: { color: 'rgba(116,164,190,0.7)' }, grid: { color: GRID } },
+          y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' %' } }
+        }
+      }
+    });
+  } else {
+    // 15-min slot aggregation
+    const slotMap = {};
+    for (const s of filtered) {
+      if (!slotMap[s.s]) slotMap[s.s] = { po:0, pa:0, no:0, na:0 };
+      const m = slotMap[s.s];
+      m.po += s.po; m.pa += s.pa; m.no += s.no; m.na += s.na;
+    }
+    const slotTimes = [];
+    for (let h = 0; h < 24; h++) for (let min = 0; min < 60; min += 15)
+      slotTimes.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
+
+    const upRate   = slotTimes.map(t => { const m = slotMap[t]; return m && m.po > 0 ? Math.round(m.pa/m.po*1000)/10 : (m ? 0 : null); });
+    const downRate = slotTimes.map(t => { const m = slotMap[t]; return m && m.no > 0 ? Math.round(m.na/m.no*1000)/10 : (m ? 0 : null); });
+
+    const slotXOpts = {
+      ...axisStyle({ maxRotation: 0, autoSkip: false }),
+      ticks: { color: 'rgba(116,164,190,0.7)', callback: (val, idx) => idx % 16 === 0 ? slotTimes[idx] : null, maxRotation: 0 }
+    };
+    createChart('cTreSlotRate', {
+      type: 'line', data: { labels: slotTimes, datasets: [
         lineDataset('UP-Aktivierungsrate', upRate, C_UP, { thin: true }),
         lineDataset('DOWN-Aktivierungsrate', downRate, C_DOWN, { thin: true }),
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(0,15,30,0.92)',
-          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, crosshair: true, tooltip: { position: 'cursorFollow',
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 1) : '—'} %` }
-        }
-      },
-      scales: {
-        x: slotXOpts,
-        y: {
-          ...axisStyle({}),
-          title: { display: false },
-          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' %' }
-        }
+        }},
+        scales: { x: slotXOpts, y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' %' } } }
       }
-    }
-  });
+    });
+  }
 
-  createChart('cTreSlotPrice', {
-    type: 'line',
-    data: {
-      labels: slotTimes,
-      datasets: [
-        lineDataset('UP Ø Marginalpreis', upAvgPrice, C_UP, { thin: true }),
-        lineDataset('DOWN Ø Marginalpreis', downAvgPrice, C_DOWN, { thin: true }),
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(0,15,30,0.92)',
-          borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+  // ── Slot price chart ─────────────────────────────────────────
+  document.getElementById('treSlotPriceMeta').textContent =
+    (treSlotGran === '4h' ? 'Je 4h-Block' : 'Je 15-Min-Block') + ' · ' +
+    (treSlotMetric === 'vwap' ? 'VWAP (volumengewichtet)' : 'Ø Marginalpreis');
+
+  if (treSlotGran === '4h') {
+    const blockMap = {};
+    for (const s of filtered) {
+      const blk = slotTo4hBlock(s.s);
+      if (!blockMap[blk]) blockMap[blk] = { pmSum:0, pmCnt:0, nmSum:0, nmCnt:0, pVol:0, pVwap:0, nVol:0, nVwap:0 };
+      const m = blockMap[blk];
+      if (s.pm !== null) { m.pmSum += s.pm; m.pmCnt++; if(s.pa>0){m.pVol+=s.pa; m.pVwap+=s.pm*s.pa;} }
+      if (s.nm !== null) { m.nmSum += s.nm; m.nmCnt++; if(s.na>0){m.nVol+=s.na; m.nVwap+=s.nm*s.na;} }
+    }
+    const upP   = BLOCKS_4H.map(b => { const m=blockMap[b];if(!m)return null;
+      return treSlotMetric==='vwap' ? (m.pVol>0?Math.round(m.pVwap/m.pVol*100)/100:null) : (m.pmCnt>0?Math.round(m.pmSum/m.pmCnt*100)/100:null); });
+    const downP = BLOCKS_4H.map(b => { const m=blockMap[b];if(!m)return null;
+      return treSlotMetric==='vwap' ? (m.nVol>0?Math.round(m.nVwap/m.nVol*100)/100:null) : (m.nmCnt>0?Math.round(m.nmSum/m.nmCnt*100)/100:null); });
+    createChart('cTreSlotPrice', {
+      type: 'bar', data: { labels: BLOCKS_4H_LABELS, datasets: [
+        { label: 'UP',   data: upP,   backgroundColor: 'rgba(0,190,245,0.65)', borderColor: C_UP,   borderWidth: 1, borderRadius: 3 },
+        { label: 'DOWN', data: downP, backgroundColor: 'rgba(254,117,0,0.65)',  borderColor: C_DOWN, borderWidth: 1, borderRadius: 3 },
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, tooltip: { position: 'cursorFollow',
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
           callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 2) : '—'} EUR/MWh` }
-        }
-      },
-      scales: {
-        x: slotXOpts,
-        y: { ...axisStyle({}), title: { display: false },
-             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } }
+        }},
+        scales: { x: { ticks: { color: 'rgba(116,164,190,0.7)' }, grid: { color: GRID } },
+                  y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } } }
       }
+    });
+  } else {
+    const slotMap2 = {};
+    for (const s of filtered) {
+      if (!slotMap2[s.s]) slotMap2[s.s] = { pmSum:0, pmCnt:0, nmSum:0, nmCnt:0, pVol:0, pVwap:0, nVol:0, nVwap:0 };
+      const m = slotMap2[s.s];
+      if (s.pm !== null) { m.pmSum += s.pm; m.pmCnt++; if(s.pa>0){m.pVol+=s.pa; m.pVwap+=s.pm*s.pa;} }
+      if (s.nm !== null) { m.nmSum += s.nm; m.nmCnt++; if(s.na>0){m.nVol+=s.na; m.nVwap+=s.nm*s.na;} }
     }
-  });
+    const slotTimes2 = [];
+    for (let h=0;h<24;h++) for (let min=0;min<60;min+=15)
+      slotTimes2.push(`${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}`);
+    const upP   = slotTimes2.map(t => { const m=slotMap2[t];if(!m)return null;
+      return treSlotMetric==='vwap'?(m.pVol>0?Math.round(m.pVwap/m.pVol*100)/100:null):(m.pmCnt>0?Math.round(m.pmSum/m.pmCnt*100)/100:null); });
+    const downP = slotTimes2.map(t => { const m=slotMap2[t];if(!m)return null;
+      return treSlotMetric==='vwap'?(m.nVol>0?Math.round(m.nVwap/m.nVol*100)/100:null):(m.nmCnt>0?Math.round(m.nmSum/m.nmCnt*100)/100:null); });
+    const slotXOpts2 = { ...axisStyle({ maxRotation: 0, autoSkip: false }),
+      ticks: { color: 'rgba(116,164,190,0.7)', callback: (val, idx) => idx % 16 === 0 ? slotTimes2[idx] : null, maxRotation: 0 } };
+    createChart('cTreSlotPrice', {
+      type: 'line', data: { labels: slotTimes2, datasets: [
+        lineDataset('UP ' + (treSlotMetric==='vwap'?'VWAP':'Ø Marginalpreis'), upP, C_UP, { thin: true }),
+        lineDataset('DOWN ' + (treSlotMetric==='vwap'?'VWAP':'Ø Marginalpreis'), downP, C_DOWN, { thin: true }),
+      ]},
+      options: {
+        responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, crosshair: true, tooltip: { position: 'cursorFollow',
+          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? fmt(ctx.parsed.y, 2) : '—'} EUR/MWh` }
+        }},
+        scales: { x: slotXOpts2, y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } } }
+      }
+    });
+  }
+}
+
+/* ── TRE Bid Stack (Price Duration Curve) ── */
+function buildTreBidStackChart() {
+  const isUp     = treBidDir === 'up';
+  const dateInp  = document.getElementById('treBidDateInp');
+  const blockSel = document.getElementById('treBidBlockSel');
+
+  // Bid stacks exist only for the last 30 days — search all slots, not just inRange
+  const allSlots = allData.treSlots;
+
+  const datesWithStack = [...new Set(
+    allSlots
+      .filter(s => isUp ? (s.pbs && s.pbs.length > 0) : (s.nbs && s.nbs.length > 0))
+      .map(s => s.d)
+  )].sort((a, b) => b.localeCompare(a)); // most recent first
+
+  // Smart default: transplant the most recent bid date's MM-DD into currentEnd's year.
+  // Reset when the year (from the Zeitraum top bar) changes.
+  const selYear = currentEnd.slice(0, 4);
+  if (treBidYear !== selYear) {
+    treBidYear = selYear;
+    treBidDate = null;
+  }
+
+  // Keep an explicit user selection; on year change, transplant MM-DD into the new year.
+  // Don't gate on datesWithStack — historical dates have no bid stacks and will render empty.
+  let selDate;
+  if (treBidDate) {
+    selDate = treBidDate;
+  } else {
+    const mostRecent = datesWithStack[0] ?? null;
+    selDate = mostRecent ? `${selYear}-${mostRecent.slice(5)}` : null;
+  }
+  treBidDate = selDate;
+
+  // Calendar bounds = full TRE slot date range, not just the bid-stack window
+  const treFirst = allSlots[0]?.d ?? '2022-01-01';
+  const treLast  = allSlots[allSlots.length - 1]?.d ?? new Date().toISOString().slice(0, 10);
+  dateInp.min = treFirst;
+  dateInp.max = treLast;
+  if (selDate) dateInp.value = selDate;
+
+  // Slots for the selected date with any offered volume (bid stack data not required)
+  const slotsPresent = allSlots
+    .filter(s => s.d === selDate && (isUp ? s.po > 0 : s.no > 0))
+    .map(s => s.s)
+    .sort();
+
+  // Default slot: first with activation → '12:00' slot → first available
+  const prevBlock = treBidBlock ?? blockSel.value;
+  let selBlock;
+  if (slotsPresent.includes(prevBlock)) {
+    selBlock = prevBlock;
+  } else {
+    const firstActivated = allSlots
+      .filter(s => s.d === selDate && (isUp ? s.pa > 0 : s.na > 0))
+      .map(s => s.s)
+      .sort()[0];
+    selBlock = firstActivated
+      ?? slotsPresent.find(t => t.startsWith('12:00'))
+      ?? slotsPresent[0]
+      ?? null;
+  }
+  treBidBlock = selBlock;
+  blockSel.innerHTML = slotsPresent.length
+    ? slotsPresent.map(t => `<option value="${t}"${t === selBlock ? ' selected' : ''}>${t}</option>`).join('')
+    : '<option value="">—</option>';
+
+  // Find the selected slot and read its bid stack (only stored for recent ~30 days)
+  const slot = selDate && selBlock
+    ? allSlots.find(s => s.d === selDate && s.s === selBlock)
+    : null;
+  const hasBidStack = !!(slot && (isUp ? slot.pbs?.length : slot.nbs?.length));
+  const rawBids = hasBidStack
+    ? (isUp ? slot.pbs : slot.nbs).map(b => Array.isArray(b) ? { p: b[0], v: b[1], a: b[2] } : b)
+    : [];
+
+  const dateLabel = selDate  ? fmtDateFull(selDate) : '—';
+  const slotLabel = selBlock ? ` · ${selBlock}` : '';
+  document.getElementById('treBidMeta').textContent = hasBidStack
+    ? `${rawBids.length} Gebote · ${treBidDir.toUpperCase()} · ${dateLabel}${slotLabel}`
+    : `Keine Gebotsstack-Daten · ${treBidDir.toUpperCase()} · ${dateLabel}${slotLabel} — nur letzte 30 Tage verfügbar`;
+
+  const dirData = {
+    bidStack: rawBids,
+    awarded:  rawBids.reduce((s, b) => s + b.a, 0),
+    marginal: isUp
+      ? rawBids.filter(b => b.a > 0).reduce((m, b) => Math.max(m, b.p), -Infinity) || null
+      : rawBids.filter(b => b.a > 0).reduce((m, b) => Math.min(m, b.p),  Infinity) || null,
+  };
+  if (!isFinite(dirData.marginal)) dirData.marginal = null;
+
+  buildBidStackChart('cTreBidStack', dirData, treBidDir, treBidScale === 'log' ? 'symlog' : 'linear');
+}
+
+/* ── SRL Bid Stack Charts ── */
+function buildSrlWeeklyBidStackChart() {
+  const weeks = (allData.srlWeekly || []).filter(w => inRange(w.date));
+  if (weeks.length === 0) return;
+
+  const sel = document.getElementById('srlWeeklyBidWeekSel');
+  const prevVal = srlWeeklyBidWeek ?? sel.value;
+  const available = weeks.map(w => w.id);
+  const selId = available.includes(prevVal) ? prevVal : weeks.at(-1).id;
+  srlWeeklyBidWeek = selId;
+  sel.innerHTML = weeks.map(w =>
+    `<option value="${w.id}"${w.id === selId ? ' selected' : ''}>${w.id} · ${fmtDate(w.date)}</option>`
+  ).join('');
+
+  const week = weeks.find(w => w.id === selId) ?? weeks.at(-1);
+  document.getElementById('srlWeeklyBidMeta').textContent =
+    `${week.id} · ${fmtDateFull(week.date)} · ${srlWeeklyBidDir.toUpperCase()}`;
+
+  buildBidStackChart('cSrlWeeklyBidStack', week[srlWeeklyBidDir], srlWeeklyBidDir);
+}
+
+function buildSrlDailyBidStackChart() {
+  const days = (allData.srlDaily || []).filter(d => inRange(d.date));
+  if (days.length === 0) return;
+
+  const dateSel  = document.getElementById('srlDailyBidDateSel');
+  const blockSel = document.getElementById('srlDailyBidBlockSel');
+
+  const prevDate = srlDailyBidDate ?? dateSel.value;
+  const availDates = days.map(d => d.date);
+  const selDate = availDates.includes(prevDate) ? prevDate : days.at(-1).date;
+  srlDailyBidDate = selDate;
+  dateSel.innerHTML = days.map(d =>
+    `<option value="${d.date}"${d.date === selDate ? ' selected' : ''}>${fmtDateFull(d.date)}</option>`
+  ).join('');
+
+  const day = days.find(d => d.date === selDate) ?? days.at(-1);
+  const availBlocks = day.blocks.map(b => b.block);
+  const selBlock = availBlocks.includes(srlDailyBidBlock) ? srlDailyBidBlock : availBlocks[0];
+  srlDailyBidBlock = selBlock;
+  blockSel.innerHTML = availBlocks.map(b =>
+    `<option value="${b}"${b === selBlock ? ' selected' : ''}>${b}</option>`
+  ).join('');
+
+  const block = day.blocks.find(b => b.block === selBlock);
+  document.getElementById('srlDailyBidMeta').textContent =
+    `${fmtDateFull(selDate)} · ${selBlock} · ${srlDailyBidDir.toUpperCase()}`;
+
+  buildBidStackChart('cSrlDailyBidStack', block?.[srlDailyBidDir], srlDailyBidDir);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2156,24 +3044,6 @@ function updateKpis() {
   document.getElementById('kpiTrlUpVolMeta').textContent  = `Ø verfügbare MW · Wochen- + Tagesauktion`;
   document.getElementById('kpiTrlDownVolMeta').textContent = `Ø verfügbare MW · Wochen- + Tagesauktion`;
 
-  // TRE activated MWh split by direction, daily average over selected period
-  let totalPosActivated = 0, totalNegActivated = 0, totalOffered = 0;
-  for (const d of treD) {
-    totalPosActivated += (d.pos?.activated ?? 0);
-    totalNegActivated += (d.neg?.activated ?? 0);
-    totalOffered      += (d.pos?.offered ?? 0) + (d.neg?.offered ?? 0);
-  }
-  const nDays = treD.length || 1;
-  const avgPosDay = (totalPosActivated * 0.25) / nDays;
-  const avgNegDay = (totalNegActivated * 0.25) / nDays;
-  const rate = totalOffered > 0 ? (totalPosActivated + totalNegActivated) / totalOffered * 100 : 0;
-
-  document.getElementById('kpiTrePosActivated').textContent    = treD.length ? fmt(avgPosDay, 1) : '—';
-  document.getElementById('kpiTrePosActivatedMeta').textContent = `Ø über ${treD.length} Tage`;
-  document.getElementById('kpiTreNegActivated').textContent    = treD.length ? fmt(avgNegDay, 1) : '—';
-  document.getElementById('kpiTreNegActivatedMeta').textContent = `Ø über ${treD.length} Tage`;
-  document.getElementById('kpiTreRate').textContent          = fmt(rate, 1);
-  document.getElementById('kpiTreRateMeta').textContent      = `Ø über ${treD.length} Tage`;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2184,37 +3054,35 @@ const C_ANT_DOWN = '#FFA500';  // amber — anticipated DOWN for SRL
 function buildSrlWeeklyCharts() {
   const weeks = (allData.srlWeekly || []).filter(w => inRange(w.date));
   const labels = weeks.map(w => w.id);
+  const step = { extra: { stepped: 'middle', tension: 0 } };
 
-  // Chart 1: Marginal prices — 4 curves (regular UP/DOWN + anticipated UP/DOWN)
   createChart('cSrlWeeklyPrice', {
     type: 'line',
     data: {
       labels,
       datasets: [
-        lineDataset('UP', weeks.map(w => w.up?.marginal ?? null), C_UP),
-        lineDataset('DOWN', weeks.map(w => w.down?.marginal ?? null), C_DOWN),
-        lineDataset('Anticipiert UP', weeks.map(w => w.anticipated?.up?.marginal ?? null), C_ANT, { dashed: true, thin: true }),
-        lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.down?.marginal ?? null), C_ANT_DOWN, { dashed: true, thin: true }),
+        lineDataset('UP',             weeks.map(w => w.up?.[srlWeeklyMetric]                ?? null), C_UP,      step),
+        lineDataset('DOWN',           weeks.map(w => w.down?.[srlWeeklyMetric]              ?? null), C_DOWN,    step),
+        lineDataset('Anticipiert UP', weeks.map(w => w.anticipated?.up?.[srlWeeklyMetric]   ?? null), C_ANT,     { dashed: true, thin: true, ...step }),
+        lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.down?.[srlWeeklyMetric] ?? null), C_ANT_DOWN, { dashed: true, thin: true, ...step }),
       ]
     },
     options: baseLineOpts('', 'CHF/MW', 'CHF/MW'),
   });
 
-  // Chart 2: Volumes (mirrored bars) — regular + anticipated stacked together
-  // SRL anticipated has both UP and DOWN (w.anticipated = {up:{...}, down:{...}})
   createChart('cSrlWeeklyVol', {
     type: 'bar',
     data: {
       labels,
       datasets: [
-        { label: 'UP Zuschlag',              data: weeks.map(w =>  (w.up?.awarded ?? 0)),                                                   backgroundColor: 'rgba(0,190,245,0.75)', stack: 'vol' },
-        { label: 'UP Angebot (n.z.)',        data: weeks.map(w =>  Math.max(0,(w.up?.offered??0)-(w.up?.awarded??0))),                      backgroundColor: 'rgba(0,190,245,0.18)', stack: 'vol' },
-        { label: 'Ant. UP Zuschlag',         data: weeks.map(w =>  (w.anticipated?.up?.awarded ?? 0)),                                      backgroundColor: 'rgba(76,210,246,0.65)', stack: 'vol' },
-        { label: 'Ant. UP Angebot (n.z.)',   data: weeks.map(w =>  Math.max(0,(w.anticipated?.up?.offered??0)-(w.anticipated?.up?.awarded??0))),  backgroundColor: 'rgba(76,210,246,0.18)', stack: 'vol' },
-        { label: 'DOWN Zuschlag',            data: weeks.map(w => -(w.down?.awarded ?? 0)),                                                 backgroundColor: 'rgba(254,117,0,0.75)',  stack: 'vol' },
-        { label: 'DOWN Angebot (n.z.)',      data: weeks.map(w => -Math.max(0,(w.down?.offered??0)-(w.down?.awarded??0))),                  backgroundColor: 'rgba(254,117,0,0.18)',  stack: 'vol' },
-        { label: 'Ant. DOWN Zuschlag',       data: weeks.map(w => -(w.anticipated?.down?.awarded ?? 0)),                                    backgroundColor: 'rgba(255,165,0,0.65)',  stack: 'vol' },
-        { label: 'Ant. DOWN Angebot (n.z.)', data: weeks.map(w => -Math.max(0,(w.anticipated?.down?.offered??0)-(w.anticipated?.down?.awarded??0))), backgroundColor: 'rgba(255,165,0,0.18)', stack: 'vol' },
+        { label: 'UP Zuschlag',              data: weeks.map(w =>  (w.up?.awarded ?? 0)),                                                                backgroundColor: 'rgba(0,190,245,0.75)',  stack: 'vol' },
+        { label: 'UP Angebot (n.z.)',        data: weeks.map(w =>  Math.max(0,(w.up?.offered??0)-(w.up?.awarded??0))),                                   backgroundColor: 'rgba(0,190,245,0.18)',  stack: 'vol' },
+        { label: 'Ant. UP Zuschlag',         data: weeks.map(w =>  (w.anticipated?.up?.awarded ?? 0)),                                                   backgroundColor: 'rgba(76,210,246,0.65)', stack: 'vol' },
+        { label: 'Ant. UP Angebot (n.z.)',   data: weeks.map(w =>  Math.max(0,(w.anticipated?.up?.offered??0)-(w.anticipated?.up?.awarded??0))),          backgroundColor: 'rgba(76,210,246,0.18)', stack: 'vol' },
+        { label: 'DOWN Zuschlag',            data: weeks.map(w => -(w.down?.awarded ?? 0)),                                                              backgroundColor: 'rgba(254,117,0,0.75)',  stack: 'vol' },
+        { label: 'DOWN Angebot (n.z.)',      data: weeks.map(w => -Math.max(0,(w.down?.offered??0)-(w.down?.awarded??0))),                               backgroundColor: 'rgba(254,117,0,0.18)',  stack: 'vol' },
+        { label: 'Ant. DOWN Zuschlag',       data: weeks.map(w => -(w.anticipated?.down?.awarded ?? 0)),                                                 backgroundColor: 'rgba(255,165,0,0.65)',  stack: 'vol' },
+        { label: 'Ant. DOWN Angebot (n.z.)', data: weeks.map(w => -Math.max(0,(w.anticipated?.down?.offered??0)-(w.anticipated?.down?.awarded??0))),     backgroundColor: 'rgba(255,165,0,0.18)',  stack: 'vol' },
       ]
     },
     options: {
@@ -2222,7 +3090,8 @@ function buildSrlWeeklyCharts() {
       scales: {
         x: { ...axisStyle({ maxRotation: 0 }), stacked: true },
         y: { ...axisStyle({}), stacked: true,
-             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+             title: { display: true, text: 'MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') } }
       },
       plugins: {
         legend: { display: false },
@@ -2234,6 +3103,7 @@ function buildSrlWeeklyCharts() {
       }
     }
   });
+  buildSrlWeeklyBidStackChart();
 }
 
 function buildSrlDailyCharts() {
@@ -2243,6 +3113,8 @@ function buildSrlDailyCharts() {
   const dateStep = niceDayStep(nDays);
   const volLabels = [];
   const upPriceScatter = [], downPriceScatter = [];
+  const upPriceLine = [], downPriceLine = [], priceLineLabels = [];
+  const tipLabels = [];
   const upAwd = [], upNotAwd = [], downAwd = [], downNotAwd = [];
   const dayStarts = {};
   let prevDate = '';
@@ -2256,11 +3128,19 @@ function buildSrlDailyCharts() {
         dayCount++;
         if ((dayCount - 1) % dateStep === 0) dayStarts[idx] = fmtDate(day.date);
       }
-      volLabels.push(isFirst && (dayCount - 1) % dateStep === 0 ? fmtDate(day.date) : '');
+      const lbl = isFirst && (dayCount - 1) % dateStep === 0 ? fmtDate(day.date) : '';
+      volLabels.push(lbl);
+      priceLineLabels.push(lbl);
+      tipLabels.push(`${fmtDateFull(day.date)}  ${blk.block}`);
       prevDate = day.date;
 
-      if (blk.up?.marginal   != null) upPriceScatter.push({ x: idx, y: blk.up.marginal });
-      if (blk.down?.marginal != null) downPriceScatter.push({ x: idx, y: blk.down.marginal });
+      const upVal   = blk.up?.[srlDailyMetric]   ?? null;
+      const downVal = blk.down?.[srlDailyMetric]  ?? null;
+      if (upVal   != null) upPriceScatter.push({ x: idx, y: upVal });
+      if (downVal != null) downPriceScatter.push({ x: idx, y: downVal });
+      upPriceLine.push(upVal   != null ? Math.round(upVal   * 10) / 10 : null);
+      downPriceLine.push(downVal != null ? Math.round(downVal * 10) / 10 : null);
+
       upAwd.push(blk.up?.awarded ?? 0);
       upNotAwd.push(Math.max(0,(blk.up?.offered??0)-(blk.up?.awarded??0)));
       downAwd.push(-(blk.down?.awarded ?? 0));
@@ -2280,7 +3160,7 @@ function buildSrlDailyCharts() {
       color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false,
       stepSize: scatterTickStep,
       callback: v => {
-        const near = Object.keys(dayStarts).map(Number).sort((a,b)=>a-b).reverse().find(k => k <= v && v - k < scatterTickStep / 2);
+        const near = Object.keys(dayStarts).map(Number).find(k => Math.abs(k - v) < scatterTickStep / 2);
         return near != null ? dayStarts[near] : null;
       },
       font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 },
@@ -2296,38 +3176,76 @@ function buildSrlDailyCharts() {
     }
   };
 
-  createChart('cSrlDailyPrice', {
-    type: 'scatter',
-    data: {
-      datasets: [
-        { label: 'UP',   data: upPriceScatter,   backgroundColor: 'rgba(0,190,245,0.6)',  pointRadius: 3, pointHoverRadius: 5 },
-        { label: 'DOWN', data: downPriceScatter, backgroundColor: 'rgba(254,117,0,0.6)', pointRadius: 3, pointHoverRadius: 5 },
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'nearest', intersect: true },
-      plugins: {
-        legend: { display: true, labels: { color: 'rgba(116,164,190,0.85)', font: { size: 11 }, boxWidth: 12 } },
-        tooltip: {
-          backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
-          titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
-          callbacks: {
-            title: ctx => {
-              const xi = Math.round(ctx[0].parsed.x);
-              const near = Object.keys(dayStarts).map(Number).sort((a,b)=>a-b).reverse().find(k => k <= xi);
-              return near != null ? dayStarts[near] : '';
-            },
-            label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW`
-          }
-        }
+  const yPriceAxis = {
+    ...axisStyle({}),
+    title: { display: true, text: 'CHF/MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) }
+  };
+
+  if (srlDailyStyle === 'scatter') {
+    createChart('cSrlDailyPrice', {
+      type: 'scatter',
+      data: {
+        datasets: [
+          { label: 'UP',   data: upPriceScatter,   backgroundColor: 'rgba(0,190,245,0.6)',  pointRadius: 3, pointHoverRadius: 5 },
+          { label: 'DOWN', data: downPriceScatter, backgroundColor: 'rgba(254,117,0,0.6)',  pointRadius: 3, pointHoverRadius: 5 },
+        ]
       },
-      scales: {
-        x: xScatterOpts,
-        y: { ...axisStyle({}), ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) + ' CHF/MW' } }
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'nearest', intersect: true },
+        plugins: {
+          legend: { display: false },
+          crosshair: true,
+          tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: ctx => tipLabels[Math.round(ctx[0].parsed.x)] ?? '',
+              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW`
+            }
+          }
+        },
+        scales: { x: xScatterOpts, y: yPriceAxis }
       }
-    }
-  });
+    });
+  } else {
+    createChart('cSrlDailyPrice', {
+      type: 'line',
+      data: {
+        labels: priceLineLabels,
+        datasets: [
+          { label: 'UP',   data: upPriceLine,   borderColor: C_UP,   backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 3, tension: 0, spanGaps: false },
+          { label: 'DOWN', data: downPriceLine, borderColor: C_DOWN, backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 3, tension: 0, spanGaps: false },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          crosshair: true,
+          tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: ctx => tipLabels[ctx[0].dataIndex] ?? '',
+              label: ctx => ctx.parsed.y != null ? ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y, 2)} CHF/MW` : null
+            }
+          }
+        },
+        scales: {
+          x: {
+            ...axisStyle({ maxRotation: 90, autoSkip: false, font: { size: 9 } }),
+            ticks: { color: 'rgba(116,164,190,0.7)', maxRotation: 90, autoSkip: false, callback: (v, i) => priceLineLabels[i] || null, font: { family: 'ProximaNova, Nunito, sans-serif', size: 9 } }
+          },
+          y: yPriceAxis
+        }
+      }
+    });
+  }
 
   createChart('cSrlDailyVol', {
     type: 'bar',
@@ -2348,17 +3266,24 @@ function buildSrlDailyCharts() {
         tooltip: {
           backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
-          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW` }
+          callbacks: {
+            title: ctx => tipLabels[ctx[0].dataIndex] ?? '',
+            label: ctx => ` ${ctx.dataset.label}: ${Math.abs(ctx.parsed.y).toLocaleString('de-CH')} MW`
+          }
         }
       },
       scales: {
         x: { ...xVolOpts, stacked: true },
-        y: { ...axisStyle({}), stacked: true,
-             ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') + ' MW' } }
+        y: {
+          ...axisStyle({}), stacked: true,
+          title: { display: true, text: 'MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => Math.abs(v).toLocaleString('de-CH') }
+        }
       }
     }
   });
   buildDailyHeatmap('cSrlDailyHeatmap', days, srlHeatmapDir, 'CHF/MW');
+  buildSrlDailyBidStackChart();
 }
 
 /* ── Daily Auction Heatmap (shared TRL + SRL) ── */
@@ -2593,6 +3518,41 @@ function rollingAvg(data, window = 30) {
 
 // Per-chart view-mode state
 const spotViewMode = { trend: 'raw', spread: 'raw' };
+let spotRawStyle = 'line'; // 'scatter' | 'line' — only applies when trend = 'raw'
+let trlWeeklyMetric = 'vwap';  // 'marginal' | 'vwap'
+let trlDailyMetric  = 'vwap';  // 'marginal' | 'vwap'
+let trlDailyStyle   = 'line';  // 'scatter' | 'line'
+let trlWeeklyBidWeek  = null;  // null = auto (last in range)
+let trlWeeklyBidDir   = 'up';
+let trlDailyBidDate   = null;  // null = auto (last day in range)
+let trlDailyBidBlock  = '12:00-16:00';
+let trlDailyBidDir    = 'up';
+let srlWeeklyMetric = 'vwap';  // 'marginal' | 'vwap'
+let srlDailyMetric  = 'vwap';  // 'marginal' | 'vwap'
+let srlDailyStyle   = 'line';  // 'scatter' | 'line'
+let srlWeeklyBidWeek = null;
+let srlWeeklyBidDir  = 'up';
+let srlDailyBidDate  = null;
+let srlDailyBidBlock = '12:00-16:00';
+let srlDailyBidDir   = 'up';
+let treRawScale    = 'linear'; // 'linear' | 'log'
+let treRawStyle    = 'scatter';  // 'scatter' | 'line'
+let treRawMetric   = 'marginal'; // 'marginal' | 'avg'
+let treRateGran    = '15min';    // '15min' | '4h'
+let treSlotGran    = '15min';    // '15min' | '4h'
+let treSlotMetric  = 'marginal'; // 'marginal' | 'vwap'
+let treBidDir      = 'up';
+let treBidScale    = 'linear';   // 'linear' | 'log'
+let treBidDate     = null;        // null = use smart default
+let treBidBlock    = null;        // null = use smart default
+let treBidYear     = null;        // tracks currentEnd year; resets date when year changes
+let pvTreMetric = 'marginal'; // 'marginal' | 'vwap'
+const pvChartTrePriceMarginal = [];
+const pvChartTrePriceVwap     = [];
+const pvRevData     = { plantMWp: 0.531 }; // filled by buildHomePage, read by setPvTreMetric
+const pvPieSegsCur  = [0, 0, 0];           // [TRE, TRL, FeedIn] — mutated before each pie rebuild
+const pvPieSegsPrev = [0, 0, 0];
+let   pvPieTotalNorm = 0;
 
 // Period presets per market context
 const SPOT_PRESETS = [
@@ -2635,19 +3595,20 @@ function buildSpotTrendChart() {
     const spots = (allData.spotDaily || []).filter(s => inRange(s.date));
     const nSpotDays = spots.length;
     const spotRollStep = Math.max(1, Math.ceil(nSpotDays / 20));
-    const labels = spots.map(s => fmtDateFull(s.date));
+    const labels = spots.map(s => fmtDate(s.date));
     const avgs = rollingAvg(spots.map(s => s.avg ?? null));
     createChart('cSpotTrend', {
       type: 'line',
       data: {
         labels,
-        datasets: [lineDataset('30-Tage-Mittel', avgs, C_UP, { thin: true })]
+        datasets: [lineDataset('30-Tage-Mittel', avgs, '#C0457A', { thin: true })]
       },
       options: {
         ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh'),
         plugins: {
           ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh').plugins,
           tooltip: {
+            position: 'cursorFollow',
             backgroundColor: 'rgba(0,15,30,0.92)',
             borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
             titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
@@ -2658,21 +3619,80 @@ function buildSpotTrendChart() {
           x: { ...axisStyle({ maxRotation: 45, autoSkip: true, maxTicksLimit: 20 }),
                ticks: { color: 'rgba(116,164,190,0.7)', maxRotation: 45, autoSkip: true,
                         maxTicksLimit: 20, callback: (v, i) => i % spotRollStep === 0 ? labels[i] : '' } },
-          y: { ...axisStyle({}), title: { display: false },
-               ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' } }
+          y: { ...axisStyle({}),
+               title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+               ticks: { color: 'rgba(116,164,190,0.7)', callback: v => `${v}` } }
         }
       }
     });
     return;
   }
 
-  // Raw mode: scatter chart with full hourly resolution
+  // Raw mode — shared setup
   const hourly = (allData.spotHourly || []).filter(s => inRange(s.date));
   const nSpotHDays = hourly.length;
-  // Aim for ≤20 date labels regardless of period length
+  const spotDates = hourly.map(d => d.date);
+
+  const yScaleRaw = {
+    ...axisStyle({}),
+    title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+    ticks: { color: 'rgba(116,164,190,0.7)', callback: v => `${v}` },
+  };
+
+  if (spotRawStyle === 'line') {
+    const prices = [], dayLabels = [], tipLabels = [];
+    hourly.forEach(d => {
+      const short = fmtDate(d.date), full = fmtDateFull(d.date);
+      (d.h || []).forEach((p, hi) => {
+        prices.push(p != null ? Math.round(p * 10) / 10 : null);
+        dayLabels.push(hi === 0 ? short : '');
+        tipLabels.push(`${full}  ${String(hi).padStart(2,'0')}:00`);
+      });
+    });
+    createChart('cSpotTrend', {
+      type: 'line',
+      data: {
+        labels: dayLabels,
+        datasets: [{
+          label: 'Stundenpreis',
+          data: prices,
+          borderColor: '#C0457A',
+          borderWidth: 1.2,
+          backgroundColor: 'rgba(192,69,122,0.1)',
+          fill: true, tension: 0, pointRadius: 0, pointHoverRadius: 3, spanGaps: false,
+        }]
+      },
+      options: {
+        animation: false, responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          crosshair: true,
+          tooltip: {
+            position: 'cursorFollow',
+            mode: 'index', intersect: false,
+            backgroundColor: 'rgba(0,15,30,0.92)',
+            borderColor: 'rgba(192,69,122,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
+            callbacks: {
+              title: items => tipLabels[items[0]?.dataIndex ?? 0] ?? '',
+              label: ctx => ` ${ctx.parsed.y != null ? ctx.parsed.y.toFixed(2) + ' EUR/MWh' : '—'}`,
+            }
+          },
+        },
+        scales: {
+          x: { ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxRotation: 45,
+                        autoSkip: false, callback: (_, i) => dayLabels[i] || null },
+               grid: { color: 'rgba(116,164,190,0.06)' } },
+          y: yScaleRaw,
+        }
+      }
+    });
+    return;
+  }
+
+  // Scatter mode (default raw style)
   const spotDayStep = Math.max(1, Math.ceil(nSpotHDays / 20));
   const spotTickStep = spotDayStep * 24;
-  const spotDates = hourly.map(d => d.date);
   const priceData = [];
   hourly.forEach((day, dayIdx) => {
     day.h.forEach((price, hIdx) => {
@@ -2687,17 +3707,15 @@ function buildSpotTrendChart() {
       datasets: [{
         label: 'Spotpreis (stündlich)',
         data: priceData,
-        backgroundColor: 'rgba(0,190,245,0.4)',
+        backgroundColor: 'rgba(192,69,122,0.5)',
         pointRadius: 1.5,
         pointHoverRadius: 3,
       }]
     },
     options: {
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
+      animation: false, responsive: true, maintainAspectRatio: false,
       plugins: {
-        legend: { display: true, labels: { color: '#74A4BE', font: { family: 'ProximaNova, Nunito, sans-serif' } } },
+        legend: { display: false },
         tooltip: {
           backgroundColor: 'rgba(0,15,30,0.92)',
           borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
@@ -2716,27 +3734,20 @@ function buildSpotTrendChart() {
       },
       scales: {
         x: {
-          type: 'linear',
-          min: 0,
-          max: totalHours,
+          type: 'linear', min: 0, max: totalHours,
           ticks: {
             stepSize: spotTickStep,
-            color: 'rgba(116,164,190,0.7)',
-            maxRotation: 45,
-            autoSkip: false,
+            color: 'rgba(116,164,190,0.7)', maxRotation: 45, autoSkip: false,
             callback: val => {
               const dayIdx = Math.round(val / 24);
-              return spotDates[dayIdx] ? fmtDateFull(spotDates[dayIdx]) : '';
+              return spotDates[dayIdx] ? fmtDate(spotDates[dayIdx]) : '';
             },
             font: { family: 'ProximaNova, Nunito, sans-serif', size: 11 },
           },
           grid: { color: 'rgba(116,164,190,0.12)' },
           border: { color: 'rgba(116,164,190,0.25)' },
         },
-        y: {
-          ...axisStyle({}), title: { display: false },
-          ticks: { color: 'rgba(116,164,190,0.7)', callback: v => v + ' €' }
-        }
+        y: yScaleRaw,
       }
     }
   });
@@ -2776,6 +3787,7 @@ function buildSpotSpreadChart() {
       plugins: {
         ...baseLineOpts('', 'EUR/MWh', 'EUR/MWh').plugins,
         tooltip: {
+          position: 'cursorFollow',
           backgroundColor: 'rgba(0,15,30,0.92)',
           borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
           titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
@@ -2818,6 +3830,151 @@ function updateSpotKpis() {
   document.getElementById('kpiSpotTb1Meta').textContent  = `Ø über ${nDays} Tage`;
   document.getElementById('kpiSpotTb2Meta').textContent  = `Ø über ${nDays} Tage`;
 }
+
+window.setTrlWeeklyMetric = m => {
+  trlWeeklyMetric = m;
+  document.getElementById('trlWeeklyMetricBtnMarginal').classList.toggle('active', m === 'marginal');
+  document.getElementById('trlWeeklyMetricBtnVwap').classList.toggle('active',     m === 'vwap');
+  document.getElementById('trlWeeklyPriceMeta').textContent =
+    m === 'marginal' ? 'Höchster zugeschlagener Angebotspreis je Woche' : 'Volumengewichteter Durchschnittspreis je Woche';
+  buildTrlWeeklyCharts();
+};
+
+window.setTrlDailyMetric = m => {
+  trlDailyMetric = m;
+  document.getElementById('trlDailyMetricBtnMarginal').classList.toggle('active', m === 'marginal');
+  document.getElementById('trlDailyMetricBtnVwap').classList.toggle('active',     m === 'vwap');
+  document.getElementById('trlDailyPriceMeta').textContent =
+    m === 'marginal' ? 'Höchster zugeschlagener Angebotspreis je 4h-Block' : 'Volumengewichteter Durchschnittspreis je 4h-Block';
+  buildTrlDailyCharts();
+};
+
+window.setTrlDailyStyle = s => {
+  trlDailyStyle = s;
+  document.getElementById('trlDailyStyleBtnScatter').classList.toggle('active', s === 'scatter');
+  document.getElementById('trlDailyStyleBtnLine').classList.toggle('active',    s === 'line');
+  buildTrlDailyCharts();
+};
+
+window.setTrlWeeklyBidWeek = id => { trlWeeklyBidWeek = id; buildTrlWeeklyBidStackChart(); };
+window.setTrlWeeklyBidDir  = dir => {
+  trlWeeklyBidDir = dir;
+  document.getElementById('trlWeeklyBidDirBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('trlWeeklyBidDirBtnUp').classList.toggle('active',   dir === 'up');
+  buildTrlWeeklyBidStackChart();
+};
+window.setTrlDailyBidDate  = date  => { trlDailyBidDate  = date;  buildTrlDailyBidStackChart(); };
+window.setTrlDailyBidBlock = block => { trlDailyBidBlock = block; buildTrlDailyBidStackChart(); };
+window.setTrlDailyBidDir   = dir   => {
+  trlDailyBidDir = dir;
+  document.getElementById('trlDailyBidDirBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('trlDailyBidDirBtnUp').classList.toggle('active',   dir === 'up');
+  buildTrlDailyBidStackChart();
+};
+
+window.setPvTreMetric = m => {
+  pvTreMetric = m;
+  document.getElementById('pvTreMetricBtnMarginal').classList.toggle('active', m === 'marginal');
+  document.getElementById('pvTreMetricBtnVwap').classList.toggle('active',     m === 'vwap');
+};
+
+window.setSrlWeeklyMetric = m => {
+  srlWeeklyMetric = m;
+  document.getElementById('srlWeeklyMetricBtnMarginal').classList.toggle('active', m === 'marginal');
+  document.getElementById('srlWeeklyMetricBtnVwap').classList.toggle('active',     m === 'vwap');
+  document.getElementById('srlWeeklyPriceMeta').textContent =
+    m === 'marginal' ? 'Höchster zugeschlagener Angebotspreis je Woche' : 'Volumengewichteter Durchschnittspreis je Woche';
+  buildSrlWeeklyCharts();
+};
+
+window.setSrlDailyMetric = m => {
+  srlDailyMetric = m;
+  document.getElementById('srlDailyMetricBtnMarginal').classList.toggle('active', m === 'marginal');
+  document.getElementById('srlDailyMetricBtnVwap').classList.toggle('active',     m === 'vwap');
+  document.getElementById('srlDailyPriceMeta').textContent =
+    m === 'marginal' ? 'Höchster zugeschlagener Angebotspreis je 4h-Block' : 'Volumengewichteter Durchschnittspreis je 4h-Block';
+  buildSrlDailyCharts();
+};
+
+window.setSrlDailyStyle = s => {
+  srlDailyStyle = s;
+  document.getElementById('srlDailyStyleBtnScatter').classList.toggle('active', s === 'scatter');
+  document.getElementById('srlDailyStyleBtnLine').classList.toggle('active',    s === 'line');
+  buildSrlDailyCharts();
+};
+
+window.setTreDailyScale = scale => {
+  treRawScale = scale;
+  document.getElementById('treDailyScaleBtnLinear').classList.toggle('active', scale === 'linear');
+  document.getElementById('treDailyScaleBtnLog').classList.toggle('active',    scale === 'log');
+  buildTreDailyChart();
+};
+window.setTreDailyStyleMode = style => {
+  treRawStyle = style;
+  document.getElementById('treDailyStyleBtnScatter').classList.toggle('active', style === 'scatter');
+  document.getElementById('treDailyStyleBtnLine').classList.toggle('active',    style === 'line');
+  buildTreDailyChart();
+};
+window.setTreDailyMetric = metric => {
+  treRawMetric = metric;
+  document.getElementById('treDailyMetricBtnMarginal').classList.toggle('active', metric === 'marginal');
+  document.getElementById('treDailyMetricBtnAvg').classList.toggle('active',      metric === 'avg');
+  buildTreDailyChart();
+};
+window.setTreRateGran = gran => {
+  treRateGran = gran;
+  document.getElementById('treRateGranBtn15').classList.toggle('active', gran === '15min');
+  document.getElementById('treRateGranBtn4h').classList.toggle('active', gran === '4h');
+  buildTreSlotCharts();
+};
+window.setTreSlotGran = gran => {
+  treSlotGran = gran;
+  document.getElementById('treSlotGranBtn15').classList.toggle('active', gran === '15min');
+  document.getElementById('treSlotGranBtn4h').classList.toggle('active', gran === '4h');
+  buildTreSlotCharts();
+};
+window.setTreSlotMetric = metric => {
+  treSlotMetric = metric;
+  document.getElementById('treSlotMetricBtnMarg').classList.toggle('active', metric === 'marginal');
+  document.getElementById('treSlotMetricBtnVwap').classList.toggle('active', metric === 'vwap');
+  buildTreSlotCharts();
+};
+window.setTreBidDir = dir => {
+  treBidDir = dir;
+  document.getElementById('treBidDirBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('treBidDirBtnUp').classList.toggle('active',   dir === 'up');
+  buildTreBidStackChart();
+};
+window.setTreBidScale = scale => {
+  treBidScale = scale;
+  document.getElementById('treBidScaleBtnLinear').classList.toggle('active', scale === 'linear');
+  document.getElementById('treBidScaleBtnLog').classList.toggle('active',    scale === 'log');
+  buildTreBidStackChart();
+};
+window.setTreBidDate  = date  => { treBidDate  = date; buildTreBidStackChart(); };
+window.setTreBidBlock = block => { treBidBlock = block || null; buildTreBidStackChart(); };
+window.setSrlWeeklyBidWeek = id => { srlWeeklyBidWeek = id; buildSrlWeeklyBidStackChart(); };
+window.setSrlWeeklyBidDir  = dir => {
+  srlWeeklyBidDir = dir;
+  document.getElementById('srlWeeklyBidDirBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('srlWeeklyBidDirBtnUp').classList.toggle('active',   dir === 'up');
+  buildSrlWeeklyBidStackChart();
+};
+window.setSrlDailyBidDate  = date  => { srlDailyBidDate  = date;  buildSrlDailyBidStackChart(); };
+window.setSrlDailyBidBlock = block => { srlDailyBidBlock = block; buildSrlDailyBidStackChart(); };
+window.setSrlDailyBidDir   = dir   => {
+  srlDailyBidDir = dir;
+  document.getElementById('srlDailyBidDirBtnDown').classList.toggle('active', dir === 'down');
+  document.getElementById('srlDailyBidDirBtnUp').classList.toggle('active',   dir === 'up');
+  buildSrlDailyBidStackChart();
+};
+
+window.setSpotRawStyle = style => {
+  spotRawStyle = style;
+  document.getElementById('spotRawBtnScatter').classList.toggle('active', style === 'scatter');
+  document.getElementById('spotRawBtnLine').classList.toggle('active',    style === 'line');
+  if (spotViewMode.trend === 'raw') buildSpotTrendChart();
+};
 
 // Wire up the raw/rolling toggle buttons
 document.querySelectorAll('.chart-toggle').forEach(tog => {
@@ -2873,11 +4030,14 @@ function switchMarket(market) {
   } else if (market === 'spot') {
     setPresets(SPOT_PRESETS);
     if (!prevIsSpot) {
-      // Coming from a non-spot market — reset to default spot range
-      currentStart = '2026-01-01';
-      currentEnd   = '2026-04-30';
+      // Coming from a non-spot market — reset to last month of available spot data
+      const spotLast = (allData?.spotDaily || []).at(-1)?.date;
+      const r = spotLast ? lastMonthRange(spotLast) : { start: '2026-01-01', end: '2026-04-30' };
+      currentStart = r.start;
+      currentEnd   = r.end;
       document.getElementById('dateFrom').value = currentStart;
       document.getElementById('dateTo').value   = currentEnd;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
     }
     document.getElementById('dateFrom').min = '2022-01-01';
     document.getElementById('dateFrom').max = '2026-12-31';
@@ -2886,11 +4046,12 @@ function switchMarket(market) {
   } else {
     setPresets(TRL_PRESETS);
     if (prevIsSpot) {
-      // Coming from spot market — reset to default non-spot range
-      currentStart = '2026-01-01';
-      currentEnd   = '2026-04-30';
+      // Coming from spot market — restore TRE/TRL default range
+      currentStart = defaultNonSpotStart;
+      currentEnd   = defaultNonSpotEnd;
       document.getElementById('dateFrom').value = currentStart;
       document.getElementById('dateTo').value   = currentEnd;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
     }
     document.getElementById('dateFrom').min = '2022-01-01';
     document.getElementById('dateFrom').max = '2026-12-31';
@@ -2909,6 +4070,7 @@ function switchMarket(market) {
     } else if (market === 'tre') {
       buildTreDailyChart();
       buildTreSlotCharts();
+      buildTreBidStackChart();
       updateKpis();
     } else if (market === 'spot') {
       buildSpotTrendChart();
@@ -2939,6 +4101,7 @@ function redraw() {
   } else if (activeMarket === 'tre') {
     buildTreDailyChart();
     buildTreSlotCharts();
+    buildTreBidStackChart();
     updateKpis();
   } else if (activeMarket === 'spot') {
     buildSpotTrendChart();
@@ -3023,6 +4186,17 @@ async function loadData() {
   document.getElementById('footerProcessed').textContent =
     `Daten: Swissgrid · Q1 2026 · Verarbeitet in ${(ms/1000).toFixed(1)}s`;
 
+  // Set default range: most recent TRE date as end, same day one month prior as start
+  const treLatest = (allData.treDaily || []).at(-1)?.date ?? null;
+  if (treLatest) {
+    const r = lastMonthRange(treLatest);
+    currentStart = defaultNonSpotStart = r.start;
+    currentEnd   = defaultNonSpotEnd   = r.end;
+    document.getElementById('dateFrom').value = currentStart;
+    document.getElementById('dateTo').value   = currentEnd;
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  }
+
   redraw();
 }
 
@@ -3045,246 +4219,351 @@ function trendEl(elId, current, reference) {
 function buildHomePage() {
   if (!allData) return;
 
-  // ─── SRL Ø Marginalpreis per 4h block (7d / 4w toggle) ──────────────────────
-  const srlBlockDays = allData.srlDaily || [];
+  // ─── SRL: daily block prices + normalized weekly reference line ─────────────
+  const srlBlockDays  = allData.srlDaily  || [];
+  const srlWeeklyData = allData.srlWeekly || [];
   if (srlBlockDays.length >= 7) {
     const SRL_BLOCK_KEYS   = ['00:00-04:00','04:00-08:00','08:00-12:00','12:00-16:00','16:00-20:00','20:00-24:00'];
     const SRL_BLOCK_LABELS = ['00–04','04–08','08–12','12–16','16–20','20–24'];
+    const BLOCKS_PER_WEEK  = 42;
 
     const computeSrlBlocks = (dateFrom, dateTo) => {
       const days = srlBlockDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
       return SRL_BLOCK_KEYS.map(blkKey => {
         const entries = days.flatMap(d => d.blocks.filter(b => b.block === blkKey));
-        const compute = dir => {
-          const marginals  = entries.map(b => b[dir]?.marginal  ?? null).filter(v => v != null);
-          const medianBids = entries.map(b => b[dir]?.medianBid ?? null).filter(v => v != null);
-          return {
-            avg:       marginals.length  ? marginals.reduce((a,b)=>a+b,0)/marginals.length  : null,
-            medianBid: medianBids.length ? medianBids.reduce((a,b)=>a+b,0)/medianBids.length : null,
-          };
+        const simpleAvg = (dir, field) => {
+          const vals = entries.map(b => b[dir]?.[field] ?? null).filter(v => v != null);
+          return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
         };
-        return { up: compute('up'), down: compute('down') };
+        const volWtdVwap = dir => {
+          const active = entries.filter(b => b[dir]?.vwap != null && b[dir]?.awarded > 0);
+          const totVol = active.reduce((s,b) => s + b[dir].awarded, 0);
+          return totVol > 0
+            ? active.reduce((s,b) => s + b[dir].vwap * b[dir].awarded, 0) / totVol
+            : null;
+        };
+        return {
+          up:   { marginal: simpleAvg('up',   'marginal'), vwap: volWtdVwap('up')   },
+          down: { marginal: simpleAvg('down', 'marginal'), vwap: volWtdVwap('down') },
+        };
       });
+    };
+
+    const computeSrlWeeklyRef = (toDate, nWeeks) => {
+      const recent = srlWeeklyData.filter(w => w.date <= toDate).slice(-nWeeks);
+      if (!recent.length) return { up: null, down: null, label: '—' };
+      const avgDir = dir => {
+        const vals = recent.map(w => w[dir]?.marginal).filter(v => v != null);
+        return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+      };
+      return { up: avgDir('up'), down: avgDir('down'),
+               label: nWeeks === 1 ? (recent[0].id || '—') : `Ø ${nWeeks} Wo` };
     };
 
     const srlDays7  = srlBlockDays.slice(-7);
     const srlDays28 = srlBlockDays.slice(-28);
-    const srlBlockData = {
-      7:  computeSrlBlocks(srlDays7[0].date,  srlDays7[srlDays7.length-1].date),
-      28: computeSrlBlocks(srlDays28[0].date, srlDays28[srlDays28.length-1].date),
+    const srlBlockData  = {
+      7:  computeSrlBlocks(srlDays7[0].date,  srlDays7.at(-1).date),
+      28: computeSrlBlocks(srlDays28[0].date, srlDays28.at(-1).date),
+    };
+    const srlWeeklyRefs = {
+      7:  computeSrlWeeklyRef(srlDays7.at(-1).date,  1),
+      28: computeSrlWeeklyRef(srlDays28.at(-1).date, 4),
     };
 
-    const roundSrl = (arr, dir) => arr.map(b => ({
-      avg:       b[dir].avg       != null ? Math.round(b[dir].avg       * 10) / 10 : null,
-      medianBid: b[dir].medianBid != null ? Math.round(b[dir].medianBid * 10) / 10 : null,
-    }));
+    const SRL_COL_UP   = 'rgba(130,220,245,0.75)';
+    const SRL_COL_DOWN = 'rgba(254,117,0,0.75)';
+    const SRL_BDR_UP   = 'rgba(80,180,210,0.85)';
+    const SRL_BDR_DOWN = 'rgba(210,80,0,0.85)';
 
-    const srlWeekLabel = (n, dir) => {
-      const days = n === 7 ? srlDays7 : srlDays28;
-      return `${dir.toUpperCase()} · Ø ${n === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days[days.length-1].date)}`;
+    const getSrlData = (win, dir, metric) => {
+      const ref  = srlWeeklyRefs[win];
+      const vals = srlBlockData[win].map(b => {
+        const v = b[dir]?.[metric] ?? null;
+        return v != null ? Math.round(v * 10) / 10 : null;
+      });
+      const norm = ref[dir] != null ? ref[dir] / BLOCKS_PER_WEEK : null;
+      return { vals, norm, actual: ref[dir], label: ref.label };
     };
+
+    const updateSrlLegend = r => {
+      const el = document.getElementById('srlWeeklyLabel');
+      if (r?.label && r?.actual != null)
+        el.innerHTML = `Wochenauktion ${r.label}: <span style="color:#fff;font-size:13px;font-weight:600;">${fmt(r.actual, 0)} CHF/MW</span>`;
+      else
+        el.textContent = '—';
+    };
+
+    let srlWindow = 7, srlDir = 'down', srlMetric = 'marginal';
+    const initSrl = getSrlData(7, 'down', 'marginal');
+    let srlWeeklyRefState = { norm: initSrl.norm, actual: initSrl.actual, label: initSrl.label };
+    const srlInitYMax = Math.max(...initSrl.vals.filter(v=>v!=null), initSrl.norm ?? 0);
+
+    const srlWeeklyRefPlugin = {
+      id: 'srlWeeklyRef',
+      afterDatasetsDraw(chart) {
+        const r = srlWeeklyRefState;
+        if (!r || r.norm == null) return;
+        const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+        const yp = y.getPixelForValue(r.norm);
+        if (yp < top || yp > bottom) return;
+        ctx.save();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([6, 3]);
+        ctx.beginPath(); ctx.moveTo(left, yp); ctx.lineTo(right, yp); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    };
+    document.getElementById('homeSrlWeek').textContent =
+      `${srlDir.toUpperCase()} · Ø 7 Tage bis ${fmtDate(srlDays7.at(-1).date)}`;
 
     createChart('cSrlBlock', {
       type: 'bar',
       data: {
         labels: SRL_BLOCK_LABELS,
-        datasets: [
-          {
-            label: 'Ø Marginalpreis',
-            data: roundSrl(srlBlockData[7], 'down').map(b => b.avg),
-            backgroundColor: '#82DCF5',
-            borderColor: '#4CAFC8',
-            borderWidth: 1,
-            borderRadius: 3,
-            borderSkipped: false,
-            order: 1,
-          },
-          {
-            type: 'line',
-            label: 'Ø Median Gebot',
-            data: roundSrl(srlBlockData[7], 'down').map(b => b.medianBid),
-            borderColor: '#FE7500',
-            borderWidth: 0,
-            pointBackgroundColor: '#FE7500',
-            pointBorderColor: '#FE7500',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            showLine: false,
-            fill: false,
-            order: 0,
-          },
-        ]
+        datasets: [{
+          label: 'Ø Marginalpreis Tagesauktion',
+          data: initSrl.vals,
+          backgroundColor: Array(initSrl.vals.length).fill(SRL_COL_DOWN),
+          borderColor:     Array(initSrl.vals.length).fill(SRL_BDR_DOWN),
+          borderWidth: 1, borderRadius: 3, borderSkipped: false,
+        }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: 'index', intersect: false },
         scales: {
-          x: {
-            ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } },
-            grid:  { color: 'rgba(116,164,190,0.07)' },
-          },
-          y: {
-            ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
-              callback: v => `${v}` },
-            grid: { color: 'rgba(116,164,190,0.07)' },
-          }
+          x: { ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } }, grid: { color: 'rgba(116,164,190,0.07)' } },
+          y: { suggestedMax: srlInitYMax * 1.1,
+               title: { display: true, text: 'CHF/MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+               ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5, callback: v => `${v}` },
+               grid: { color: 'rgba(116,164,190,0.07)' } }
         },
         plugins: {
-          legend: {
-            display: true, position: 'top', align: 'end',
-            labels: { color: 'rgba(116,164,190,0.7)', font: { size: 9 }, boxWidth: 10, padding: 8,
-              usePointStyle: true }
-          },
+          legend: { display: false },
           tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
             callbacks: {
-              label: ctx => {
-                const v = ctx.parsed.y;
-                return ` ${ctx.dataset.label}: ${v != null ? fmt(v,1)+' CHF/MW' : '—'}`;
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? fmt(ctx.parsed.y,1)+' CHF/MW' : '—'}`,
+              afterBody: () => {
+                const r = srlWeeklyRefState;
+                return r?.norm != null ? [`${r.label}: ${fmt(r.norm,1)} CHF/Blk (= ${fmt(r.actual,0)} CHF/MW/Wo)`] : [];
               }
             }
           }
         }
-      }
+      },
+      plugins: [srlWeeklyRefPlugin]
     });
 
-    let srlWindow = 7, srlDir = 'down';
-    document.getElementById('homeSrlWeek').textContent = srlWeekLabel(7, 'down');
+    updateSrlLegend(initSrl);
 
     const updateSrlChart = () => {
       const c = charts['cSrlBlock'];
       if (!c) return;
-      const d = roundSrl(srlBlockData[srlWindow], srlDir);
-      c.data.datasets[0].data = d.map(b => b.avg);
-      c.data.datasets[1].data = d.map(b => b.medianBid);
+      const d = getSrlData(srlWindow, srlDir, srlMetric);
+      const srlCol = srlDir === 'down' ? SRL_COL_DOWN : SRL_COL_UP;
+      const srlBdr = srlDir === 'down' ? SRL_BDR_DOWN : SRL_BDR_UP;
+      c.data.datasets[0].data            = d.vals;
+      c.data.datasets[0].label           = srlMetric === 'vwap' ? 'Ø-Preis' : 'Marginal';
+      c.data.datasets[0].backgroundColor = Array(d.vals.length).fill(srlCol);
+      c.data.datasets[0].borderColor     = Array(d.vals.length).fill(srlBdr);
+      srlWeeklyRefState = { norm: d.norm, actual: d.actual, label: d.label };
+      c.options.scales.y.suggestedMax = Math.max(...d.vals.filter(v=>v!=null), d.norm ?? 0) * 1.1;
       c.update('none');
+      updateSrlLegend(d);
+      document.getElementById('srlBarSwatch').style.background = srlCol;
       document.getElementById('srlBlockBtn7').classList.toggle('active',  srlWindow === 7);
       document.getElementById('srlBlockBtn28').classList.toggle('active', srlWindow === 28);
       document.getElementById('srlBtnDown').classList.toggle('active', srlDir === 'down');
       document.getElementById('srlBtnUp').classList.toggle('active',   srlDir === 'up');
-      document.getElementById('homeSrlWeek').textContent = srlWeekLabel(srlWindow, srlDir);
+      document.getElementById('srlMetricBtnMarginal').classList.toggle('active', srlMetric === 'marginal');
+      document.getElementById('srlMetricBtnAvg').classList.toggle('active',      srlMetric === 'vwap');
+      const days = srlWindow === 7 ? srlDays7 : srlDays28;
+      document.getElementById('homeSrlWeek').textContent =
+        `${srlDir.toUpperCase()} · Ø ${srlWindow === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days.at(-1).date)}`;
     };
     window.setSrlBlockWindow = n => { srlWindow = n; updateSrlChart(); };
-    window.setSrlBlockDir   = d => { srlDir   = d; updateSrlChart(); };
+    window.setSrlBlockDir    = d => { srlDir   = d; updateSrlChart(); };
+    window.setSrlMetric      = m => { srlMetric = m; updateSrlChart(); };
   }
 
-  // ─── TRL Ø Marginalpreis per 4h block (7d / 4w toggle) ──────────────────────
-  const trlBlockDays = allData.trlDaily || [];
+  // ─── TRL: daily block prices + normalized weekly reference line ─────────────
+  const trlBlockDays  = allData.trlDaily  || [];
+  const trlWeeklyData = allData.trlWeekly || [];
   if (trlBlockDays.length >= 7) {
     const TRL_BLOCK_KEYS   = ['00:00-04:00','04:00-08:00','08:00-12:00','12:00-16:00','16:00-20:00','20:00-24:00'];
     const TRL_BLOCK_LABELS = ['00–04','04–08','08–12','12–16','16–20','20–24'];
+    const BLOCKS_PER_WEEK  = 42;
 
     const computeTrlBlocks = (dateFrom, dateTo) => {
       const days = trlBlockDays.filter(d => d.date >= dateFrom && d.date <= dateTo);
       return TRL_BLOCK_KEYS.map(blkKey => {
         const entries = days.flatMap(d => d.blocks.filter(b => b.block === blkKey));
-        const compute = dir => {
-          const marginals  = entries.map(b => b[dir]?.marginal  ?? null).filter(v => v != null);
-          const medianBids = entries.map(b => b[dir]?.medianBid ?? null).filter(v => v != null);
-          return {
-            avg:       marginals.length  ? marginals.reduce((a,b)=>a+b,0)/marginals.length  : null,
-            medianBid: medianBids.length ? medianBids.reduce((a,b)=>a+b,0)/medianBids.length : null,
-          };
+        const simpleAvg = (dir, field) => {
+          const vals = entries.map(b => b[dir]?.[field] ?? null).filter(v => v != null);
+          return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
         };
-        return { up: compute('up'), down: compute('down') };
+        const volWtdVwap = dir => {
+          const active = entries.filter(b => b[dir]?.vwap != null && b[dir]?.awarded > 0);
+          const totVol = active.reduce((s,b) => s + b[dir].awarded, 0);
+          return totVol > 0
+            ? active.reduce((s,b) => s + b[dir].vwap * b[dir].awarded, 0) / totVol
+            : null;
+        };
+        return {
+          up:   { marginal: simpleAvg('up',   'marginal'), vwap: volWtdVwap('up')   },
+          down: { marginal: simpleAvg('down', 'marginal'), vwap: volWtdVwap('down') },
+        };
       });
+    };
+
+    const computeTrlWeeklyRef = (toDate, nWeeks) => {
+      const recent = trlWeeklyData.filter(w => w.date <= toDate).slice(-nWeeks);
+      if (!recent.length) return { up: null, down: null, label: '—' };
+      const avgDir = dir => {
+        const vals = recent.map(w => w[dir]?.marginal).filter(v => v != null);
+        return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+      };
+      return { up: avgDir('up'), down: avgDir('down'),
+               label: nWeeks === 1 ? (recent[0].id || '—') : `Ø ${nWeeks} Wo` };
     };
 
     const trlDays7  = trlBlockDays.slice(-7);
     const trlDays28 = trlBlockDays.slice(-28);
-    const trlBlockData = {
-      7:  computeTrlBlocks(trlDays7[0].date,  trlDays7[trlDays7.length-1].date),
-      28: computeTrlBlocks(trlDays28[0].date, trlDays28[trlDays28.length-1].date),
+    const trlBlockData  = {
+      7:  computeTrlBlocks(trlDays7[0].date,  trlDays7.at(-1).date),
+      28: computeTrlBlocks(trlDays28[0].date, trlDays28.at(-1).date),
+    };
+    const trlWeeklyRefs = {
+      7:  computeTrlWeeklyRef(trlDays7.at(-1).date,  1),
+      28: computeTrlWeeklyRef(trlDays28.at(-1).date, 4),
     };
 
-    const roundTrl = (arr, dir) => arr.map(b => ({
-      avg:       b[dir].avg       != null ? Math.round(b[dir].avg       * 10) / 10 : null,
-      medianBid: b[dir].medianBid != null ? Math.round(b[dir].medianBid * 10) / 10 : null,
-    }));
+    const TRL_COL_UP   = 'rgba(0,190,245,0.75)';
+    const TRL_COL_DOWN = 'rgba(254,117,0,0.75)';
+    const TRL_BDR_UP   = 'rgba(0,140,190,0.85)';
+    const TRL_BDR_DOWN = 'rgba(210,80,0,0.85)';
 
-    const trlWeekLabel = (n, dir) => {
-      const days = n === 7 ? trlDays7 : trlDays28;
-      return `${dir.toUpperCase()} · Ø ${n === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days[days.length-1].date)}`;
+    let trlMetric = 'marginal';
+
+    const getTrlData = (win, dir) => {
+      const ref  = trlWeeklyRefs[win];
+      const vals = trlBlockData[win].map(b => {
+        const v = b[dir]?.[trlMetric] ?? null;
+        return v != null ? Math.round(v * 10) / 10 : null;
+      });
+      const norm = ref[dir] != null ? ref[dir] / BLOCKS_PER_WEEK : null;
+      return { vals, norm, actual: ref[dir], label: ref.label };
     };
+
+    const updateTrlLegend = r => {
+      const el = document.getElementById('trlWeeklyLabel');
+      if (r?.label && r?.actual != null)
+        el.innerHTML = `Wochenauktion ${r.label}: <span style="color:#fff;font-size:13px;font-weight:600;">${fmt(r.actual, 0)} CHF/MW</span>`;
+      else
+        el.textContent = '—';
+    };
+
+    let trlWindow = 7, trlDir = 'down';
+    const initTrl = getTrlData(7, 'down');
+    let trlWeeklyRefState = { norm: initTrl.norm, actual: initTrl.actual, label: initTrl.label };
+    const trlInitYMax = Math.max(...initTrl.vals.filter(v=>v!=null), initTrl.norm ?? 0);
+
+    const trlWeeklyRefPlugin = {
+      id: 'trlWeeklyRef',
+      afterDatasetsDraw(chart) {
+        const r = trlWeeklyRefState;
+        if (!r || r.norm == null) return;
+        const { ctx, chartArea: { left, right, top, bottom }, scales: { y } } = chart;
+        const yp = y.getPixelForValue(r.norm);
+        if (yp < top || yp > bottom) return;
+        ctx.save();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.8;
+        ctx.setLineDash([6, 3]);
+        ctx.beginPath(); ctx.moveTo(left, yp); ctx.lineTo(right, yp); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+    };
+    document.getElementById('homeTrlWeek').textContent =
+      `${trlDir.toUpperCase()} · Ø 7 Tage bis ${fmtDate(trlDays7.at(-1).date)}`;
 
     createChart('cTrlBlock', {
       type: 'bar',
       data: {
         labels: TRL_BLOCK_LABELS,
-        datasets: [
-          {
-            label: 'Ø Marginalpreis',
-            data: roundTrl(trlBlockData[7], 'down').map(b => b.avg),
-            backgroundColor: '#00BEF5',
-            borderColor: '#0090c0',
-            borderWidth: 1,
-            borderRadius: 3,
-            borderSkipped: false,
-            order: 1,
-          },
-          {
-            type: 'line',
-            label: 'Ø Median Gebot',
-            data: roundTrl(trlBlockData[7], 'down').map(b => b.medianBid),
-            borderColor: '#FE7500',
-            borderWidth: 0,
-            pointBackgroundColor: '#FE7500',
-            pointBorderColor: '#FE7500',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            showLine: false,
-            fill: false,
-            order: 0,
-          },
-        ]
+        datasets: [{
+          label: 'Ø Marginalpreis Tagesauktion',
+          data: initTrl.vals,
+          backgroundColor: Array(initTrl.vals.length).fill(TRL_COL_DOWN),
+          borderColor:     Array(initTrl.vals.length).fill(TRL_BDR_DOWN),
+          borderWidth: 1, borderRadius: 3, borderSkipped: false,
+        }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, animation: false,
+        interaction: { mode: 'index', intersect: false },
         scales: {
-          x: {
-            ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } },
-            grid:  { color: 'rgba(116,164,190,0.07)' },
-          },
-          y: {
-            ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
-              callback: v => `${v}` },
-            grid: { color: 'rgba(116,164,190,0.07)' },
-          }
+          x: { ticks: { color: 'rgba(116,164,190,0.7)', font: { size: 9 } }, grid: { color: 'rgba(116,164,190,0.07)' } },
+          y: { suggestedMax: trlInitYMax * 1.1,
+               title: { display: true, text: 'CHF/MW', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
+               ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5, callback: v => `${v}` },
+               grid: { color: 'rgba(116,164,190,0.07)' } }
         },
         plugins: {
-          legend: {
-            display: true, position: 'top', align: 'end',
-            labels: { color: 'rgba(116,164,190,0.7)', font: { size: 9 }, boxWidth: 10, padding: 8,
-              usePointStyle: true }
-          },
+          legend: { display: false },
           tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
             callbacks: {
-              label: ctx => {
-                const v = ctx.parsed.y;
-                return ` ${ctx.dataset.label}: ${v != null ? fmt(v,1)+' CHF/MW' : '—'}`;
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? fmt(ctx.parsed.y,1)+' CHF/MW' : '—'}`,
+              afterBody: () => {
+                const r = trlWeeklyRefState;
+                return r?.norm != null ? [`${r.label}: ${fmt(r.norm,1)} CHF/Blk (= ${fmt(r.actual,0)} CHF/MW/Wo)`] : [];
               }
             }
           }
         }
-      }
+      },
+      plugins: [trlWeeklyRefPlugin]
     });
 
-    let trlWindow = 7, trlDir = 'down';
-    document.getElementById('homeTrlWeek').textContent = trlWeekLabel(7, 'down');
+    updateTrlLegend(initTrl);
 
     const updateTrlChart = () => {
       const c = charts['cTrlBlock'];
       if (!c) return;
-      const d = roundTrl(trlBlockData[trlWindow], trlDir);
-      c.data.datasets[0].data = d.map(b => b.avg);
-      c.data.datasets[1].data = d.map(b => b.medianBid);
+      const d = getTrlData(trlWindow, trlDir);
+      const trlCol = trlDir === 'down' ? TRL_COL_DOWN : TRL_COL_UP;
+      const trlBdr = trlDir === 'down' ? TRL_BDR_DOWN : TRL_BDR_UP;
+      c.data.datasets[0].data            = d.vals;
+      c.data.datasets[0].backgroundColor = Array(d.vals.length).fill(trlCol);
+      c.data.datasets[0].borderColor     = Array(d.vals.length).fill(trlBdr);
+      trlWeeklyRefState = { norm: d.norm, actual: d.actual, label: d.label };
+      c.options.scales.y.suggestedMax = Math.max(...d.vals.filter(v=>v!=null), d.norm ?? 0) * 1.1;
       c.update('none');
+      updateTrlLegend(d);
+      document.getElementById('trlBarSwatch').style.background = trlCol;
       document.getElementById('trlBlockBtn7').classList.toggle('active',  trlWindow === 7);
       document.getElementById('trlBlockBtn28').classList.toggle('active', trlWindow === 28);
       document.getElementById('trlBtnDown').classList.toggle('active', trlDir === 'down');
       document.getElementById('trlBtnUp').classList.toggle('active',   trlDir === 'up');
-      document.getElementById('homeTrlWeek').textContent = trlWeekLabel(trlWindow, trlDir);
+      document.getElementById('trlMetricBtnMarginal').classList.toggle('active', trlMetric === 'marginal');
+      document.getElementById('trlMetricBtnVwap').classList.toggle('active',     trlMetric === 'vwap');
+      const days = trlWindow === 7 ? trlDays7 : trlDays28;
+      document.getElementById('homeTrlWeek').textContent =
+        `${trlDir.toUpperCase()} · Ø ${trlWindow === 7 ? '7 Tage' : '4 Wochen'} bis ${fmtDate(days.at(-1).date)}`;
     };
     window.setTrlBlockWindow = n => { trlWindow = n; updateTrlChart(); };
-    window.setTrlBlockDir   = d => { trlDir   = d; updateTrlChart(); };
+    window.setTrlBlockDir    = d => { trlDir   = d; updateTrlChart(); };
+    window.setTrlMetric      = m => { trlMetric = m; updateTrlChart(); };
   }
 
   // ─── TRE (last 7 days vs prev 7 days vs same 7 days last year) ───
@@ -3305,20 +4584,23 @@ function buildHomePage() {
       const slots = treSlots.filter(s => s.d >= dateFrom && s.d <= dateTo);
       return TRE_HOUR_BLOCKS.map(blk => {
         const bSlots = slots.filter(s => s.s >= blk.from && s.s < blk.to);
-        const calcDir = vals => {
-          const filtered = vals.filter(v => v != null);
-          const sorted   = [...filtered].sort((a, b) => a - b);
-          const mid      = Math.floor(sorted.length / 2);
-          const median   = sorted.length === 0 ? null :
+        const calcDir = (priceField, volField, vwapField) => {
+          const prices  = bSlots.map(s => s[priceField]).filter(v => v != null);
+          const sorted  = [...prices].sort((a, b) => a - b);
+          const mid     = Math.floor(sorted.length / 2);
+          const median  = sorted.length === 0 ? null :
             sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-          return {
-            avg:    filtered.length ? filtered.reduce((a,b)=>a+b,0)/filtered.length : null,
-            median: median,
-          };
+          const avg     = prices.length ? prices.reduce((a,b)=>a+b,0)/prices.length : null;
+          const active  = bSlots.filter(s => s[vwapField] != null && s[volField] > 0);
+          const totVol  = active.reduce((s,x) => s + x[volField], 0);
+          const vwap    = totVol > 0
+            ? active.reduce((s,x) => s + x[vwapField] * x[volField], 0) / totVol
+            : null;
+          return { avg, median, vwap };
         };
         return {
-          down: calcDir(bSlots.map(s => s.nm)),
-          up:   calcDir(bSlots.map(s => s.pm)),
+          down: calcDir('nm', 'na', 'nv'),
+          up:   calcDir('pm', 'pa', 'pv'),
         };
       });
     };
@@ -3331,8 +4613,9 @@ function buildHomePage() {
     };
 
     const roundArr = (arr, dir) => arr.map(b => ({
-      avg:    b[dir].avg    != null ? Math.round(b[dir].avg    * 10) / 10 : null,
-      median: b[dir].median != null ? Math.round(b[dir].median * 10) / 10 : null,
+      marginal: b[dir].avg    != null ? Math.round(b[dir].avg    * 10) / 10 : null,
+      median:   b[dir].median != null ? Math.round(b[dir].median * 10) / 10 : null,
+      vwap:     b[dir].vwap   != null ? Math.round(b[dir].vwap   * 10) / 10 : null,
     }));
 
     const weekLabel = (n, dir) => {
@@ -3346,28 +4629,13 @@ function buildHomePage() {
         labels: TRE_HOUR_BLOCKS.map(b => b.label),
         datasets: [
           {
-            label: 'Ø Aktivierungspreis',
-            data: roundArr(blockData[7], 'down').map(b => b.avg),
-            backgroundColor: '#FE7500',
-            borderColor: '#C05800',
+            label: 'Marginal',
+            data: roundArr(blockData[7], 'down').map(b => b.marginal),
+            backgroundColor: Array(TRE_HOUR_BLOCKS.length).fill('#FE7500'),
+            borderColor:     Array(TRE_HOUR_BLOCKS.length).fill('#C05800'),
             borderWidth: 1,
             borderRadius: 3,
             borderSkipped: false,
-            order: 1,
-          },
-          {
-            type: 'line',
-            label: 'Median',
-            data: roundArr(blockData[7], 'down').map(b => b.median),
-            borderColor: '#00BEF5',
-            borderWidth: 0,
-            pointBackgroundColor: '#00BEF5',
-            pointBorderColor: '#00BEF5',
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            showLine: false,
-            fill: false,
-            order: 0,
           },
         ]
       },
@@ -3379,18 +4647,19 @@ function buildHomePage() {
             grid:  { color: 'rgba(116,164,190,0.07)' },
           },
           y: {
+            title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
             ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
               callback: v => `${v}` },
             grid: { color: 'rgba(116,164,190,0.07)' },
           }
         },
+        interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            display: true, position: 'top', align: 'end',
-            labels: { color: 'rgba(116,164,190,0.7)', font: { size: 9 }, boxWidth: 10, padding: 8,
-              usePointStyle: true }
-          },
+          legend: { display: false },
           tooltip: {
+            position: 'cursorFollow',
+            backgroundColor: 'rgba(0,15,30,0.92)', borderColor: 'rgba(0,190,245,0.2)', borderWidth: 1,
+            titleColor: '#fff', bodyColor: 'rgba(116,164,190,0.9)',
             callbacks: {
               label: ctx => {
                 const v = ctx.parsed.y;
@@ -3402,7 +4671,7 @@ function buildHomePage() {
       }
     });
 
-    let treWindow = 7, treDir = 'down';
+    let treWindow = 7, treDir = 'down', treMetric = 'marginal';
     document.getElementById('homeTreWeek').textContent = weekLabel(7, 'down');
 
     const updateTreChart = () => {
@@ -3410,22 +4679,24 @@ function buildHomePage() {
       if (!c) return;
       const d      = roundArr(blockData[treWindow], treDir);
       const isDown = treDir === 'down';
-      c.data.datasets[0].data            = d.map(b => b.avg);
-      c.data.datasets[0].backgroundColor = isDown ? '#FE7500' : '#00BEF5';
-      c.data.datasets[0].borderColor     = isDown ? '#C05800' : '#0090c0';
-      c.data.datasets[1].data                  = d.map(b => b.median);
-      c.data.datasets[1].borderColor           = isDown ? '#00BEF5' : '#FE7500';
-      c.data.datasets[1].pointBackgroundColor  = isDown ? '#00BEF5' : '#FE7500';
-      c.data.datasets[1].pointBorderColor      = isDown ? '#00BEF5' : '#FE7500';
+      const treCol = isDown ? '#FE7500' : '#00BEF5';
+      const treBdr = isDown ? '#C05800' : '#0090c0';
+      c.data.datasets[0].data            = d.map(b => b[treMetric]);
+      c.data.datasets[0].label           = treMetric === 'vwap' ? 'Ø-Preis' : 'Marginal';
+      c.data.datasets[0].backgroundColor = Array(d.length).fill(treCol);
+      c.data.datasets[0].borderColor     = Array(d.length).fill(treBdr);
       c.update('none');
       document.getElementById('treBlockBtn7').classList.toggle('active',  treWindow === 7);
       document.getElementById('treBlockBtn28').classList.toggle('active', treWindow === 28);
       document.getElementById('treBtnDown').classList.toggle('active', treDir === 'down');
       document.getElementById('treBtnUp').classList.toggle('active',   treDir === 'up');
+      document.getElementById('treMetricBtnVwap').classList.toggle('active',     treMetric === 'vwap');
+      document.getElementById('treMetricBtnMarginal').classList.toggle('active', treMetric === 'marginal');
       document.getElementById('homeTreWeek').textContent = weekLabel(treWindow, treDir);
     };
     window.setTreBlockWindow = n => { treWindow = n; updateTreChart(); };
     window.setTreBlockDir   = d => { treDir   = d; updateTreChart(); };
+    window.setTreMetric     = m => { treMetric = m; updateTreChart(); };
   }
 
   // ─── Spot (last 7 days avg) ───
@@ -3476,14 +4747,14 @@ function buildHomePage() {
         datasets: [{
           label: 'Stundenpreis',
           data: hourPrices,
-          borderColor: '#FE7500',
+          borderColor: '#C0457A',
           borderWidth: 1.5,
-          backgroundColor: 'rgba(254,117,0,0.07)',
+          backgroundColor: 'rgba(192,69,122,0.15)',
           fill: true,
           tension: 0.2,
           pointRadius: 0,
           pointHoverRadius: 4,
-          pointHoverBackgroundColor: '#FE7500',
+          pointHoverBackgroundColor: '#C0457A',
           spanGaps: false,
         }]
       },
@@ -3499,6 +4770,7 @@ function buildHomePage() {
             grid: { color: 'rgba(116,164,190,0.06)' },
           },
           y: {
+            title: { display: true, text: 'EUR/MWh', color: 'rgba(116,164,190,0.45)', font: { size: 9 } },
             ticks: { color: 'rgba(116,164,190,0.6)', font: { size: 9 }, maxTicksLimit: 5,
               callback: v => `${v}` },
             grid: { color: 'rgba(116,164,190,0.07)' },
@@ -3506,7 +4778,9 @@ function buildHomePage() {
         },
         plugins: {
           legend: { display: false },
+          crosshair: true,
           tooltip: {
+            position: 'cursorFollow',
             mode: 'index', intersect: false,
             callbacks: {
               title: items => hourTooltipLabels[items[0]?.dataIndex ?? 0],
@@ -3742,14 +5016,19 @@ function buildHomePage() {
       }
     }
 
-    // TRE nm price per activated slot
-    const trePriceMap = {};
+    // TRE nm (marginal) and nv (VWAP) price per activated slot
+    const trePriceMap = {}, treVwapMap = {};
     for (const s of treSlots) {
-      if (activatedSet.has(`${s.d}|${s.s}`)) trePriceMap[`${s.d}|${s.s}`] = s.nm;
+      if (activatedSet.has(`${s.d}|${s.s}`)) {
+        trePriceMap[`${s.d}|${s.s}`] = s.nm;
+        treVwapMap[`${s.d}|${s.s}`]  = s.nv;
+      }
     }
 
     const pvChartLabels = [], pvChartProd = [], pvChartTrl = [], pvChartAct = [];
-    const pvChartTrlPrice = [], pvChartTrePrice = [];
+    const pvChartTrlPrice = [];
+    pvChartTrePriceMarginal.length = 0;
+    pvChartTrePriceVwap.length     = 0;
     const dayBoundaries = [];
     for (let di = 0; di < pvTreDays7.length; di++) {
       const day = pvTreDays7[di];
@@ -3767,8 +5046,10 @@ function buildHomePage() {
           const curtailed = trlMin ?? 0;
           pvChartTrl.push(trlMin);
           pvChartTrlPrice.push(trlPrice);
-          pvChartAct.push(activatedSet.has(key) ? (curtailed || null) : null);
-          pvChartTrePrice.push(activatedSet.has(key) ? (trePriceMap[key] ?? null) : null);
+          const isAct = activatedSet.has(key);
+          pvChartAct.push(isAct ? (curtailed || null) : null);
+          pvChartTrePriceMarginal.push(isAct ? (trePriceMap[key] ?? null) : null);
+          pvChartTrePriceVwap.push(isAct ? (treVwapMap[key] ?? null) : null);
         }
       }
     }
@@ -3853,25 +5134,23 @@ function buildHomePage() {
             pvTooltipEl.style.display = 'none'; return;
           }
           if (e.type !== 'mousemove') return;
-          const i        = Math.max(0, Math.min(pvChartLabels.length - 1, Math.round(x.getValueForPixel(e.x))));
-          const label    = pvChartLabels[i];
-          const cursorKw = y.getValueForPixel(e.y);
-          const trlVol   = pvChartTrl[i];
-          const trlPrc   = pvChartTrlPrice[i];
-          const treVol   = pvChartAct[i];
-          const trePrc   = pvChartTrePrice[i];
-          const pv       = pvChartProd[i];
+          const i     = Math.max(0, Math.min(pvChartLabels.length - 1, Math.round(x.getValueForPixel(e.x))));
+          const label = pvChartLabels[i];
+          const trlVol  = pvChartTrl[i];
+          const trlPrc  = pvChartTrlPrice[i];
+          const treVol  = pvChartAct[i];
+          const trePrc  = (pvTreMetric === 'marginal' ? pvChartTrePriceMarginal : pvChartTrePriceVwap)[i];
+          const pv      = pvChartProd[i];
 
           let html = `<div style="color:rgba(116,164,190,0.7);font-size:10px;margin-bottom:4px;">${fmtDate(label.slice(0,10))}&nbsp;&nbsp;${label.slice(11)}</div>`;
-          if (trlVol != null && cursorKw <= trlVol) {
-            // Cursor is inside the TRL/TRE block area
-            if (treVol != null) {
-              html += `<div style="color:#FE7500;">TRE&nbsp;&nbsp;${fmt(treVol,1)} kW${trePrc != null ? ' · '+fmt(Math.abs(trePrc),2)+' EUR/MWh' : ''}</div>`;
-            } else {
-              html += `<div style="color:#00BEF5;">TRL&nbsp;&nbsp;${fmt(trlVol,1)} kW${trlPrc != null ? ' · '+fmt(trlPrc,1)+' CHF/MW' : ''}</div>`;
-            }
-          } else {
-            // Above the block or outside TRL hours — show PV power
+          if (treVol != null) {
+            const prcLabel = pvTreMetric === 'marginal' ? 'Marginal' : 'Ø';
+            html += `<div style="color:#FE7500;">TRE&nbsp;&nbsp;${fmt(treVol,1)} kW${trePrc != null ? ' · '+fmt(trePrc,2)+' EUR/MWh ('+prcLabel+')' : ''}</div>`;
+          }
+          if (trlVol != null) {
+            html += `<div style="color:#00BEF5;">TRL&nbsp;&nbsp;${fmt(trlVol,1)} kW${trlPrc != null ? ' · '+fmt(trlPrc,1)+' CHF/MW' : ''}</div>`;
+          }
+          if (pv != null) {
             html += `<div style="color:#F0C040;">PV&nbsp;&nbsp;${fmt(pv,1)} kW</div>`;
           }
 

@@ -1,0 +1,11 @@
+<!DOCTYPE html><html><head><script>
+function onLoad() {
+  try {
+    const win = document.getElementById('f').contentWindow;
+    win.switchMarket('tre');
+  } catch(e) {}
+}
+</script></head>
+<body style="margin:0;">
+<iframe id="f" src="http://localhost:3000/" style="width:1440px;height:2600px;border:none;" onload="onLoad()"></iframe>
+</body></html>

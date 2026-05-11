@@ -20,6 +20,7 @@ import os
 import re
 import time
 import mimetypes
+from datetime import date as _date, timedelta as _timedelta
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from threading import Thread
@@ -117,7 +118,7 @@ def block_from_desc(desc: str) -> str | None:
 # ─── Accumulator helpers ──────────────────────────────────────────────────────
 
 def _dir_entry():
-    return {'offered': 0.0, 'awarded': 0.0, 'total_cost': 0.0, 'max_price': 0.0, 'bid_prices': []}
+    return {'offered': 0.0, 'awarded': 0.0, 'total_cost': 0.0, 'max_price': 0.0, 'bid_prices': [], 'bid_stack': []}
 
 
 def accum_trl(container: dict, key: str, direction: str,
@@ -128,6 +129,8 @@ def accum_trl(container: dict, key: str, direction: str,
         container[key][direction] = _dir_entry()
     r = container[key][direction]
     r['offered'] += offered
+    if cap_price > 0 and offered > 0:
+        r['bid_stack'].append({'p': round(cap_price * 10) / 10, 'v': round(offered), 'a': round(awarded)})
     if awarded > 0:
         r['awarded']    += awarded
         r['total_cost'] += costs
@@ -146,12 +149,16 @@ def fin_trl_dir(r: dict) -> dict:
         median_bid = round(prices[n // 2] * 10) / 10
     else:
         median_bid = round((prices[n // 2 - 1] + prices[n // 2]) / 2 * 10) / 10
+    vwap = round(r['total_cost'] / r['awarded'] * 10) / 10 if r['awarded'] > 0 else None
+    bid_stack = sorted(r.get('bid_stack', []), key=lambda b: b['p'])
     return {
         'offered':   round(r['offered']),
         'awarded':   round(r['awarded']),
         'marginal':  round(r['max_price'] * 10) / 10 if r['max_price'] > 0 else None,
         'medianBid': median_bid,
+        'vwap':      vwap,
         'awardRate': round(r['awarded'] / r['offered'] * 1000) / 10 if r['offered'] > 0 else 0,
+        'bidStack':  bid_stack,
     }
 
 
@@ -311,14 +318,22 @@ def build_dashboard_data(data_dir=None) -> dict:
                 key = f"{date}|{slot_from}"
                 if key not in slot_map:
                     slot_map[key] = {
-                        'pos': {'offered': 0.0, 'activated': 0.0, 'max_price': None},
-                        'neg': {'offered': 0.0, 'activated': 0.0, 'min_price': None},
+                        'pos': {'offered': 0.0, 'activated': 0.0, 'total_cost': 0.0, 'max_price': None, 'bids': []},
+                        'neg': {'offered': 0.0, 'activated': 0.0, 'total_cost': 0.0, 'min_price': None, 'bids': []},
                     }
                 r = slot_map[key][direction]
                 r['offered'] += offered
+                if offered > 0:
+                    # Compact array format [price×10_int, volume, activated] to minimise JSON size
+                    r['bids'].append([
+                        round(price * 10) / 10,
+                        round(offered),
+                        round(activated) if status == 'aktiviert' else 0,
+                    ])
 
                 if status == 'aktiviert' and activated > 0:
-                    r['activated'] += activated
+                    r['activated']  += activated
+                    r['total_cost'] += price * activated
                     if is_pos:
                         if r['max_price'] is None or price > r['max_price']:
                             r['max_price'] = price
@@ -393,23 +408,32 @@ def build_dashboard_data(data_dir=None) -> dict:
 
     # ── Finalize TRE ─────────────────────────────────────────────────────────
 
-    # treSlots: compact array sorted by date then slot
+    # treSlots: compact array sorted by date then slot.
+    # Bid stacks (pbs/nbs) included for the last 30 days only (each slot ~320 bids → large).
+    # Bids stored as [price, volume, activated] arrays for compactness.
     tre_slots = []
+    bid_stack_cutoff = (_date.today() - _timedelta(days=365)).isoformat()
     for key in sorted(slot_map):
         date_str, slot = key.split('|', 1)
         s = slot_map[key]
         pos = s['pos']
         neg = s['neg']
-        tre_slots.append({
+        entry = {
             'd':  date_str,
             's':  slot,
             'po': round(pos['offered']),
             'pa': round(pos['activated']),
             'pm': round(pos['max_price'] * 100) / 100 if pos['max_price'] is not None else None,
+            'pv': round(pos['total_cost'] / pos['activated'] * 100) / 100 if pos['activated'] > 0 else None,
             'no': round(neg['offered']),
             'na': round(neg['activated']),
             'nm': round(neg['min_price'] * 100) / 100 if neg['min_price'] is not None else None,
-        })
+            'nv': round(neg['total_cost'] / neg['activated'] * 100) / 100 if neg['activated'] > 0 else None,
+        }
+        if date_str >= bid_stack_cutoff:
+            entry['pbs'] = sorted(pos['bids'], key=lambda b: b[0])
+            entry['nbs'] = sorted(neg['bids'], key=lambda b: b[0])
+        tre_slots.append(entry)
 
     # treDaily: aggregate daily totals from slot_map
     daily_agg = {}
@@ -669,6 +693,8 @@ class Handler(BaseHTTPRequestHandler):
 def load_data_background():
     global DASHBOARD_DATA, RELOADING
     DASHBOARD_DATA = build_dashboard_data()
+    data_file = BASE_DIR / 'data' / 'data.json'
+    data_file.write_text(json.dumps(DASHBOARD_DATA, ensure_ascii=False), encoding='utf-8')
     RELOADING = False
 
 
