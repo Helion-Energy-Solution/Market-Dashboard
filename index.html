@@ -2187,7 +2187,9 @@ function setupDragZoom(canvasId) {
       const iMin = Math.max(0, Math.round(xScale.getValueForPixel(pxMin)));
       const iMax = Math.min(labels.length - 1, Math.round(xScale.getValueForPixel(pxMax)));
       if (iMin >= iMax) return;
-      scaleMin = labels[iMin]; scaleMax = labels[iMax];
+      // Use integer indices, not label strings — sparse label arrays contain many "" values
+      // that would all resolve to the same first-occurrence index in Chart.js
+      scaleMin = iMin; scaleMax = iMax;
       dataMin = iMin; dataMax = iMax;
     } else {
       scaleMin = dataMin = xScale.getValueForPixel(pxMin);
@@ -2197,7 +2199,7 @@ function setupDragZoom(canvasId) {
 
     // On first zoom: save original axis bounds + Y-axis label width (to lock axis position)
     if (!_dzSavedBounds[canvasId]) {
-      const saved = { axes: {}, yWidth: null, yAfterFit: null };
+      const saved = { axes: {}, yWidth: null, yAfterFit: null, xStepSize: undefined, xAfterBuildTicks: null };
       for (const axId of Object.keys(chart.scales)) {
         const opts = chart.options.scales[axId];
         saved.axes[axId] = { min: opts?.min, max: opts?.max };
@@ -2206,6 +2208,9 @@ function setupDragZoom(canvasId) {
         saved.yWidth    = chart.scales.y.width;
         saved.yAfterFit = chart.options.scales.y?.afterFit ?? null;
       }
+      const xOpts0 = chart.options.scales.x;
+      saved.xStepSize        = xOpts0?.ticks?.stepSize;
+      saved.xAfterBuildTicks = xOpts0?.afterBuildTicks ?? null;
       _dzSavedBounds[canvasId] = saved;
     }
 
@@ -2217,6 +2222,26 @@ function setupDragZoom(canvasId) {
     if (saved.yWidth != null && saved.yAfterFit === null && chart.options.scales?.y) {
       const lockedW = saved.yWidth;
       chart.options.scales.y.afterFit = sc => { sc.width = lockedW; };
+    }
+
+    // For linear axes: adjust tick generation so labels appear in the zoomed range
+    if (xScale.type !== 'category') {
+      const xOpts = chart.options.scales.x;
+      const range = scaleMax - scaleMin;
+      // Reduce stepSize proportionally so ~4 ticks fall in the zoomed range
+      if (xOpts?.ticks?.stepSize != null && range > 0) {
+        xOpts.ticks.stepSize = Math.max(1, Math.round(range / 4));
+      }
+      // For afterBuildTicks charts (e.g. TRE): filter generated ticks to the zoomed range
+      if (saved.xAfterBuildTicks) {
+        const origFn = saved.xAfterBuildTicks;
+        const smin = scaleMin, smax = scaleMax;
+        xOpts.afterBuildTicks = axis => {
+          origFn(axis);
+          const inRange = axis.ticks.filter(t => t.value >= smin && t.value <= smax);
+          if (inRange.length > 0) axis.ticks = inRange;
+        };
+      }
     }
 
     // Y auto-fit to data within the zoomed X interval
@@ -2276,6 +2301,19 @@ function setupDragZoom(canvasId) {
         chart.options.scales.y.afterFit = saved.yAfterFit;
       } else {
         delete chart.options.scales.y.afterFit;
+      }
+    }
+
+    // Restore x-axis tick config
+    const xOpts = chart.options.scales?.x;
+    if (xOpts) {
+      if (saved?.xStepSize !== undefined) {
+        if (xOpts.ticks) xOpts.ticks.stepSize = saved.xStepSize;
+      }
+      if (saved?.xAfterBuildTicks != null) {
+        xOpts.afterBuildTicks = saved.xAfterBuildTicks;
+      } else if ('afterBuildTicks' in (xOpts || {})) {
+        delete xOpts.afterBuildTicks;
       }
     }
 
