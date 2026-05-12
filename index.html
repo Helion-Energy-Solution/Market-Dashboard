@@ -2149,7 +2149,7 @@ function setupDragZoom(canvasId) {
 
     // On first zoom: save original axis bounds + Y-axis label width
     if (!_dzSavedBounds[canvasId]) {
-      const saved = { axes: {}, yWidth: null, yAfterFit: null, xStepSize: undefined, xAfterBuildTicks: null };
+      const saved = { axes: {}, yWidth: null, yAfterFit: null, xStepSize: undefined, xAfterBuildTicks: null, xAfterTickConv: null };
       for (const axId of Object.keys(chart.scales)) {
         const opts = chart.options.scales[axId];
         saved.axes[axId] = { min: opts?.min, max: opts?.max };
@@ -2161,17 +2161,44 @@ function setupDragZoom(canvasId) {
       const xOpts0 = chart.options.scales.x;
       saved.xStepSize        = xOpts0?.ticks?.stepSize;
       saved.xAfterBuildTicks = xOpts0?.afterBuildTicks ?? null;
+      saved.xAfterTickConv   = xOpts0?.afterTickToLabelConversion ?? null;
       _dzSavedBounds[canvasId] = saved;
     }
 
     chart.options.scales.x.min = scaleMin;
     chart.options.scales.x.max = scaleMax;
 
-    // Lock Y-axis label width so chart area doesn't shift when tick values change
+    // Lock Y-axis label width so chart area doesn't shift when tick values change.
+    // Skip on re-apply (directRange) — a freshly-built chart already has the correct Y width
+    // and reading chart.scales.y.width before the first layout pass returns 0, which would
+    // collapse the axis.
     const saved = _dzSavedBounds[canvasId];
-    if (saved.yWidth != null && saved.yAfterFit === null && chart.options.scales?.y) {
+    if (!directRange && saved.yWidth != null && saved.yAfterFit === null && chart.options.scales?.y) {
       const lockedW = saved.yWidth;
       chart.options.scales.y.afterFit = sc => { sc.width = lockedW; };
+    }
+
+    // For category axes with sparse labels (e.g. one date label every N days): when the
+    // zoomed window is narrower than the label interval, the existing tick callback returns
+    // null for every visible tick → no x-axis text at all.
+    // Fix: use afterTickToLabelConversion, which fires after Chart.js has already run the
+    // callback and written tick.label. If every visible tick still has no label at that
+    // point, inject the containing day's date onto the first tick directly.
+    if (xScale.type === 'category') {
+      const xOpts = chart.options.scales.x;
+      const labels = chart.data.labels || [];
+      // Walk back from scaleMin to find the most recent non-empty date label
+      let fallback = '';
+      for (let k = scaleMin; k >= 0; k--) {
+        if (labels[k]) { fallback = labels[k]; break; }
+      }
+      if (fallback) {
+        xOpts.afterTickToLabelConversion = axis => {
+          if (axis.ticks.length > 0 && !axis.ticks.some(t => t.label)) {
+            axis.ticks[0].label = fallback;
+          }
+        };
+      }
     }
 
     // For linear axes: adjust ticks so labels appear in the zoomed range
@@ -2184,10 +2211,38 @@ function setupDragZoom(canvasId) {
       if (saved.xAfterBuildTicks) {
         const origFn = saved.xAfterBuildTicks;
         const smin = scaleMin, smax = scaleMax;
+        // Shared across the two hooks below: the day-start tick just before smin,
+        // used to label the synthetic tick when the zoomed window is < 1 day.
+        let _subDayFallback = null;
+
         xOpts.afterBuildTicks = axis => {
           origFn(axis);
-          const inRange = axis.ticks.filter(t => t.value >= smin && t.value <= smax);
-          if (inRange.length > 0) axis.ticks = inRange;
+          _subDayFallback = null;
+          const allDayStarts = axis.ticks.slice(); // snapshot before filtering
+          const inRange = allDayStarts.filter(t => t.value >= smin && t.value <= smax);
+          if (inRange.length > 0) {
+            axis.ticks = inRange;
+          } else {
+            // No day-boundary in window: inject a synthetic tick at smin so the axis
+            // isn't blank.  afterTickToLabelConversion will supply the label.
+            const before = allDayStarts.filter(t => t.value <= smin);
+            if (before.length > 0) {
+              const nearest = before[before.length - 1];
+              _subDayFallback = { value: nearest.value, pos: allDayStarts.indexOf(nearest), allTicks: allDayStarts };
+            }
+            axis.ticks = [{ value: smin, major: false }];
+          }
+        };
+
+        // After Chart.js has run the tick callback (setting tick.label), inject the
+        // containing day's label onto the synthetic tick if it still has no label.
+        xOpts.afterTickToLabelConversion = axis => {
+          if (!_subDayFallback) return;
+          if (!axis.ticks.some(t => t.label)) {
+            const cb = axis.options?.ticks?.callback;
+            const lbl = cb?.call(axis, _subDayFallback.value, _subDayFallback.pos, _subDayFallback.allTicks);
+            if (lbl) axis.ticks[0].label = String(lbl);
+          }
         };
       }
     }
@@ -2239,9 +2294,10 @@ function setupDragZoom(canvasId) {
   }
 
   // If overlay already exists the events are wired — but re-apply zoom if chart was rebuilt
-  // (e.g. user toggled marginal→avg while zoomed)
+  // (e.g. user toggled marginal→avg while zoomed). Defer with rAF so Chart.js finishes its
+  // initial layout before we read scale dimensions or set min/max.
   if (overlay) {
-    if (_dzActiveZoom[canvasId]) applyZoom(null, _dzActiveZoom[canvasId]);
+    if (_dzActiveZoom[canvasId]) requestAnimationFrame(() => applyZoom(null, _dzActiveZoom[canvasId]));
     return;
   }
 
@@ -2270,7 +2326,13 @@ function setupDragZoom(canvasId) {
     startPy = e.clientY - r.top;
     dragging = true;
     const chart = charts[canvasId];
-    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = false;
+    if (chart?.options?.plugins?.tooltip) {
+      chart.options.plugins.tooltip.enabled = false;
+      chart.update('none');
+    }
+    // Route subsequent mousemove events to the overlay instead of the chart canvas,
+    // so Chart.js doesn't process them and re-show the tooltip while dragging.
+    overlay.style.pointerEvents = 'auto';
   });
 
   document.addEventListener('mousemove', e => {
@@ -2292,6 +2354,7 @@ function setupDragZoom(canvasId) {
   document.addEventListener('mouseup', e => {
     if (!dragging) return;
     dragging = false;
+    overlay.style.pointerEvents = 'none'; // restore — chart canvas receives events again
     octx.clearRect(0, 0, overlay.width, overlay.height);
     const endPx = e.clientX - canvas.getBoundingClientRect().left;
     const chart = charts[canvasId];
@@ -2321,6 +2384,11 @@ function setupDragZoom(canvasId) {
         xOpts.afterBuildTicks = saved.xAfterBuildTicks;
       } else if ('afterBuildTicks' in (xOpts || {})) {
         delete xOpts.afterBuildTicks;
+      }
+      if (saved?.xAfterTickConv != null) {
+        xOpts.afterTickToLabelConversion = saved.xAfterTickConv;
+      } else if ('afterTickToLabelConversion' in xOpts) {
+        delete xOpts.afterTickToLabelConversion;
       }
     }
 
@@ -2610,8 +2678,10 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
 
   const totalAwarded  = dirData.awarded  ?? 0;
   const clearingPrice = dirData.marginal ?? null;
-  // TRE DOWN (flipped): awarded bids are on the RIGHT; SRL/TRL DOWN: awarded on the LEFT
-  const splitX = doFlip ? totalVolume - totalAwarded : totalAwarded;
+  // Awarded bids are always the left-most slice (cumVol 0 → totalAwarded).
+  // For TRE DOWN (doFlip): the reversal already puts expensive (least-negative) bids on the
+  // left, so the first totalAwarded MW are the correct accepted slice.
+  const splitX = totalAwarded;
 
   // Build two partial staircases split at splitX.
   // ptsL = left side (x ≤ splitX), ptsR = right side (x ≥ splitX).
@@ -2646,12 +2716,11 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
     cumVol = rightX;
   }
 
-  // UP / SRL+TRL DOWN: left = awarded (solid), right = non-awarded (dim)
-  // TRE DOWN (flipped): left = non-awarded (dim), right = awarded (solid)
-  const lBorder = doFlip ? dimBorder   : solidBorder;
-  const lFill   = doFlip ? dimFill     : solidFill;
-  const rBorder = doFlip ? solidBorder : dimBorder;
-  const rFill   = doFlip ? solidFill   : dimFill;
+  // Left slice (0 → splitX) = awarded (solid); right slice = non-awarded (dim)
+  const lBorder = solidBorder;
+  const lFill   = solidFill;
+  const rBorder = dimBorder;
+  const rFill   = dimFill;
 
   const maxBidPrice = bidStack.reduce((m, b) => Math.max(m, b.p), 0);
 
@@ -2667,8 +2736,9 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
     fill: 'origin',
   });
 
-  // Inline plugin: draws full-height dividers at every bid boundary (afterDatasetsDraw
-  // so the tooltip — a global afterDraw plugin — renders on top)
+  // Inline plugin: draws full-height dividers at every bid boundary, then redraws the
+  // clearing-price line + dot on top of them. Both happen in afterDatasetsDraw so the
+  // tooltip (a global afterDraw plugin) still renders above everything.
   const bidDividersPlugin = {
     id: 'bidDividers',
     afterDatasetsDraw(chart) {
@@ -2693,6 +2763,26 @@ function buildBidStackChart(canvasId, dirData, dir, yType = 'linear') {
         }
         cv += orderedBids[i].v;
       }
+
+      // Redraw clearing-price line + dot above the dividers
+      if (totalAwarded > 0 && clearingPrice != null) {
+        const cpY = isLog ? sl(clearingPrice) : clearingPrice;
+        const px  = scales.x.getPixelForValue(splitX);
+        const pyC = scales.y.getPixelForValue(cpY);
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(px, chartArea.top);
+        ctx.lineTo(px, chartArea.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.beginPath();
+        ctx.arc(px, pyC, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.restore();
     }
   };
