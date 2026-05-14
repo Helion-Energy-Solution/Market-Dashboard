@@ -1320,6 +1320,36 @@
             <div class="chart-body tall"><canvas id="cTreDailyPrice"></canvas></div>
           </div>
         </div>
+        <div style="margin-top:20px;">
+          <div class="chart-card">
+            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <div class="chart-title">Gebotsstack (Preisdauerkurve)</div>
+                <div class="chart-meta" id="treBidMeta">Alle Aktivierungen sortiert nach Marginalpreis · Periode</div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
+                <input type="date" id="treBidDateInp" class="date-input" onchange="setTreBidDate(this.value)">
+                <select id="treBidBlockSel" class="mini-select" onchange="setTreBidBlock(this.value)"></select>
+                <div class="card-menu-wrap" style="flex-shrink:0;">
+                  <button class="card-menu-btn" title="Einstellungen">⋮</button>
+                  <div class="card-menu-dropdown">
+                    <div class="card-menu-group-label">Richtung</div>
+                    <div class="card-menu-group">
+                      <button class="mini-toggle-btn active" id="treBidDirBtnUp"   onclick="setTreBidDir('up')">UP</button>
+                      <button class="mini-toggle-btn"        id="treBidDirBtnDown" onclick="setTreBidDir('down')">DOWN</button>
+                    </div>
+                    <div class="card-menu-group-label" style="margin-top:7px;">Y-Achse</div>
+                    <div class="card-menu-group">
+                      <button class="mini-toggle-btn active" id="treBidScaleBtnLinear" onclick="setTreBidScale('linear')">Linear</button>
+                      <button class="mini-toggle-btn"        id="treBidScaleBtnLog"    onclick="setTreBidScale('log')">Log</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="chart-body tall"><canvas id="cTreBidStack"></canvas></div>
+          </div>
+        </div>
         <div class="subsection-label">Tagesgang (Ø über Periode)</div>
         <div class="charts-grid-slot">
           <div class="chart-card">
@@ -1372,36 +1402,6 @@
               </div>
             </div>
             <div class="chart-body tall"><canvas id="cTreSlotPrice"></canvas></div>
-          </div>
-        </div>
-        <div style="margin-top:20px;">
-          <div class="chart-card">
-            <div class="chart-head" style="display:flex; justify-content:space-between; align-items:flex-start;">
-              <div>
-                <div class="chart-title">Gebotsstack (Preisdauerkurve)</div>
-                <div class="chart-meta" id="treBidMeta">Alle Aktivierungen sortiert nach Marginalpreis · Periode</div>
-              </div>
-              <div style="display:flex; gap:8px; align-items:center; flex-shrink:0; flex-wrap:wrap;">
-                <input type="date" id="treBidDateInp" class="date-input" onchange="setTreBidDate(this.value)">
-                <select id="treBidBlockSel" class="mini-select" onchange="setTreBidBlock(this.value)"></select>
-                <div class="card-menu-wrap" style="flex-shrink:0;">
-                  <button class="card-menu-btn" title="Einstellungen">⋮</button>
-                  <div class="card-menu-dropdown">
-                    <div class="card-menu-group-label">Richtung</div>
-                    <div class="card-menu-group">
-                      <button class="mini-toggle-btn active" id="treBidDirBtnUp"   onclick="setTreBidDir('up')">UP</button>
-                      <button class="mini-toggle-btn"        id="treBidDirBtnDown" onclick="setTreBidDir('down')">DOWN</button>
-                    </div>
-                    <div class="card-menu-group-label" style="margin-top:7px;">Y-Achse</div>
-                    <div class="card-menu-group">
-                      <button class="mini-toggle-btn active" id="treBidScaleBtnLinear" onclick="setTreBidScale('linear')">Linear</button>
-                      <button class="mini-toggle-btn"        id="treBidScaleBtnLog"    onclick="setTreBidScale('log')">Log</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="chart-body tall"><canvas id="cTreBidStack"></canvas></div>
           </div>
         </div>
       </section>
@@ -2104,7 +2104,11 @@ function setupDragZoom(canvasId) {
 
   // octx is null on first call (overlay not yet created); set properly below
   let octx = overlay?.getContext('2d') ?? null;
-  let dragging = false, startPx = 0, startPy = 0;
+  let dragging = false, dragStarted = false, startPx = 0, startPy = 0;
+  // dragStarted flips true once the cursor has moved past a small threshold after mousedown
+  // — only then do we disable the chart tooltip + capture pointer events. A pure click
+  // (mousedown + mouseup without movement) leaves the tooltip untouched.
+  let tooltipWasDisabled = false;
 
   function syncOverlay() {
     const w = canvas.offsetWidth, h = canvas.offsetHeight;
@@ -2115,17 +2119,22 @@ function setupDragZoom(canvasId) {
   }
 
   // applyZoom is defined before the early-return check so it can be called on chart rebuild.
-  // Pass directRange = { scaleMin, scaleMax } to skip pixel-based computation (re-apply path).
-  function applyZoom(endPx, directRange) {
+  // Pass directRange = { scaleMin, scaleMax, yRanges? } to skip pixel-based computation (re-apply path).
+  function applyZoom(endPx, endPy, directRange) {
     const chart = charts[canvasId];
     if (!chart) return;
 
     const xScale = chart.scales.x;
     let scaleMin, scaleMax, dataMin, dataMax;
+    // yRanges is keyed by axis id: { y: {min, max}, y1: {...}, ... }
+    // Populated below if the user drew a meaningful 2D box; otherwise we fall back
+    // to auto-fitting Y to the data inside the zoomed X interval (legacy behavior).
+    let yRanges = null;
 
     if (directRange) {
       ({ scaleMin, scaleMax } = directRange);
       dataMin = scaleMin; dataMax = scaleMax;
+      yRanges = directRange.yRanges || null;
     } else {
       const pxMin = Math.min(startPx, endPx), pxMax = Math.max(startPx, endPx);
       if (pxMax - pxMin < 3) return;
@@ -2144,7 +2153,28 @@ function setupDragZoom(canvasId) {
         scaleMax = dataMax = xScale.getValueForPixel(pxMax);
         if (dataMin >= dataMax) return;
       }
-      _dzActiveZoom[canvasId] = { scaleMin, scaleMax };
+
+      // Y from drawn box — only if the user dragged a meaningful 2D area.
+      // Threshold avoids hijacking near-horizontal drags (where users expect data-fit).
+      if (endPy != null && Math.abs(endPy - startPy) >= 10) {
+        const pyTop = Math.min(startPy, endPy);
+        const pyBot = Math.max(startPy, endPy);
+        const found = {};
+        for (const axId of Object.keys(chart.scales)) {
+          if (axId === 'x') continue;
+          const sc = chart.scales[axId];
+          if (!sc?.getValueForPixel) continue;
+          // Pixel y is top-down; data y is bottom-up — top pixel maps to the higher value.
+          const yHi = sc.getValueForPixel(pyTop);
+          const yLo = sc.getValueForPixel(pyBot);
+          if (isFinite(yLo) && isFinite(yHi) && yHi > yLo) {
+            found[axId] = { min: yLo, max: yHi };
+          }
+        }
+        if (Object.keys(found).length) yRanges = found;
+      }
+
+      _dzActiveZoom[canvasId] = { scaleMin, scaleMax, yRanges };
     }
 
     // On first zoom: save original axis bounds + Y-axis label width
@@ -2247,45 +2277,53 @@ function setupDragZoom(canvasId) {
       }
     }
 
-    // Y auto-fit to data within the zoomed X interval
-    const isStacked = Object.values(chart.scales).some(sc => sc.options?.stacked);
-    let yLo = Infinity, yHi = -Infinity;
-
-    if (isStacked) {
-      const pos = {}, neg = {};
-      for (const ds of chart.data.datasets) {
-        if (ds.hidden) continue;
-        for (let j = Math.floor(dataMin); j <= Math.ceil(dataMax); j++) {
-          const v = Array.isArray(ds.data) ? ds.data[j] : null;
-          if (v == null || !isFinite(v)) continue;
-          if (v >= 0) pos[j] = (pos[j] || 0) + v;
-          else        neg[j] = (neg[j] || 0) + v;
-        }
+    // Y bounds: either from the drawn box (2D drag) or auto-fit to data in the X interval.
+    if (yRanges) {
+      for (const [axId, r] of Object.entries(yRanges)) {
+        const axOpts = chart.options.scales[axId];
+        if (axOpts) { axOpts.min = r.min; axOpts.max = r.max; }
       }
-      const all = [...Object.values(pos), ...Object.values(neg), 0];
-      yLo = Math.min(...all); yHi = Math.max(...all);
     } else {
-      for (const ds of chart.data.datasets) {
-        if (ds.hidden) continue;
-        for (let j = 0; j < (ds.data?.length ?? 0); j++) {
-          const pt = ds.data[j];
-          const xv = (pt != null && typeof pt === 'object') ? pt.x : j;
-          const yv = (pt != null && typeof pt === 'object') ? pt.y : pt;
-          if (yv == null || !isFinite(yv)) continue;
-          if (xv >= dataMin && xv <= dataMax) {
-            if (yv < yLo) yLo = yv;
-            if (yv > yHi) yHi = yv;
+      // Auto-fit to data within the zoomed X interval (legacy behavior — horizontal drag).
+      const isStacked = Object.values(chart.scales).some(sc => sc.options?.stacked);
+      let yLo = Infinity, yHi = -Infinity;
+
+      if (isStacked) {
+        const pos = {}, neg = {};
+        for (const ds of chart.data.datasets) {
+          if (ds.hidden) continue;
+          for (let j = Math.floor(dataMin); j <= Math.ceil(dataMax); j++) {
+            const v = Array.isArray(ds.data) ? ds.data[j] : null;
+            if (v == null || !isFinite(v)) continue;
+            if (v >= 0) pos[j] = (pos[j] || 0) + v;
+            else        neg[j] = (neg[j] || 0) + v;
+          }
+        }
+        const all = [...Object.values(pos), ...Object.values(neg), 0];
+        yLo = Math.min(...all); yHi = Math.max(...all);
+      } else {
+        for (const ds of chart.data.datasets) {
+          if (ds.hidden) continue;
+          for (let j = 0; j < (ds.data?.length ?? 0); j++) {
+            const pt = ds.data[j];
+            const xv = (pt != null && typeof pt === 'object') ? pt.x : j;
+            const yv = (pt != null && typeof pt === 'object') ? pt.y : pt;
+            if (yv == null || !isFinite(yv)) continue;
+            if (xv >= dataMin && xv <= dataMax) {
+              if (yv < yLo) yLo = yv;
+              if (yv > yHi) yHi = yv;
+            }
           }
         }
       }
-    }
 
-    if (isFinite(yLo) && isFinite(yHi)) {
-      const pad = (yHi - yLo) * 0.1 || Math.abs(yHi) * 0.1 || 1;
-      for (const axId of Object.keys(chart.scales)) {
-        if (axId === 'x') continue;
-        const axOpts = chart.options.scales[axId];
-        if (axOpts) { axOpts.min = yLo - pad; axOpts.max = yHi + pad; }
+      if (isFinite(yLo) && isFinite(yHi)) {
+        const pad = (yHi - yLo) * 0.1 || Math.abs(yHi) * 0.1 || 1;
+        for (const axId of Object.keys(chart.scales)) {
+          if (axId === 'x') continue;
+          const axOpts = chart.options.scales[axId];
+          if (axOpts) { axOpts.min = yLo - pad; axOpts.max = yHi + pad; }
+        }
       }
     }
 
@@ -2297,7 +2335,7 @@ function setupDragZoom(canvasId) {
   // (e.g. user toggled marginal→avg while zoomed). Defer with rAF so Chart.js finishes its
   // initial layout before we read scale dimensions or set min/max.
   if (overlay) {
-    if (_dzActiveZoom[canvasId]) requestAnimationFrame(() => applyZoom(null, _dzActiveZoom[canvasId]));
+    if (_dzActiveZoom[canvasId]) requestAnimationFrame(() => applyZoom(null, null, _dzActiveZoom[canvasId]));
     return;
   }
 
@@ -2325,22 +2363,39 @@ function setupDragZoom(canvasId) {
     startPx = e.clientX - r.left;
     startPy = e.clientY - r.top;
     dragging = true;
-    const chart = charts[canvasId];
-    if (chart?.options?.plugins?.tooltip) {
-      chart.options.plugins.tooltip.enabled = false;
-      chart.update('none');
-    }
-    // Route subsequent mousemove events to the overlay instead of the chart canvas,
-    // so Chart.js doesn't process them and re-show the tooltip while dragging.
-    overlay.style.pointerEvents = 'auto';
+    dragStarted = false;
+    tooltipWasDisabled = false;
+    // Don't disable tooltip or redirect pointer events yet — wait for actual movement.
+    // If this turns out to be a plain click, the tooltip should stay visible.
   });
 
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
-    if (e.buttons === 0) { dragging = false; octx.clearRect(0, 0, overlay.width, overlay.height); return; }
+    if (e.buttons === 0) {
+      dragging = false; dragStarted = false;
+      octx.clearRect(0, 0, overlay.width, overlay.height);
+      return;
+    }
     syncOverlay();
     const r = canvas.getBoundingClientRect();
     const cx = e.clientX - r.left, cy = e.clientY - r.top;
+
+    // Promote click → drag once movement exceeds threshold. THIS is where we hide
+    // the tooltip and take over pointer events from the chart canvas — not on mousedown.
+    if (!dragStarted) {
+      if (Math.abs(cx - startPx) < 3 && Math.abs(cy - startPy) < 3) return;
+      dragStarted = true;
+      const chart = charts[canvasId];
+      if (chart?.options?.plugins?.tooltip) {
+        chart.options.plugins.tooltip.enabled = false;
+        chart.update('none');
+        tooltipWasDisabled = true;
+      }
+      // Route subsequent events to the overlay instead of the chart canvas, so Chart.js
+      // doesn't process them and re-show the tooltip while dragging.
+      overlay.style.pointerEvents = 'auto';
+    }
+
     octx.clearRect(0, 0, overlay.width, overlay.height);
     const bx = Math.min(startPx, cx), bw = Math.abs(cx - startPx);
     const by = Math.min(startPy, cy), bh = Math.abs(cy - startPy);
@@ -2353,13 +2408,20 @@ function setupDragZoom(canvasId) {
 
   document.addEventListener('mouseup', e => {
     if (!dragging) return;
+    const wasRealDrag = dragStarted;
     dragging = false;
+    dragStarted = false;
     overlay.style.pointerEvents = 'none'; // restore — chart canvas receives events again
     octx.clearRect(0, 0, overlay.width, overlay.height);
-    const endPx = e.clientX - canvas.getBoundingClientRect().left;
     const chart = charts[canvasId];
-    if (chart?.options?.plugins?.tooltip) chart.options.plugins.tooltip.enabled = true;
-    applyZoom(endPx);
+    if (tooltipWasDisabled && chart?.options?.plugins?.tooltip) {
+      chart.options.plugins.tooltip.enabled = true;
+    }
+    if (!wasRealDrag) return; // plain click — nothing to zoom
+    const r = canvas.getBoundingClientRect();
+    const endPx = e.clientX - r.left;
+    const endPy = e.clientY - r.top;
+    applyZoom(endPx, endPy);
   });
 
   clearBtn.addEventListener('click', () => {
@@ -2415,6 +2477,21 @@ function buildTrlWeeklyCharts() {
 
   // Chart 1: Leistungspreise (metric-aware, stepped)
   const weeklyPriceOpts = baseLineOpts('', 'CHF/MW', 'CHF/MW');
+  // Click a point → load that week into the bid-stack panel.
+  // Datasets: 0=UP, 1=DOWN, 2=Anticipated DOWN (routed to 'down').
+  weeklyPriceOpts.onClick = (event, _els, chart) => {
+    const pts = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false, axis: 'xy' }, false);
+    if (!pts.length) return;
+    const p = pts[0];
+    const week = weeks[p.index];
+    if (!week) return;
+    const dir = p.datasetIndex === 0 ? 'up' : 'down';
+    trlWeeklyBidWeek = week.id;
+    trlWeeklyBidDir  = dir;
+    document.getElementById('trlWeeklyBidDirBtnUp')  ?.classList.toggle('active', dir === 'up');
+    document.getElementById('trlWeeklyBidDirBtnDown')?.classList.toggle('active', dir === 'down');
+    buildTrlWeeklyBidStackChart();
+  };
   createChart('cTrlWeeklyPrice', {
     type: 'line',
     data: {
@@ -2480,6 +2557,7 @@ function buildTrlDailyCharts() {
   const tipLabels = [];
   const upAwd = [], upNotAwd = [];
   const downAwd = [], downNotAwd = [];
+  const dayBlockMap = []; // idx → {date, block} for click → bid-stack mapping
   const dayStarts = {};
   let prevDate = '';
   let dayCount = 0;
@@ -2496,6 +2574,7 @@ function buildTrlDailyCharts() {
       volLabels.push(lbl);
       priceLineLabels.push(lbl);
       tipLabels.push(`${fmtDateFull(day.date)}  ${blk.block}`);
+      dayBlockMap.push({ date: day.date, block: blk.block });
       prevDate = day.date;
 
       const upVal   = blk.up?.[trlDailyMetric]   ?? null;
@@ -2546,6 +2625,31 @@ function buildTrlDailyCharts() {
     ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) }
   };
 
+  // Click a point → load that day+block into the daily bid-stack panel.
+  // Shared by both scatter and line variants of cTrlDailyPrice.
+  const onTrlDailyClick = (event, _els, chart) => {
+    const pts = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false, axis: 'xy' }, false);
+    if (!pts.length) return;
+    const p = pts[0];
+    let blockIdx;
+    if (chart.config.type === 'line') {
+      blockIdx = p.index;
+    } else {
+      const raw = chart.data.datasets[p.datasetIndex]?.data?.[p.index];
+      blockIdx = (raw != null && typeof raw === 'object') ? raw.x : null;
+    }
+    if (blockIdx == null) return;
+    const db = dayBlockMap[blockIdx];
+    if (!db) return;
+    const dir = p.datasetIndex === 0 ? 'up' : 'down';
+    trlDailyBidDate  = db.date;
+    trlDailyBidBlock = db.block;
+    trlDailyBidDir   = dir;
+    document.getElementById('trlDailyBidDirBtnUp')  ?.classList.toggle('active', dir === 'up');
+    document.getElementById('trlDailyBidDirBtnDown')?.classList.toggle('active', dir === 'down');
+    buildTrlDailyBidStackChart();
+  };
+
   if (trlDailyStyle === 'scatter') {
     createChart('cTrlDailyPrice', {
       type: 'scatter',
@@ -2557,6 +2661,7 @@ function buildTrlDailyCharts() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        onClick: onTrlDailyClick,
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
           legend: { display: false },
@@ -2586,6 +2691,7 @@ function buildTrlDailyCharts() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        onClick: onTrlDailyClick,
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
@@ -2964,6 +3070,40 @@ function buildTreDailyChart() {
     ? (isLine ? 'Gleitender Ø (20 Slots) des Ø-Preises' : 'Volumengewichteter Ø-Preis (VWAP) pro Slot')
     : 'UP: höchster aktivierter Preis · DOWN: niedrigster aktivierter Preis';
 
+  // Click any point → jump the Gebotsstack chart to that slot/date/direction.
+  // The chart's onClick fires only on plain clicks (the drag-zoom logic suppresses
+  // the synthetic click after a real drag), so it doesn't conflict with zoom.
+  const onPointClick = (event, _els, chart) => {
+    const pts = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false, axis: 'xy' }, false);
+    if (!pts.length) return;
+    const p = pts[0];
+    const ds = chart.data.datasets[p.datasetIndex];
+    // line mode: p.index is the slot index directly; scatter mode: read raw.x
+    let slotIdx;
+    if (chart.config.type === 'line') {
+      slotIdx = p.index;
+    } else {
+      const raw = ds?.data?.[p.index];
+      slotIdx = (raw != null && typeof raw === 'object') ? raw.x : null;
+    }
+    if (slotIdx == null) return;
+    const slot = slots[slotIdx];
+    if (!slot) return;
+    const dir = p.datasetIndex === 0 ? 'up' : 'down';
+
+    treBidDir   = dir;
+    treBidDate  = slot.d;
+    treBidBlock = slot.s;
+
+    // Sync the chart's own controls
+    const dateInp = document.getElementById('treBidDateInp');
+    if (dateInp) dateInp.value = slot.d;
+    document.getElementById('treBidDirBtnUp')  ?.classList.toggle('active', dir === 'up');
+    document.getElementById('treBidDirBtnDown')?.classList.toggle('active', dir === 'down');
+
+    buildTreBidStackChart();
+  };
+
   const xAxis = {
     type: 'linear', min: 0, max: totalSlots - 1,
     ...axisStyle({}),
@@ -3011,6 +3151,7 @@ function buildTreDailyChart() {
       },
       options: {
         animation: false, responsive: true, maintainAspectRatio: false,
+        onClick: onPointClick,
         plugins: {
           legend: { display: false }, crosshair: true,
           tooltip: {
@@ -3044,6 +3185,7 @@ function buildTreDailyChart() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        onClick: onPointClick,
         interaction: { mode: 'nearest', intersect: false, axis: 'x' },
         plugins: {
           decimation: { enabled: false }, legend: { display: false }, crosshair: true,
@@ -3409,6 +3551,23 @@ function buildSrlWeeklyCharts() {
   const labels = weeks.map(w => w.id);
   const step = { extra: { stepped: 'middle', tension: 0 } };
 
+  const srlWeeklyPriceOpts = baseLineOpts('', 'CHF/MW', 'CHF/MW');
+  // Click a point → load that week into the bid-stack panel.
+  // Datasets: 0=UP, 1=DOWN, 2=Anticipated UP, 3=Anticipated DOWN (routed to their base direction).
+  srlWeeklyPriceOpts.onClick = (event, _els, chart) => {
+    const pts = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false, axis: 'xy' }, false);
+    if (!pts.length) return;
+    const p = pts[0];
+    const week = weeks[p.index];
+    if (!week) return;
+    const dir = (p.datasetIndex === 0 || p.datasetIndex === 2) ? 'up' : 'down';
+    srlWeeklyBidWeek = week.id;
+    srlWeeklyBidDir  = dir;
+    document.getElementById('srlWeeklyBidDirBtnUp')  ?.classList.toggle('active', dir === 'up');
+    document.getElementById('srlWeeklyBidDirBtnDown')?.classList.toggle('active', dir === 'down');
+    buildSrlWeeklyBidStackChart();
+  };
+
   createChart('cSrlWeeklyPrice', {
     type: 'line',
     data: {
@@ -3420,7 +3579,7 @@ function buildSrlWeeklyCharts() {
         lineDataset('Anticipiert DOWN', weeks.map(w => w.anticipated?.down?.[srlWeeklyMetric] ?? null), C_ANT_DOWN, { dashed: true, thin: true, ...step }),
       ]
     },
-    options: baseLineOpts('', 'CHF/MW', 'CHF/MW'),
+    options: srlWeeklyPriceOpts,
   });
 
   createChart('cSrlWeeklyVol', {
@@ -3469,6 +3628,7 @@ function buildSrlDailyCharts() {
   const upPriceLine = [], downPriceLine = [], priceLineLabels = [];
   const tipLabels = [];
   const upAwd = [], upNotAwd = [], downAwd = [], downNotAwd = [];
+  const dayBlockMap = []; // idx → {date, block} for click → bid-stack mapping
   const dayStarts = {};
   let prevDate = '';
   let dayCount = 0;
@@ -3485,6 +3645,7 @@ function buildSrlDailyCharts() {
       volLabels.push(lbl);
       priceLineLabels.push(lbl);
       tipLabels.push(`${fmtDateFull(day.date)}  ${blk.block}`);
+      dayBlockMap.push({ date: day.date, block: blk.block });
       prevDate = day.date;
 
       const upVal   = blk.up?.[srlDailyMetric]   ?? null;
@@ -3535,6 +3696,31 @@ function buildSrlDailyCharts() {
     ticks: { color: 'rgba(116,164,190,0.7)', callback: v => fmt(v, 0) }
   };
 
+  // Click a point → load that day+block into the daily bid-stack panel.
+  // Shared by both scatter and line variants of cSrlDailyPrice.
+  const onSrlDailyClick = (event, _els, chart) => {
+    const pts = chart.getElementsAtEventForMode(event, 'nearest', { intersect: false, axis: 'xy' }, false);
+    if (!pts.length) return;
+    const p = pts[0];
+    let blockIdx;
+    if (chart.config.type === 'line') {
+      blockIdx = p.index;
+    } else {
+      const raw = chart.data.datasets[p.datasetIndex]?.data?.[p.index];
+      blockIdx = (raw != null && typeof raw === 'object') ? raw.x : null;
+    }
+    if (blockIdx == null) return;
+    const db = dayBlockMap[blockIdx];
+    if (!db) return;
+    const dir = p.datasetIndex === 0 ? 'up' : 'down';
+    srlDailyBidDate  = db.date;
+    srlDailyBidBlock = db.block;
+    srlDailyBidDir   = dir;
+    document.getElementById('srlDailyBidDirBtnUp')  ?.classList.toggle('active', dir === 'up');
+    document.getElementById('srlDailyBidDirBtnDown')?.classList.toggle('active', dir === 'down');
+    buildSrlDailyBidStackChart();
+  };
+
   if (srlDailyStyle === 'scatter') {
     createChart('cSrlDailyPrice', {
       type: 'scatter',
@@ -3546,6 +3732,7 @@ function buildSrlDailyCharts() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        onClick: onSrlDailyClick,
         interaction: { mode: 'nearest', intersect: true },
         plugins: {
           legend: { display: false },
@@ -3575,6 +3762,7 @@ function buildSrlDailyCharts() {
       },
       options: {
         responsive: true, maintainAspectRatio: false,
+        onClick: onSrlDailyClick,
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
