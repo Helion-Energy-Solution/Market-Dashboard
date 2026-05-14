@@ -27,13 +27,13 @@ with SRC.open("r", encoding="utf-8") as f:
     d = json.load(f)
 
 # Windows
-TAIL_DAILY  = 90   # last ~3 months of daily summaries
-TAIL_WEEKLY = 26   # last ~6 months of weekly summaries
-TAIL_SLOTS_DAYS = 14   # last 14 days of 15-min TRE slots (1344 entries)
+TAIL_DAILY  = 60   # last ~2 months of daily summaries
+TAIL_WEEKLY = 20   # last ~5 months of weekly summaries
+TAIL_SLOTS_DAYS = 7    # last 7 days of 15-min TRE slots (672 entries)
 # Bid stacks only kept for these many most-recent entries per series:
-BIDSTACK_KEEP_WEEKLY = 8     # last 8 weeks
-BIDSTACK_KEEP_DAILY  = 14    # last 14 days
-BIDSTACK_KEEP_SLOTS  = 30 * 96  # last 30 days of slots have stacks (dashboard's rule)
+BIDSTACK_KEEP_WEEKLY = 6      # last 6 weeks
+BIDSTACK_KEEP_DAILY  = 10     # last 10 days
+BIDSTACK_KEEP_SLOTS  = 2 * 96 # only last 2 days of slots keep bid stacks
 
 def strip_bidstacks(entry):
     """Recursively remove 'bidStack' keys from a dict (in place copy)."""
