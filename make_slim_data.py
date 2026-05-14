@@ -4,9 +4,12 @@ make_slim_data.py — produce a small subset of data/data.json for design iterat
 Run from your local Market Dashboard repo root:
     python make_slim_data.py
 
-Output: data/data_slim.json   (under ~1 MB, last 3 months detailed + 6 months weekly)
+Output: data/data_slim.json   (target: under ~3 MB)
 
-Upload data_slim.json to the chat once it's generated.
+The dashboard only renders bid-stack charts for the most recent windows, so
+this strips bid stacks from older auctions while keeping summary metrics
+(marginal, vwap, awarded, etc.) intact — every chart still has data, just
+without the historical heavy detail.
 """
 
 import json
@@ -23,34 +26,48 @@ print(f"Loading {SRC} …")
 with SRC.open("r", encoding="utf-8") as f:
     d = json.load(f)
 
-# Tail counts — tweak if you want more/less history in the slim file.
-TAIL_DAILY = 90    # last ~3 months for daily series
-TAIL_WEEKLY = 26   # last ~6 months for weekly series
-TAIL_SLOTS = 30    # bid stacks only exist for the last 30 days anyway
+# Windows
+TAIL_DAILY  = 90   # last ~3 months of daily summaries
+TAIL_WEEKLY = 26   # last ~6 months of weekly summaries
+TAIL_SLOTS_DAYS = 14   # last 14 days of 15-min TRE slots (1344 entries)
+# Bid stacks only kept for these many most-recent entries per series:
+BIDSTACK_KEEP_WEEKLY = 8     # last 8 weeks
+BIDSTACK_KEEP_DAILY  = 14    # last 14 days
+BIDSTACK_KEEP_SLOTS  = 30 * 96  # last 30 days of slots have stacks (dashboard's rule)
 
-def tail(key, n):
-    v = d.get(key)
-    if isinstance(v, list):
-        return v[-n:]
-    return v
+def strip_bidstacks(entry):
+    """Recursively remove 'bidStack' keys from a dict (in place copy)."""
+    if isinstance(entry, dict):
+        return {k: strip_bidstacks(v) for k, v in entry.items() if k != "bidStack"}
+    if isinstance(entry, list):
+        return [strip_bidstacks(x) for x in entry]
+    return entry
+
+def tail_with_bidstack_window(seq, total_keep, bidstack_keep):
+    """Take last `total_keep`; strip bidStack from all but the last `bidstack_keep`."""
+    if not isinstance(seq, list):
+        return seq
+    tail = seq[-total_keep:]
+    cutoff = max(0, len(tail) - bidstack_keep)
+    return [strip_bidstacks(e) if i < cutoff else e for i, e in enumerate(tail)]
 
 slim = {
-    "trlWeekly":   tail("trlWeekly", TAIL_WEEKLY),
-    "trlDaily":    tail("trlDaily",  TAIL_DAILY),
-    "srlWeekly":   tail("srlWeekly", TAIL_WEEKLY),
-    "srlDaily":    tail("srlDaily",  TAIL_DAILY),
-    "treDaily":    tail("treDaily",  TAIL_DAILY),
-    "treSlots":    tail("treSlots",  TAIL_SLOTS * 96),  # 96 fifteen-min slots/day
-    "spotDaily":   tail("spotDaily", TAIL_DAILY),
-    "spotHourly":  tail("spotHourly", TAIL_DAILY),
-    "pvProfile":   d.get("pvProfile"),
+    "trlWeekly":  tail_with_bidstack_window(d.get("trlWeekly", []),  TAIL_WEEKLY, BIDSTACK_KEEP_WEEKLY),
+    "trlDaily":   tail_with_bidstack_window(d.get("trlDaily", []),   TAIL_DAILY,  BIDSTACK_KEEP_DAILY),
+    "srlWeekly":  tail_with_bidstack_window(d.get("srlWeekly", []),  TAIL_WEEKLY, BIDSTACK_KEEP_WEEKLY),
+    "srlDaily":   tail_with_bidstack_window(d.get("srlDaily", []),   TAIL_DAILY,  BIDSTACK_KEEP_DAILY),
+    "treDaily":   tail_with_bidstack_window(d.get("treDaily", []),   TAIL_DAILY,  BIDSTACK_KEEP_DAILY),
+    "treSlots":   tail_with_bidstack_window(d.get("treSlots", []),   TAIL_SLOTS_DAYS * 96, BIDSTACK_KEEP_SLOTS),
+    "spotDaily":  (d.get("spotDaily") or [])[-TAIL_DAILY:],
+    "spotHourly": (d.get("spotHourly") or [])[-TAIL_DAILY:],
+    "pvProfile":  d.get("pvProfile"),
     "processingMs": d.get("processingMs", 0),
 }
 
-# Carry over any other top-level keys we didn't slim, just in case.
+# Carry over any other top-level keys, stripped of bid stacks just in case.
 for k, v in d.items():
     if k not in slim:
-        slim[k] = v
+        slim[k] = strip_bidstacks(v)
 
 print(f"Writing {DST} …")
 with DST.open("w", encoding="utf-8") as f:
@@ -58,4 +75,6 @@ with DST.open("w", encoding="utf-8") as f:
 
 size_kb = DST.stat().st_size / 1024
 print(f"Done. {DST.name} = {size_kb:.0f} KB")
-print(f"Trim sizes: weekly={TAIL_WEEKLY}, daily={TAIL_DAILY}, slots={TAIL_SLOTS} days")
+print(f"  weekly={TAIL_WEEKLY} (last {BIDSTACK_KEEP_WEEKLY} keep bidStack)")
+print(f"  daily={TAIL_DAILY} (last {BIDSTACK_KEEP_DAILY} keep bidStack)")
+print(f"  TRE slots={TAIL_SLOTS_DAYS} days (last 30 keep bidStack)")
